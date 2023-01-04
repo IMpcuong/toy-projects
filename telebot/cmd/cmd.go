@@ -3,17 +3,18 @@ package cmd
 import (
 	"os/exec"
 	"runtime"
-	"strings"
+	"telebot/logger"
 )
 
 type Statement struct {
+	Status bool
 	Cmd    string
 	Output []byte
 	Args   []string
 }
 
 func NewStatement(cmd string, args ...string) Statement {
-	if len(args) == 0 {
+	if len(args) == 1 && args[0] == "" {
 		return Statement{
 			Cmd: cmd,
 		}
@@ -28,13 +29,18 @@ func (s *Statement) CaptureOutput() string {
 	return string(s.Output)
 }
 
-func (s *Statement) Execution() {
-	var stdOut []byte
-
-	strArgs := strings.Join(s.Args, " ")
+func (s *Statement) Execute() {
+	// NOTE: We currently only support MinGW-w64 (runtime environment for GCC & LLVM)
+	// or any other Linux terminal emulator on Windows.
 	if runtime.GOOS != "windows" {
 		return
 	}
-	stdOut, _ = exec.Command(s.Cmd, strArgs).Output()
+
+	stdOut, err := exec.Command(s.Cmd, s.Args...).Output()
+	if err != nil {
+		out := logger.CustomError(logger.CommandError, err)
+		logger.Error.Println(out)
+	}
+	s.Status = true
 	s.Output = stdOut
 }
