@@ -22,6 +22,7 @@ func Generate(logTracer, logInfo, logWarning, logErr io.Writer) {
 }
 
 var (
+	AuthError    string = "AuthError"
 	CommandError string = "CommandError"
 	CompileError string = "CompileError"
 	RuntimeError string = "RuntimeError"
