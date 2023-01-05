@@ -39,7 +39,7 @@ func (s *Statement) Execute() {
 	stdOut, err := exec.Command(s.Cmd, s.Args...).Output()
 	if err != nil {
 		out := logger.CustomError(logger.CommandError, err)
-		logger.Error.Println(out)
+		logger.Error.Print(out)
 	}
 	s.Status = true
 	s.Output = stdOut

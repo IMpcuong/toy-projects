@@ -1,4 +1,4 @@
-package pkg
+package bot
 
 import (
 	"context"
@@ -22,9 +22,6 @@ const (
 	Tutorial string = "Tutorial"
 )
 
-// Pinging bot status.
-var ping bool = false
-
 type Autobot struct {
 	Enable bool       // Enable CLI to trigger bot.
 	Auth   string     // Basic authentication token for TelegramAPI.
@@ -41,21 +38,24 @@ func NewAutobot(auth, data string, urls []*url.URL) *Autobot {
 	}
 }
 
-func (b *Autobot) Register() (bot *telebot.BotAPI, err error) {
-	bot, err = telebot.NewBotAPI(b.Auth)
-	bot.Debug = true
-	return
-}
-
-func (b *Autobot) User() string {
-	bot, err := b.Register()
-	if err != nil {
-		out := logger.CustomError(logger.AuthError, err)
-		logger.Error.Println(out)
+func (b *Autobot) Register() *telebot.BotAPI {
+	if b.Auth == "" {
+		logger.Error.Fatalln("Missing authentication token to activate bot")
 	}
 
-	userInfo := fmt.Sprintf("User(ID, Name): (%d, %s)", bot.Self.ID, bot.Self.UserName)
-	return userInfo
+	bot, err := telebot.NewBotAPI(b.Auth)
+	if err != nil {
+		out := logger.CustomError(logger.AuthError, err)
+		logger.Error.Print(out)
+	}
+	bot.Debug = true
+	return bot
+}
+
+func (b *Autobot) Info() string {
+	bot := b.Register()
+	botInfo := fmt.Sprintf("WIZ-Bot(ID, Name): (%d, %s)", bot.Self.ID, bot.Self.UserName)
+	return botInfo
 }
 
 func craftLayout() (markups []telebot.InlineKeyboardMarkup) {
@@ -106,39 +106,40 @@ func (b *Autobot) HandleUpdate(update telebot.Update) {
 	}
 }
 
+var WizBot *telebot.BotAPI
+
 func (b *Autobot) HandleMessage(message *telebot.Message) {
 	user := message.From
+	text := message.Text
 	if user == nil {
 		return
 	}
-	text := message.Text
 
 	// Debugging:
-	logger.Tracer.Printf("%s wrote %s", b.User(), text)
+	logger.Tracer.Printf("%s, Room: %d", b.Info(), message.Chat.ID)
+	logger.Tracer.Printf("%v wrote %s", user, text)
 
-	bot, err := b.Register()
-	if err != nil {
-		out := logger.CustomError(logger.AuthError, err)
-		logger.Error.Println(out)
-	}
+	var err error
+	if b.Enable || text == commands[1] {
+		if strings.HasPrefix(text, "/") {
+			err = b.HandleCommand(message.Chat.ID, text)
+		} else if len(text) > 0 {
+			nonsense := "Stop writing silly thing like: " + strings.ToUpper(text)
+			// To preserve markdown, we attach entities (bold, italic, etc).
+			// msg.Entities = message.Entities
 
-	if strings.HasPrefix(text, "/") {
-		err = b.HandleCommand(message.Chat.ID, text)
-	} else if ping && len(text) > 0 {
-		// NOTE: The `ping` default condition used to prevent duplicate response as sender, from bot.
-		msg := telebot.NewMessage(message.Chat.ID, strings.ToUpper(text))
-		// To preserve markdown, we attach entities (bold, italic, etc).
-		msg.Entities = message.Entities
-		_, err = bot.Send(msg)
+			err = b.SendNonsense(message.Chat.ID, nonsense)
+		} else {
+			// This is equivalent to forwarding, but without the sender's name.
+			err = b.ForwardMsg(message.MessageID, message.Chat.ID)
+		}
 	} else {
-		// This is equivalent to forwarding, but without the sender's name.
-		copyMsg := telebot.NewCopyMessage(message.Chat.ID, message.Chat.ID, message.MessageID)
-		_, err = bot.CopyMessage(copyMsg)
+		err = b.SendNonsense(message.Chat.ID, "To enable WIZ-Bot, please type: /enable")
 	}
 
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
-		logger.Error.Println(out)
+		logger.Error.Print(out)
 	}
 }
 
@@ -147,64 +148,89 @@ func (b *Autobot) HandleButton(query *telebot.CallbackQuery) {
 	message := query.Message
 
 	listMenu := craftLayout()
+	var title string
 	if query.Data == Next {
-		b.Data = SecondMenuTitle
+		title = SecondMenuTitle
 		markup = listMenu[1]
 	} else if query.Data == Back {
-		b.Data = FirstMenuTitle
+		title = FirstMenuTitle
 		markup = listMenu[0]
 	}
 
-	bot, err := b.Register()
-	if err != nil {
-		out := logger.CustomError(logger.AuthError, err)
-		logger.Error.Println(out)
-	}
 	callbackCfg := telebot.NewCallback(query.ID, "")
-	bot.Send(callbackCfg)
+	WizBot.Send(callbackCfg)
 
 	// Replace menu text and keyboard.
-	msg := telebot.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, b.Data, markup)
+	msg := telebot.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, title, markup)
 	msg.ParseMode = telebot.ModeHTML
-	bot.Send(msg)
+	WizBot.Send(msg)
+}
+
+var commands = []string{
+	"/disable",
+	"/enable",
+	"/help",
+	"/menu",
+	"/task",
 }
 
 func (b *Autobot) HandleCommand(chatId int64, command string) error {
 	var err error
 	switch command {
-	case "/ping":
-		ping = true
-	case "/menu":
+	case commands[0]:
+		b.Enable = false
+	case commands[1]:
+		b.Enable = true
+	case commands[2]:
+		err = b.SendHelp(chatId)
+	case commands[3]:
 		err = b.SendMenu(chatId)
-	case "/welcome":
-		err = b.ResponseWithText(chatId)
+	case commands[4]:
+		err = b.SendFetchedData(chatId)
 	}
+	return err
+}
+
+func (b *Autobot) SendHelp(chatId int64) error {
+	var help string = "<b>Available commands: </b>\n\n"
+	listCmd := func(cmds []string) string {
+		for _, cmd := range cmds {
+			help += fmt.Sprintf("%s\n", cmd)
+		}
+		return help
+	}(commands)
+
+	msg := telebot.NewMessage(chatId, listCmd)
+	msg.ParseMode = telebot.ModeHTML
+	_, err := WizBot.Send(msg)
 	return err
 }
 
 func (b *Autobot) SendMenu(chatId int64) error {
-	bot, err := b.Register()
-	if err != nil {
-		out := logger.CustomError(logger.AuthError, err)
-		logger.Error.Println(out)
-	}
-
 	listMenu := craftLayout()
 	msg := telebot.NewMessage(chatId, FirstMenuTitle)
 	msg.ParseMode = telebot.ModeHTML
 	msg.ReplyMarkup = listMenu[0]
-	_, err = bot.Send(msg)
+
+	_, err := WizBot.Send(msg)
 	return err
 }
 
-func (b *Autobot) ResponseWithText(chatId int64) error {
-	bot, err := b.Register()
-	if err != nil {
-		out := logger.CustomError(logger.AuthError, err)
-		logger.Error.Println(out)
-	}
-
+func (b *Autobot) SendFetchedData(chatId int64) error {
 	msg := telebot.NewMessage(chatId, b.Data)
-	_, err = bot.Send(msg)
+	_, err := WizBot.Send(msg)
+	return err
+}
+
+func (b *Autobot) SendNonsense(chatId int64, nonsense string) error {
+	// NOTE: Only available for peer to peer room (1vs1).
+	msg := telebot.NewMessage(chatId, nonsense)
+	_, err := WizBot.Send(msg)
+	return err
+}
+
+func (b *Autobot) ForwardMsg(msgId int, chatId int64) error {
+	copyMsg := telebot.NewCopyMessage(chatId, chatId, msgId)
+	_, err := WizBot.CopyMessage(copyMsg)
 	return err
 }
