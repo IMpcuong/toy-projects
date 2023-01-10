@@ -74,7 +74,6 @@ func CollectTask(ctx context.Context, orgName string, client *github.Client) (ta
 
 	// FIXME: Cannot retrieve list projects.
 	projs, _, err := client.Organizations.ListProjects(ctx, orgName, &github.ProjectListOptions{State: "open"})
-	fmt.Printf("=====> %#v\n", projs)
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
 		logger.Error.Println(out)
