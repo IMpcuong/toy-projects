@@ -91,6 +91,9 @@ func main() {
 
 	// NOTE: As with method calls, a reference to a non-interface method with a value receiver
 	//	using an adressable value will automatically take the address of that value.
+	//	Un-addresable values include := [values in a map; return values from function/method].
+	//	Exp: `&m["key"], &afunc(), &t.method()` are all errors.
+	//
 	//	Document:
 	//		+ https://go.dev/ref/spec#Method_values
 	// 		+ https://www.golangtraining.in/lessons/pointers/addressable-values.html
