@@ -107,4 +107,11 @@ func main() {
 	fmt.Println(valStruct[1].Read()) // Equivalent (semantically): `(*SomeStruct).Read()`.
 	fmt.Println(valStruct[2].Read())
 	fmt.Printf("%#v\n", valStruct)
+
+	// NOTE: Distinctive between `var` and `:=` value assignment begins with 2 or more variables.
+	var int1, int2 int = 1, 2 // Mutual variables are on the same line, must be of the same type.
+	fmt.Println(int1, int2)
+
+	diff1, diff2 := 1, "1" // Mutual types are accepted.
+	fmt.Println(diff1, diff2)
 }
