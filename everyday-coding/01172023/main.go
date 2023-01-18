@@ -34,6 +34,22 @@ func (s *SomeStruct) Write(str string) {
 	s.data = str
 }
 
+type Human struct {
+	Age    int
+	Status string
+}
+
+// NOTE: Implement the `String() string` function defined in the `Stringer` interface
+// to override what is printed in functions like `fmt.Println`.
+func (h *Human) String() string {
+	if h.Age > 18 {
+		h.Status = "Adult"
+	} else {
+		h.Status = "Kiddo go away!"
+	}
+	return h.Status
+}
+
 func main() {
 	out := make([]*int, 10)
 	type_of_out := reflect.TypeOf(out).Elem()
@@ -114,4 +130,18 @@ func main() {
 
 	diff1, diff2 := 1, "1" // Mutual types are accepted.
 	fmt.Println(diff1, diff2)
+
+	// NOTE: Positional arguments in string interpolation and `Stringer.String()` interface implementation
+	// 	to overide the output from `fmt` package.
+	num := 123
+	txt := "Negate damage into another source"
+	fmt.Printf("%[2]s: %[1]d\n", num, txt)
+	// Out: Negate damage into another source: 123
+
+	human := &Human{1, ""}
+	fmt.Printf("%s\n", human)
+	// Out: Kiddo go away!
+
+	var a, b = 1, 1
+	fmt.Println("Ok: ", a == b, reflect.DeepEqual(a, b), &a, &b)
 }
