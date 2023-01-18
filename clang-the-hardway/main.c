@@ -7,7 +7,7 @@
 int main() {
 	int x = 0;
 	printf("%p\n", &x);
-	printf("%p\n", (void *)&x); // NOTE: Have the same output as above statement.
+	printf("%p\n", (void *)&x); // NOTE: Have the same output as the above statement.
 
 	int *ptr;
 	ptr = &x; // NOTE: Point to variable x(type, value).
