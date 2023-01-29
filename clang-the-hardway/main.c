@@ -14,14 +14,14 @@ int main() {
 	int not_ptr;
 	printf("Ptr: %zu, Non: %zu (in-length)\n", sizeof(ptr), sizeof(not_ptr));
 
-	// Arithmetric expression with the pointee's value.
+	// Arithmetic expression with the pointee's value.
 	printf("Dereference: %d\n", *ptr);
 	(*ptr)++;
 	printf("%d == %d\n", *ptr, x);
 
 	// Array in C:
 	int arr_size = 20; // NOTE: Using scoped variable or preprocessor.
-	int arr[ARR_SIZE]; // NOTE: Cannot change the initiallized size of an array.
+	int arr[ARR_SIZE]; // NOTE: Cannot change the initialized size of an array.
 	for (int i = 0; i < ARR_SIZE; i++) {
 		arr[i] = 20 - i;
 		printf("Idx: %d, Val: %d, Size: %zu\n", i, arr[i], sizeof(i));
