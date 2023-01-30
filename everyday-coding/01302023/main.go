@@ -4,7 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 )
+
+type Statement struct {
+	content string
+	date    time.Time
+}
+
+func (s *Statement) String() string {
+	strDate := s.date.GoString()
+	return fmt.Sprintf("%s, written at %s", s.content, strDate)
+}
+
+type Embed struct {
+	Statement
+}
 
 func main() {
 	fmt.Println("Hello, 世界")
@@ -48,4 +64,23 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(data.ID, data.Person.Name, data.Person.Job)
+
+	e := &Embed{}
+	e.content = "Ayokay"
+	fmt.Println(e)
+
+	// Anonymous structs: embedded mutex.
+	// NOTE: An anonymous struct, which groups the related values with an embedded `sync.Mutex` field,
+	// 	is commonly used to protect a global variable.
+	var viewCount struct {
+		sync.Mutex
+		counter int64
+	}
+	viewCount.Lock()
+	viewCount.counter = 1
+	if viewCount.counter <= 10e4 {
+		viewCount.counter <<= 10
+	}
+	viewCount.Unlock()
+	fmt.Printf("%+v", &viewCount)
 }
