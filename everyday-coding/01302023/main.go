@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -82,5 +83,17 @@ func main() {
 		viewCount.counter <<= 10
 	}
 	viewCount.Unlock()
-	fmt.Printf("%+v", &viewCount)
+	fmt.Printf("%+v\n", &viewCount)
+
+	// Anonymous interfaces:
+	var fmtStringerAgent interface {
+		String() string
+	} = bytes.NewBufferString("Secret instance overrided from `fmt.Stringer`")
+	fmt.Println(fmtStringerAgent.String())
+
+	if _, ok := fmtStringerAgent.(interface {
+		Fd() uintptr
+	}); !ok {
+		fmt.Println("Can't access methods of underlying *os.File")
+	}
 }
