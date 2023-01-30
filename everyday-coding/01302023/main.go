@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -21,6 +22,23 @@ func (s *Statement) String() string {
 
 type Embed struct {
 	Statement
+}
+
+type LazyPrimes struct {
+	once   sync.Once // Guards the prime slices, initiate once per invocation.
+	primes []int
+}
+
+func (lp *LazyPrimes) init() {
+	size := 10
+	for i := 0; i < size; i++ {
+		lp.primes = append(lp.primes, 2+3)
+	}
+}
+
+func (lp *LazyPrimes) Primer() []int {
+	lp.once.Do(lp.init) // Function decorator: `(*sync.Once).Do(f func())`.
+	return lp.primes
 }
 
 func main() {
@@ -95,5 +113,31 @@ func main() {
 		Fd() uintptr
 	}); !ok {
 		fmt.Println("Can't access methods of underlying *os.File")
+	}
+
+	// Method values: is what you get when you evaluate a method as an expression.
+	// The result is a function value.
+
+	// Evaluating a method from: `a type -> yields its function/method`.
+	var fn func(*bytes.Buffer, string) (int, error)
+	var buf bytes.Buffer
+	fn = (*bytes.Buffer).WriteString // A pointer receiver method, yields from a type.
+	fn(&buf, "Equivalent to `buf.WriteString` LMAO\n")
+	buf.WriteString("Equivalent to `buf.WriteString` LMAO, really???\n")
+	buf.WriteTo(os.Stdout)
+
+	// Evaluating a method from: `a value -> create a closure that hold that value`.
+	var fnVal func(string) (int, error)
+	var bufVal bytes.Buffer
+	fnVal = bufVal.WriteString // Yields from a value/instance.
+	fnVal("Heyyyyy, I'm a fuckboy! ")
+	fnVal("Your bazooms are huge\n")
+	bufVal.WriteTo(os.Stdout)
+
+	// Exp: Method values in `sync.Once`.
+	lp := &LazyPrimes{}
+	primes := lp.Primer()
+	for _, p := range primes {
+		fmt.Printf("%d~", p)
 	}
 }
