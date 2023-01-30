@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+)
 
 func main() {
 	fmt.Println("Hello, 世界")
@@ -21,4 +25,27 @@ func main() {
 		gender string
 	}{"Nene", "Female"}
 	fmt.Printf("%#v\n", t1)
+
+	var t2 = []struct {
+		i int
+		s string
+	}{
+		{6 * 9, "Question"},
+		{42, "Answer"},
+	}
+	fmt.Printf("%+v\n", t2)
+
+	var data struct {
+		ID     int
+		Person struct {
+			Name string
+			Job  string
+		}
+	}
+	const jsonData string = `{"ID": 123, "Person": {"Name": "NHT", "Job": "System Architecture"}}`
+	err := json.Unmarshal([]byte(jsonData), &data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(data.ID, data.Person.Name, data.Person.Job)
 }
