@@ -8,6 +8,9 @@
 #define SIZEOF_ARR(arr) (sizeof(arr) / sizeof(*arr))
 #define SIZEOF_ARR_ALT(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#define CMP_PAIR(lhs, rhs) (lhs == rhs ? "true" : "false")
+#define CMP_ONE(bool_val) (bool_val == 1 ? "true" : "false")
+
 // Resource: https://learnxinyminutes.com/docs/c/
 
 // NOTE: Double the number passed in as `x`, returning the new value to the function caller.
@@ -86,10 +89,10 @@ int main(void)
   printf("The average of the %d grades is: %d\n", arr_len, average);
 
   bool first_ptr = (*grades == grades[0]);
-  printf("Is underlying value of first element == array's pointer: %d\n", first_ptr);
+  printf("Is underlying value of first element == array's pointer: %s\n", CMP_ONE(first_ptr));
 
   bool cmp_macro_result = (SIZEOF_ARR(grades) == SIZEOF_ARR_ALT(grades));
-  printf("Tranquilize the comparision above by using macro rule instead: %d\n", cmp_macro_result);
+  printf("Tranquilize the comparision above by using macro rule instead: %s\n", CMP_ONE(cmp_macro_result));
 
   // NOTE: Characters sequence initialization (string).
   char hello_0[6] = {'H', 'e', 'l', 'l', 'o', '\0'};
@@ -99,7 +102,7 @@ int main(void)
 
   // NOTE: Pass by value of pass by reference in C.
   int magic_no = 10e5;
-  printf("Archetype address: %p\n", &magic_no);
+  printf("Archetype address + value: %p + %d\n", &magic_no, magic_no);
 
   double_input_as_orig(&magic_no);
   printf("Rock solid address: %p\n", &magic_no);
@@ -107,6 +110,7 @@ int main(void)
   int ref_val = double_input_as_ref(magic_no);
   printf("to %p address\n", &ref_val);
 
+  printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
