@@ -3,17 +3,20 @@
 #include <stdlib.h>
 
 #define DEFAULT_SIZE 10
-#define size_cmp(default, given)  \
-  ({                              \
-    size_t ret_val;               \
-    do {                          \
-      if (default < given) {      \
-        ret_val = given;          \
-      } else {                    \
-        ret_val = default;        \
-      }                           \
-    } while (0);                  \
-    ret_val;                      \
+
+// NOTE: The " ({ ... })" construct is a GNU specific extension. Microsoft's
+// compiler does not support it.
+#define SIZE_CMP(orig, given)  \
+  ({                           \
+    size_t ret_val;            \
+    do {                       \
+      if (orig < given) {      \
+        ret_val = given;       \
+      } else {                 \
+        ret_val = orig;        \
+      }                        \
+    } while (0);               \
+    ret_val;                   \
   })
 
 // Source from:
@@ -56,7 +59,7 @@ Custom_Array new_arr(size_t size_, int arr_[])
 {
   Custom_Array a = {0};
 #ifdef DEFAULT_SIZE
-  size_ = size_cmp(DEFAULT_SIZE, size_);
+  size_ = SIZE_CMP(DEFAULT_SIZE, size_);
 #endif
   arr_ = &arr_[size_];
 
