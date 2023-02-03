@@ -7,8 +7,10 @@
 #define SIZEOF_ARR(arr) ((size_t)(sizeof(arr) / sizeof(*arr)))
 #define CMP_PAIR(lhs, rhs) (lhs == rhs ? "True" : "False")
 
-// NOTE: The " ({ ... })" construct is a GNU specific extension. Microsoft's
-// compiler does not support it.
+// NOTE:
+//  + The " ({ ... })" construct is a GNU specific extension. Microsoft's
+//    compiler does not support it.
+
 /**
 #define SIZE_CMP(orig, given)  \
   ({                           \
@@ -22,6 +24,19 @@
     } while (0);               \
     ret_val;                   \
   })
+*/
+
+//  + The `typeof(T)` built-in function only supported by GNU C Extensions;
+//    lots of these language features are not found in ISO standard C, pedantically.
+//    Link: https://gcc.gnu.org/onlinedocs/gcc-4.9.3/gcc/Typeof.html#Typeof.
+
+/**
+#define max(a, b)       \
+  {(                    \
+    typeof(a) _a = (a); \
+    typeof(b) _b = (b); \
+    _a < _b ? _b : _a;  \
+  )}                    \
 */
 
 // NOTE: Follows `winsock.h` coding conventions.
@@ -78,7 +93,7 @@ struct Custom_Array {
   void (*print_childs)(Custom_Array *);
 };
 
-// NOTE: Type difinition abbreviation.
+// NOTE: Type definition abbreviation.
 /**
 typedef struct Position {
   x, y int;
@@ -108,13 +123,14 @@ struct Custom_Array *new_custom_arr(size_t size_, int *arr_)
   // ...
   // free(p);
 
-#ifdef DEFAULT_SIZE
   size_t out_;
+#ifdef DEFAULT_SIZE
   wSIZE_CMP(DEFAULT_SIZE, size_, out_);
+#else
   // HACK: Verbose version for this macro rule's implementation.
-  // lSIZE_CMP(DEFAULT_SIZE, size_, size_);
-  printf("arr_'s size = %zu\n", size_);
+  lSIZE_CMP(0, size_, out_);
 #endif
+  printf("arr_'s size = %zu (%s)\n", out_, CMP_PAIR(out_, size_));
 
   Custom_Array *__custom = {0};
   // FIXME: Cannot reassign the array argument's size.
@@ -123,7 +139,7 @@ struct Custom_Array *new_custom_arr(size_t size_, int *arr_)
 
   // FROM: https://stackoverflow.com/questions/11207783/read-and-write-to-a-memory-location
   __custom = (Custom_Array *)malloc(sizeof(Custom_Array) * 1);
-  __custom->size = size_;
+  __custom->size = out_;
 
   // NOTE: `sizeof` returns size of `*int` not `&int`, valid e.g. `sizeof(&arr_)`.
   // NOTE: `sizeof(int)` == `sizeof int`, both syntax are excepted.
@@ -184,7 +200,7 @@ int main(void)
   ca.print_childs(&ca);
 
   Custom_Array *arr = new_custom_arr(n_size, ca.child_arr);
-  printf("Custom_Array destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, arr->child_arr);
+  printf("`Custom_Array *arr` destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, arr->child_arr);
 
   arr->print_childs = ca_print_childs;
   arr->print_childs(arr);
@@ -192,7 +208,7 @@ int main(void)
   printf("Part 2.2: %zu\n", arr->size);
 
   free(f_arr);
-  free((int *)ca.child_arr);
+  free((void *)ca.child_arr);
   free(arr->child_arr);
 
   return 0;
