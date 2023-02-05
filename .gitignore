@@ -1,6 +1,9 @@
 *.exe
+*.obj
 *.ppj
 *.ppx
 *.tag
+*.xml
 
+.vscode/
 output/
