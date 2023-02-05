@@ -50,7 +50,8 @@ int main(void)
   int arr[ARR_SIZE]; // NOTE: Cannot change the initialized size of an array.
 #endif
 
-  for (int i = 0; i < ARR_SIZE; i++) {
+  for (int i = 0; i < ARR_SIZE; i++)
+  {
     arr[i] = 20 - i;
     printf("Idx: %d, Val: %d, Size: %zu\n", i, arr[i], sizeof(i));
   }
@@ -80,10 +81,11 @@ int main(void)
   // NOTE: Type of `grades` changes `int -> long` -> the expression `sizeof(int) -> sizeof(long)` simultaneously.
   //  If forgot to change, some nasty bug will be appeared.
   int arr_len = sizeof(grades) / sizeof(int);
-  if (NULL == &arr_len || arr_len == 0) {
+  if (NULL == &arr_len || arr_len == 0)
+  {
     arr_len = SIZEOF_ARR(grades);
   }
-  grades[1] = 85*arr_len - (grades[0] + grades[2]);
+  grades[1] = 85 * arr_len - (grades[0] + grades[2]);
 
   average = (grades[0] + grades[1] + grades[2]) / 3;
   printf("The average of the %d grades is: %d\n", arr_len, average);
