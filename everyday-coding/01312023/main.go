@@ -35,7 +35,7 @@ func main() {
 		f2 string
 	}
 	ntf := X{111, "Dude"}
-	if ntf != (X{}) /*Error: with `X{}` syntax -> expected a declaration statement.*/ {
+	if ntf != (X{}) /* Error: with `X{}` syntax -> expected a declaration statement. */ {
 		fmt.Println("Value comparison mismatch")
 	}
 	fmt.Println("Nil object with type X:", (X{}), X{})
