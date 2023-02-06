@@ -27,6 +27,70 @@ void double_input_as_orig(int *x)
   *x *= 2;
 }
 
+typedef struct nested_control
+{
+  char *outer;
+  struct nested_setting
+  {
+    float id;
+    char *desc;
+  } **settings; // Usage: Pointer to an array.
+} nested_control;
+
+void looping_through_ptr_arr(void)
+{
+  for (char **name = (char *[]){"uid", "gid", "oid", 0}; *name; name++)
+  {
+    printf("%s\t", *name);
+  }
+  printf("\n");
+
+  struct nested_setting base_setting = {
+      .id = 0.0,
+      .desc = "Settings controller-default",
+  };
+
+  // NOTE: Pointer to an array -> { `char **char_ptr` == `char *char_ptr[]` || `**` == `*[]` }.
+  struct nested_control *controllers[] = {
+      &(struct nested_control){
+          .outer = "controller0",
+          .settings = (struct nested_setting *[]){
+              &base_setting,
+              // NOTE: Adding trailing NULL element to avoid below error.
+              //    Error: `CRT: unhandled exception (main) -- terminating`.
+              NULL,
+          },
+      },
+      &(struct nested_control){
+          .outer = "controller1",
+          .settings = (struct nested_setting *[]){
+              &(struct nested_setting){
+                  .id = 1.1,
+                  .desc = "Settings controller-2.1",
+              },
+              &(struct nested_setting){
+                  .id = 1.2,
+                  .desc = "Settings controller-2.2",
+              },
+              NULL,
+          },
+      },
+      NULL,
+  };
+
+  // NOTE: Looping by using object's pointer incrementation.
+  //    `nested_control **ctrl` := first element's pointer (representation/embodiment of the whole array).
+  //    `for (...)` := `for (first pointer; if its pointee's address != NULL; pointer++)`.
+  for (struct nested_control **ctrl = controllers; *ctrl != NULL; ++ctrl)
+  {
+    printf("%s\n", (*ctrl)->outer);
+    for (struct nested_setting **setup = (*ctrl)->settings; *setup != NULL; ++setup)
+    {
+      printf("\t(%.1f; %s)\n", (*setup)->id, (*setup)->desc);
+    }
+  }
+}
+
 int main(void)
 {
   int x = 0;
@@ -113,6 +177,8 @@ int main(void)
   printf("to %p address\n", &ref_val);
 
   printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
+
+  looping_through_ptr_arr();
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
