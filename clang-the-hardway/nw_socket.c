@@ -76,7 +76,10 @@
  * - IP addresses and ports sorted out, how the sockets API stores and manipulates IP addresses and other data:
  *   + Network routing system "The Internet Protocol Version 4 ~ IPv4": where addresses made up for 4 bytes ~ 4 octets (8 bits * 4 octets := 32 bits),
  *     commonly written in "dots and numbers" form: `192.0.12.111`. Total amount of addresses IPv4 system can be provided ~ 2^32 abilities.
- *   + "The Internet Protocol Version 6 ~ IPv6": 2^128 addresses in the hexadecimal representation, with each 2-byte chunk separated by a colon. E.g.:
+ *   + "The Internet Protocol Version 6 ~ IPv6": 2^128 addresses in the hexadecimal representation, with each 2-byte chunk separated by a colon.
+ *     The v6 address is integrated from 8 octets (chunks), each of which has the length of 16 bits (16 bits * 8 octets := 128 bits).
+ *
+ *     E.g.:
  *     `2001:0db8:c9d2:aee5:73e3:934a:a5ae:9551`
  *
  *     `2001:0db8:c9d2:0012:0000:0000:0000:0051`
@@ -88,4 +91,12 @@
  *     `0000:0000:0000:0000:0000:0000:0000:0001`
  *     `::1` is the loopback address. It always means “this machine I’m running on now”. In IPv4, the loopback address is `127.0.0.1`.
  *   + Conversion between IPv4/IPv6: `192.0.2.33` <-> `::ffff:192.0.2.33`.
+ *
+ * - Subnets: (IPv4) IP address (32 bits) := (network_portion; host_portion)
+ *   + |---------:---------:---------:---------|    -----> Class A.
+ *       Network | Host
+ *   + |---------:---------:---------:---------|    -----> Class B.
+ *                 Network | Host
+ *   + |---------:---------:---------:---------|    -----> Class C.
+ *                           Network | Host
  */
