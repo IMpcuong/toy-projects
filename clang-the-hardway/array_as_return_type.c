@@ -9,7 +9,7 @@
 
 #define DEFAULT_SIZE 10
 
-// NOTE: Analogous with this macro rule as below.
+// NOTE: Analogous with the macro rule as below.
 // #define SIZEOF_ARR(arr) ((size_t)(sizeof arr) / sizeof arr[0])
 #define SIZEOF_ARR(arr) ((size_t)(sizeof(arr) / sizeof(*arr)))
 #define CMP_PAIR(lhs, rhs) (lhs == rhs ? "True" : "False")
@@ -164,7 +164,7 @@ static inline Custom_Array *new_custom_arr(size_t size_, int *arr_)
     // NOTE: `sizeof` returns size of `*int` not `&int`, valid e.g. `sizeof(&arr_)`.
     // NOTE: `sizeof(int)` with a type name, the name must be enclosed in parentheses.
     //       `sizeof <expr>` when used with an expression, can be specified with or without parentheses.
-    //       `sizeof` is a operator.
+    //       `sizeof` is an operator.
     __custom->child_arr = init_arr(__custom->size, (int)__arg_arr_size);
     printf("__custom := (size / first) ~ (%zu / %d)\n", __custom->size, *__custom->child_arr);
 
