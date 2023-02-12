@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,6 +185,20 @@ static inline void on_accept(void *res)
   puts((char *)res);
 }
 
+int sum_variadic_args(size_t count, ...)
+{
+  int res = 0;
+  va_list args;
+  va_start(args, count);
+  for (size_t i = 0; i < count; i++)
+  {
+    int tmp = va_arg(args, int);
+    res += tmp;
+  }
+  va_end(args);
+  return res;
+}
+
 // NOTE: To compile C code in Windows, please use:
 //  + Prompt: Visual Studio 2017 Developer Command Prompt v15.0.
 //  + Command: `cl /W4 main.c && main.exe`.
@@ -236,6 +251,9 @@ int main(void)
   arr->print_childs(arr);
 
   printf("Part 2.2: %zu\n", arr->size);
+
+  int sum = sum_variadic_args(2, (arr->child_arr)[0], (arr->child_arr)[1]);
+  printf("%d", sum);
 
   free(f_arr);
   free((void *)ca.child_arr);
