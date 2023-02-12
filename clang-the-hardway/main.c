@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <Windows.h>
 
 #include "main.h"
 
@@ -91,6 +92,16 @@ void looping_through_ptr_arr(void)
   }
 }
 
+// `spawn_thread` is defined as the entry point for the new thread.
+// This function take a single parameter `lp_param`, which is a pointer
+// to any data that you want to pass to the new spawned thread.
+DWORD WINAPI spawn_thread(LPVOID lp_param)
+{
+  int *thread_ptr = (int *)(lp_param);
+  printf("This's another thread, with sample parameter's pointer value: %p\n", thread_ptr);
+  return 0;
+}
+
 int main(void)
 {
   int x = 0;
@@ -179,6 +190,31 @@ int main(void)
   printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
 
   looping_through_ptr_arr();
+
+  // NOTE: Spawning C thread example.
+  HANDLE h_thread;
+  DWORD dw_thread_id;
+
+  // * The first parameter is a `security attribute`, which can be set to NULL for default security.
+  // * The second parameter is the `initial stack size` for the thread, which can be set to 0 to use the default stack size.
+  // * The third parameter is the `entry point` for the thread, which is `spawn_thread` in this case.
+  // * The fourth parameter is the `argument` to pass to the thread, which is &average in this case.
+  // * The fifth parameter is the `creation flags`, which can be set to 0 for default behavior.
+  // * The sixth parameter is a `pointer` to a DWORD that will receive the thread identifier.
+  h_thread = CreateThread(NULL, 0, spawn_thread, &average, 0, &dw_thread_id);
+  if (NULL == h_thread)
+  {
+    printf("Failed to create a new thread!\n");
+    return 1;
+  }
+  printf("This's the main thread, with sample parameter's pointer value: %p\n", h_thread);
+  // NOTE: The main thread waits for the new thread to finish using the
+  //  `WaitForSingleObject` function, which blocks the terminated signal
+  //  to be returned, until the specified object (thread-handler) is reaching
+  //  the signaled state.
+  WaitForSingleObject(h_thread, INFINITE);
+  // NOTE: Close the thread handler.
+  CloseHandle(h_thread);
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
