@@ -103,13 +103,13 @@ static int *init_arr(const size_t size, /* default = 0 */ const int input)
   return factor;
 }
 
-typedef struct Custom_Array Custom_Array, *ca;
-struct Custom_Array
+typedef struct CustomArray CustomArray, *ca;
+struct CustomArray
 {
   size_t size;
   int *child_arr;
 
-  void (*print_childs)(Custom_Array *);
+  void (*print_childs)(CustomArray *);
 };
 
 // NOTE: Type definition abbreviation.
@@ -119,7 +119,7 @@ typedef struct Position {
 } Position;
 */
 
-void ca_print_childs(Custom_Array *self)
+void ca_print_childs(CustomArray *self)
 {
   if (0 == self->size)
     printf("Zero-length array: %zu", self->size);
@@ -133,7 +133,7 @@ void ca_print_childs(Custom_Array *self)
 
 // NOTE: `int *arr_` -> `SIZEOF_ARR(arr_) = 2`.
 //       `int **arr_` -> `SIZEOF_ARR(arr_) = 1`.
-static inline Custom_Array *new_custom_arr(size_t size_, int *arr_)
+static inline CustomArray *new_custom_arr(size_t size_, int *arr_)
 {
   size_t __arg_arr_size = SIZEOF_ARR(arr_);
   printf("Arg-array's len = %zu\n", __arg_arr_size);
@@ -152,13 +152,13 @@ static inline Custom_Array *new_custom_arr(size_t size_, int *arr_)
 #endif
   printf("arr_'s size = %zu (%s)\n", out_, CMP_PAIR(out_, size_));
 
-  Custom_Array *__custom = {0};
+  CustomArray *__custom = {0};
   // FIXME: Cannot reassign the array argument's size.
   //    Because it already has a fixed size.
   // arr_ = &arr_[size_]; // Correct syntax, but wrong semantic.
 
   // FROM: https://stackoverflow.com/questions/11207783/read-and-write-to-a-memory-location
-  __custom = (Custom_Array *)malloc(sizeof(Custom_Array) * 1);
+  __custom = (CustomArray *)malloc(sizeof(CustomArray) * 1);
   if (__custom)
   {
     __custom->size = out_;
@@ -231,7 +231,7 @@ int main(void)
   // FIXME: Error "Signal: segmentation fault (core dumped)".
   static size_t N_SIZE = 50;
   int *ca_childs = init_arr(N_SIZE, 0);
-  Custom_Array ca = {
+  CustomArray ca = {
       .size = N_SIZE,
       .child_arr = (int *)(0),
       .print_childs = NULL,
@@ -242,10 +242,10 @@ int main(void)
   //    No needed anymore, when the struct initializer has already do this.
   ca.print_childs = ca_print_childs; // Function assignment.
   ca.print_childs(&ca);
-  printf("Initialize `Custom_Array ca`: (size / first) ~ (%zu / %d)\n", ca.size, *ca.child_arr);
+  printf("Initialize `CustomArray ca`: (size / first) ~ (%zu / %d)\n", ca.size, *ca.child_arr);
 
-  Custom_Array *arr = new_custom_arr(N_SIZE, ca.child_arr);
-  printf("`Custom_Array *arr` destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, arr->child_arr);
+  CustomArray *arr = new_custom_arr(N_SIZE, ca.child_arr);
+  printf("`CustomArray *arr` destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, arr->child_arr);
 
   arr->print_childs = ca_print_childs;
   arr->print_childs(arr);

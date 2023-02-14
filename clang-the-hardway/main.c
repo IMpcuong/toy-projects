@@ -28,15 +28,15 @@ void double_input_as_orig(int *x)
   *x *= 2;
 }
 
-typedef struct nested_control
+typedef struct NestedControl
 {
   char *outer;
-  struct nested_setting
+  struct NestedSetting
   {
-    float id;
+    double id;
     char *desc;
   } **settings; // Usage: Pointer to an array.
-} nested_control;
+} NestedControl;
 
 void looping_through_ptr_arr(void)
 {
@@ -46,30 +46,30 @@ void looping_through_ptr_arr(void)
   }
   printf("\n");
 
-  struct nested_setting base_setting = {
+  struct NestedSetting base_setting = {
       .id = 0.0,
       .desc = "Settings controller-default",
   };
 
   // NOTE: Pointer to an array -> { `char **char_ptr` == `char *char_ptr[]` || `**` == `*[]` }.
-  struct nested_control *controllers[] = {
-      &(struct nested_control){
+  struct NestedControl *controllers[] = {
+      &(struct NestedControl){
           .outer = "controller0",
-          .settings = (struct nested_setting *[]){
+          .settings = (struct NestedSetting *[]){
               &base_setting,
               // NOTE: Adding trailing NULL element to avoid below error.
               //    Error: `CRT: unhandled exception (main) -- terminating`.
               NULL,
           },
       },
-      &(struct nested_control){
+      &(struct NestedControl){
           .outer = "controller1",
-          .settings = (struct nested_setting *[]){
-              &(struct nested_setting){
+          .settings = (struct NestedSetting *[]){
+              &(struct NestedSetting){
                   .id = 1.1,
                   .desc = "Settings controller-2.1",
               },
-              &(struct nested_setting){
+              &(struct NestedSetting){
                   .id = 1.2,
                   .desc = "Settings controller-2.2",
               },
@@ -80,12 +80,12 @@ void looping_through_ptr_arr(void)
   };
 
   // NOTE: Looping by using object's pointer incrementation.
-  //    `nested_control **ctrl` := first element's pointer (representation/embodiment of the whole array).
+  //    `NestedControl **ctrl` := first element's pointer (representation/embodiment of the whole array).
   //    `for (...)` := `for (first pointer; if its pointee's address != NULL; pointer++)`.
-  for (struct nested_control **ctrl = controllers; *ctrl != NULL; ++ctrl)
+  for (struct NestedControl **ctrl = controllers; *ctrl != NULL; ++ctrl)
   {
     printf("%s\n", (*ctrl)->outer);
-    for (struct nested_setting **setup = (*ctrl)->settings; *setup != NULL; ++setup)
+    for (struct NestedSetting **setup = (*ctrl)->settings; *setup != NULL; ++setup)
     {
       printf("\t(%.1f; %s)\n", (*setup)->id, (*setup)->desc);
     }
