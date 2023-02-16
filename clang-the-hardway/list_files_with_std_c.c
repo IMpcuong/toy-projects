@@ -87,13 +87,13 @@ void curdir_list_files(DIR *current)
   // NOTE: By default, C does not include struct types in the global namespace.
   //  In other words, if you define a struct within a function, you cannot refer to it by name
   //  outside of that function without using the `struct` keyword as an identifier.
-  struct dirent *entry = malloc(sizeof(struct dirent));
+  struct dirent *entry = (struct dirent *)malloc(sizeof(struct dirent));
   while ((entry = readdir(current)) != NULL)
   {
 #ifndef _DIRENT_HAVE_D_TYPE
     printf("Filename %s (len = %d)\n", entry->d_name, entry->d_namlen);
 #else
-    // NOTE: Only the hierarchy pf Linux/BSD Operating Systems have the `d_type` attribute.
+    // NOTE: Only the direct hierarchy of Linux/BSD Operating Systems have the `d_type` attribute.
     printf("Filename %s (len = %d, type = %zu)\n", entry->d_name, entry->d_namlen, entry->d_type);
 #endif
   }
