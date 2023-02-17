@@ -17,14 +17,14 @@
 // NOTE: Double the number passed in as `x`, returning the new value to the function caller.
 int double_input_as_ref(int x)
 {
-  printf("Passed by another reference checker: %n\n", /* (void *) */ &x);
-  printf("From %n ", &x);
+  printf("Passed by another reference checker: %p\n", (void *)&x);
+  printf("From %p ", (void *)&x);
   return 2 * x;
 }
 
 void double_input_as_orig(int *x)
 {
-  printf("Passed by original address checker: %n\n", x);
+  printf("Passed by original address checker: %p\n", (void *)x);
   *x *= 2;
 }
 
@@ -79,7 +79,8 @@ void looping_through_ptr_arr(void)
       NULL,
   };
 
-  // NOTE: Looping by using object's pointer incrementation.
+  // NOTE: Looping by using object's pointer incrementation,
+  //    for more specific: using pointers as counters.
   //    `NestedControl **ctrl` := first element's pointer (representation/embodiment of the whole array).
   //    `for (...)` := `for (first pointer; if its pointee's address != NULL; pointer++)`.
   for (struct NestedControl **ctrl = controllers; *ctrl != NULL; ++ctrl)
@@ -98,14 +99,13 @@ void looping_through_ptr_arr(void)
 DWORD WINAPI spawn_thread(LPVOID lp_param)
 {
   int *thread_ptr = (int *)(lp_param);
-  printf("This's another thread, with sample parameter's pointer value: %n\n", thread_ptr);
+  printf("This's another thread, with sample parameter's pointer value: %p\n", (void *)thread_ptr);
   return 0;
 }
 
 int main(void)
 {
   int x = 0;
-  printf("%n\n", &x);
   printf("%p\n", (void *)&x); // NOTE: Have the same output as the above statement.
 
   int *ptr;
@@ -140,7 +140,7 @@ int main(void)
   //
   //  For example, when an array is passed to a function or is assigned to a
   //  pointer it implicitly converted to a pointer.
-  printf("Array's pointer: %n, Dereferences/indirects to the first element: %d\n", arr_ptr, *arr_ptr);
+  printf("Array's pointer: %p, Dereferences/indirects to the first element: %d\n", (void *)arr_ptr, *arr_ptr);
 
   // FIXME: `int (*ptr_to_arr)[ARR_SIZE] = &arr;`, `&arr` is NOT of type `int *` but `[20]int *`!
   int *ptr_to_arr = &arr[0];
@@ -177,13 +177,13 @@ int main(void)
 
   // NOTE: Pass by value of pass by reference in C.
   int magic_no = 10e5;
-  printf("Archetype address + value: %n + %d\n", &magic_no, magic_no);
+  printf("Archetype address + value: %p + %d\n", (void *)&magic_no, magic_no);
 
   double_input_as_orig(&magic_no);
-  printf("Rock solid address: %n\n", &magic_no);
+  printf("Rock solid address: %p\n", (void *)&magic_no);
 
   int ref_val = double_input_as_ref(magic_no);
-  printf("to %n address\n", &ref_val);
+  printf("to %p address\n", (void *)&ref_val);
 
   printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
 

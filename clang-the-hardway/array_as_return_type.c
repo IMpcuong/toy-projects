@@ -244,8 +244,8 @@ int main(void)
   ca.print_childs(&ca);
   printf("Initialize `CustomArray ca`: (size / first) ~ (%zu / %d)\n", ca.size, *ca.child_arr);
 
-  CustomArray *arr = new_custom_arr(N_SIZE, ca.child_arr);
-  printf("`CustomArray *arr` destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, arr->child_arr);
+  CustomArrayPtr arr = new_custom_arr(N_SIZE, ca.child_arr);
+  printf("`CustomArray *arr` destructuring: (size, arr_ptr) = (%zu, %p)\n", arr->size, (void *)(arr->child_arr));
 
   arr->print_childs = ca_print_childs;
   arr->print_childs(arr);
@@ -253,7 +253,7 @@ int main(void)
   printf("Part 2.2: %zu\n", arr->size);
 
   int sum = sum_variadic_args(2, (arr->child_arr)[0], (arr->child_arr)[1]);
-  printf("%d", sum);
+  printf("Part 3: %d\n", sum);
 
   free(f_arr);
   free((void *)ca.child_arr);
