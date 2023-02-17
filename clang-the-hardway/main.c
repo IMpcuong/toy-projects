@@ -17,14 +17,14 @@
 // NOTE: Double the number passed in as `x`, returning the new value to the function caller.
 int double_input_as_ref(int x)
 {
-  printf("Passed by another reference checker: %p\n", &x);
-  printf("From %p ", &x);
+  printf("Passed by another reference checker: %n\n", /* (void *) */ &x);
+  printf("From %n ", &x);
   return 2 * x;
 }
 
 void double_input_as_orig(int *x)
 {
-  printf("Passed by original address checker: %p\n", x);
+  printf("Passed by original address checker: %n\n", x);
   *x *= 2;
 }
 
@@ -98,14 +98,14 @@ void looping_through_ptr_arr(void)
 DWORD WINAPI spawn_thread(LPVOID lp_param)
 {
   int *thread_ptr = (int *)(lp_param);
-  printf("This's another thread, with sample parameter's pointer value: %p\n", thread_ptr);
+  printf("This's another thread, with sample parameter's pointer value: %n\n", thread_ptr);
   return 0;
 }
 
 int main(void)
 {
   int x = 0;
-  printf("%p\n", &x);
+  printf("%n\n", &x);
   printf("%p\n", (void *)&x); // NOTE: Have the same output as the above statement.
 
   int *ptr;
@@ -140,7 +140,7 @@ int main(void)
   //
   //  For example, when an array is passed to a function or is assigned to a
   //  pointer it implicitly converted to a pointer.
-  printf("Array's pointer: %p, Dereferences/indirects to the first element: %d\n", arr_ptr, *arr_ptr);
+  printf("Array's pointer: %n, Dereferences/indirects to the first element: %d\n", arr_ptr, *arr_ptr);
 
   // FIXME: `int (*ptr_to_arr)[ARR_SIZE] = &arr;`, `&arr` is NOT of type `int *` but `[20]int *`!
   int *ptr_to_arr = &arr[0];
@@ -156,10 +156,8 @@ int main(void)
   // NOTE: Type of `grades` changes `int -> long` -> the expression `sizeof(int) -> sizeof(long)` simultaneously.
   //  If forgot to change, some nasty bug will be appeared.
   int arr_len = sizeof(grades) / sizeof(int);
-  if (NULL == &arr_len || arr_len == 0)
-  {
+  if (arr_len == 0)
     arr_len = SIZEOF_ARR(grades);
-  }
   grades[1] = 85 * arr_len - (grades[0] + grades[2]);
 
   average = (grades[0] + grades[1] + grades[2]) / 3;
@@ -179,13 +177,13 @@ int main(void)
 
   // NOTE: Pass by value of pass by reference in C.
   int magic_no = 10e5;
-  printf("Archetype address + value: %p + %d\n", &magic_no, magic_no);
+  printf("Archetype address + value: %n + %d\n", &magic_no, magic_no);
 
   double_input_as_orig(&magic_no);
-  printf("Rock solid address: %p\n", &magic_no);
+  printf("Rock solid address: %n\n", &magic_no);
 
   int ref_val = double_input_as_ref(magic_no);
-  printf("to %p address\n", &ref_val);
+  printf("to %n address\n", &ref_val);
 
   printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
 

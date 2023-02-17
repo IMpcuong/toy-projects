@@ -4,7 +4,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-int double_input_as_ref(int x);
-void double_input_as_orig(int *x);
+extern int double_input_as_ref(int x);
+extern void double_input_as_orig(int *x);
 
 #endif
