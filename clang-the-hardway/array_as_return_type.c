@@ -11,8 +11,8 @@
 #define DEFAULT_SIZE 10
 
 // NOTE: Analogous with the macro rule as below.
-// #define SIZEOF_ARR(arr) ((size_t)(sizeof arr) / sizeof arr[0])
-#define SIZEOF_ARR(arr) ((size_t)(sizeof(arr) / sizeof(*arr)))
+// #define SIZEOF_ARR(arr) ((size_t)(sizeof(arr) / sizeof(*arr))) // WARN: [-Wsizeof-pointer-div] by gcc.
+#define SIZEOF_ARR(arr) ((size_t)(sizeof arr) / sizeof arr[0]) // NOTE: Better implementation choice.
 #define CMP_PAIR(lhs, rhs) (lhs == rhs ? "True" : "False")
 
 // NOTE:
@@ -92,18 +92,19 @@ static int *init_arr(const size_t size, /* default = 0 */ const int input)
   //    non-constant.
   if (0 == size)
     return 0;
-  int *factor = malloc(sizeof(int) * size);
+
+  int *factor;
+  factor = malloc(size * (sizeof *factor));
   if (NULL == factor)
     return 0;
 
   for (size_t i = 0; i < size; i++)
-  {
     factor[i] = (int)size + input;
-  }
   return factor;
 }
 
-typedef struct CustomArray CustomArray, *ca;
+// NOTE: Type alias between `CustomArray *` == `CustomArrayPtr`.
+typedef struct CustomArray CustomArray, *CustomArrayPtr;
 struct CustomArray
 {
   size_t size;
@@ -119,21 +120,19 @@ typedef struct Position {
 } Position;
 */
 
-void ca_print_childs(CustomArray *self)
+void ca_print_childs(CustomArrayPtr self)
 {
   if (0 == self->size)
     printf("Zero-length array: %zu", self->size);
 
   printf("%s\n", CMP_PAIR(self->size, SIZEOF_ARR(self->child_arr)));
   for (size_t i = 0; i < self->size; i++)
-  {
     printf("Idx: %zu / Val: %d\n", i, (self->child_arr)[i]);
-  }
 }
 
 // NOTE: `int *arr_` -> `SIZEOF_ARR(arr_) = 2`.
 //       `int **arr_` -> `SIZEOF_ARR(arr_) = 1`.
-static inline CustomArray *new_custom_arr(size_t size_, int *arr_)
+static inline CustomArrayPtr new_custom_arr(size_t size_, int *arr_)
 {
   size_t __arg_arr_size = SIZEOF_ARR(arr_);
   printf("Arg-array's len = %zu\n", __arg_arr_size);
@@ -147,18 +146,18 @@ static inline CustomArray *new_custom_arr(size_t size_, int *arr_)
 #ifdef DEFAULT_SIZE
   wSIZE_CMP(DEFAULT_SIZE, size_, out_);
 #else
-  // HACK: Verbose version for this macro rule's implementation.
+  // HACK(impcuong): A verbose implementation for the macro rule instead of using unary operator.
   lSIZE_CMP(0, size_, out_);
 #endif
   printf("arr_'s size = %zu (%s)\n", out_, CMP_PAIR(out_, size_));
 
-  CustomArray *__custom = {0};
+  CustomArrayPtr __custom = {0};
   // FIXME: Cannot reassign the array argument's size.
   //    Because it already has a fixed size.
   // arr_ = &arr_[size_]; // Correct syntax, but wrong semantic.
 
   // FROM: https://stackoverflow.com/questions/11207783/read-and-write-to-a-memory-location
-  __custom = (CustomArray *)malloc(sizeof(CustomArray) * 1);
+  __custom = malloc(1 * (sizeof *__custom));
   if (__custom)
   {
     __custom->size = out_;

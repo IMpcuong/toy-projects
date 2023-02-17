@@ -11,15 +11,15 @@
 // NOTE: `CRT` := `C Runtime library`.
 
 // NOTE: Explicit function declaration.
-extern int _cdecl atoi(const char *_String);
-extern size_t __cdecl strlen(const char *_String);
+// WARN: Redundant redeclaration of 'strlen' [-Wredundant-decls].
+// extern size_t __cdecl strlen(const char *_String);
 
 // Cmd: `gcc -Wall -D_WINDOWS -D_MINGW list_files_with_std_c.c -o lfs`.
 
 size_t str_count_num_delim(char *_src_str, const char *delim)
 {
   size_t count = 0;
-  for (int i = 0; i < strlen(_src_str); i++)
+  for (size_t i = 0; i < strlen(_src_str); i++)
     if (_src_str[i] == *delim)
       count++;
   return count;
@@ -28,7 +28,14 @@ size_t str_count_num_delim(char *_src_str, const char *delim)
 char ***str_separate_with_delim(char *_src_str, const char *delim, char **next_pos)
 {
   size_t size = str_count_num_delim(_src_str, delim) + 1;
-  char ***substr_with_idx = (char ***)malloc(size * sizeof(char **));
+
+  // NOTE(@eskilsteenberg): `sizeof` is not a function (important).
+  // NOTE: With this syntax combination, type changing in `malloc` isn't a big deal anymore.
+  //    Also, our manual allocation addressing doesn't need to be typecast explicitly.
+  //    Noting that these statements only doable when our variable have a concrete type,
+  //    not `void` nor `void *`.
+  char ***substr_with_idx;
+  substr_with_idx = malloc(size * (sizeof *substr_with_idx));
 
   char *token = strtok_s(_src_str, delim, next_pos);
   while (NULL != token)
@@ -36,9 +43,10 @@ char ***str_separate_with_delim(char *_src_str, const char *delim, char **next_p
     for (size_t i = 0; i < size; i++)
     {
       size_t substr_len = strlen(token) + size;
-      substr_with_idx[i] = (char **)malloc(substr_len * sizeof(char *));
+      substr_with_idx[i] = (char **)(0);
+      substr_with_idx[i] = malloc(substr_len * (sizeof substr_with_idx[i]));
 
-      substr_with_idx[i][0] = (char *)malloc(sizeof i);
+      substr_with_idx[i][0] = malloc(i * (sizeof *substr_with_idx[i]));
       snprintf(substr_with_idx[i][0], sizeof substr_with_idx[i][0], "%zu", i);
 
       substr_with_idx[i][1] = token;
@@ -55,17 +63,17 @@ char *str_narrow_cast(wchar_t *_src_str)
   char *narrow_str = NULL; // Allocate on heap-mem later.
 
   // NOTE: `wcstombs` := `wide-charater string to multi-bytes string`.
-  //
-  // `wcstombs` used to determine the length of the narrow string
-  // that will be produced from `src` string.
+  //    `wcstombs` used to determine the length of the narrow string
+  //    that will be produced from `src` string.
   size_t narrow_str_len = wcstombs(NULL, _src_str, 0);
-  if (narrow_str_len != -1)
+  if (narrow_str_len != (size_t)(-1))
   {
-    narrow_str = (char *)malloc(narrow_str_len + 1);
-    wcstombs(narrow_str, _src_str, narrow_str_len + 1);
+    narrow_str_len++;
+    narrow_str = malloc(narrow_str_len * (sizeof *narrow_str));
+    wcstombs(narrow_str, _src_str, narrow_str_len);
   }
   if (narrow_str == NULL)
-    printf("Could not narrow the source string: %p", _src_str);
+    printf("Could not narrow the source string: %ls", _src_str);
   return narrow_str;
 }
 
@@ -85,9 +93,10 @@ void curdir_list_files(DIR *current)
   // NOTE: Implementation using `dirent.h` from GNU C standard libraries.
   //
   // NOTE: By default, C does not include struct types in the global namespace.
-  //  In other words, if you define a struct within a function, you cannot refer to it by name
-  //  outside of that function without using the `struct` keyword as an identifier.
-  struct dirent *entry = (struct dirent *)malloc(sizeof(struct dirent));
+  //    In other words, if you define a struct within a function, you cannot refer to it by name
+  //    outside of that function without using the `struct` keyword as an identifier.
+  struct dirent *entry;
+  entry = malloc(sizeof *entry);
   while ((entry = readdir(current)) != NULL)
   {
 #ifndef _DIRENT_HAVE_D_TYPE
