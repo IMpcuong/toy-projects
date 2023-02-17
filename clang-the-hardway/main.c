@@ -103,6 +103,14 @@ DWORD WINAPI spawn_thread(LPVOID lp_param)
   return 0;
 }
 
+char *is_arr_eq_ptr(int arr_test[3])
+{
+  int third_1 = arr_test[2];
+  int *ptr_test = arr_test;
+  int third_2 = *(ptr_test + 2);
+  return CMP_PAIR(third_1, third_2);
+}
+
 int main(void)
 {
   int x = 0;
@@ -213,6 +221,9 @@ int main(void)
   WaitForSingleObject(h_thread, INFINITE);
   // NOTE: Close the thread handler.
   CloseHandle(h_thread);
+
+  int arr_test[3] = {1e3, 1e3, 1e3};
+  printf("Is pointers equal array: %s\n", is_arr_eq_ptr(arr_test));
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
