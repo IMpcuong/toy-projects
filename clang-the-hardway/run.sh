@@ -8,8 +8,8 @@ if [[ -e "${filename:-}" && "$filename" == *".c"* ]]; then
   gcc -Wall -Wextra -pedantic \
   -Wshadow -Wformat=2 -Wconversion \
   -Wpointer-arith -Wredundant-decls -Wnested-externs \
-  -Wno-long-long -Wno-long-long \
-  -std=c99 -O2 \
+  -Wno-long-long -Wcast-qual -ggdb \
+  -std=c11 -O2 \
   -o "$outfile" "$filename"
 else
   printf "ERROR: Please provide a C source code file to serve the compiler\n"
@@ -17,13 +17,13 @@ else
 fi
 
 [[ -e "$outfile" ]] || {
-  printf "ERROR: Cannot locate the binaries executable file %s" "$outfile"
+  printf "ERROR: Cannot locate the binaries executable file [%s]" "$outfile"
   exit 1
 }
 ./"$outfile"
 
 [[ "$?" == 0 ]] || {
-  printf "ERROR: Runtime error with %s" "$outfile"
+  printf "ERROR: Runtime error in [%s]" "$outfile"
   exit 1
 }
 rm -f "$outfile" && exit 0
