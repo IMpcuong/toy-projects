@@ -38,20 +38,17 @@ char ***str_separate_with_delim(char *_src_str, const char *delim, char **next_p
   substr_with_idx = malloc(size * (sizeof *substr_with_idx));
 
   char *token = strtok_s(_src_str, delim, next_pos);
-  while (NULL != token)
+  for (size_t i = 0; i < size && token != NULL; i++)
   {
-    for (size_t i = 0; i < size; i++)
-    {
-      size_t substr_len = strlen(token) + size;
-      substr_with_idx[i] = (char **)(0);
-      substr_with_idx[i] = malloc(substr_len * (sizeof substr_with_idx[i]));
+    size_t substr_len = strlen(token) + size;
+    substr_with_idx[i] = (char **)(0);
+    substr_with_idx[i] = malloc(substr_len * (sizeof substr_with_idx[i]));
 
-      substr_with_idx[i][0] = malloc(i * (sizeof *substr_with_idx[i]));
-      snprintf(substr_with_idx[i][0], sizeof substr_with_idx[i][0], "%zu", i);
+    substr_with_idx[i][0] = malloc(i * (sizeof *substr_with_idx[i]));
+    snprintf(substr_with_idx[i][0], sizeof substr_with_idx[i][0], "%zu", i);
 
-      substr_with_idx[i][1] = token;
-      token = strtok_s(NULL, delim, next_pos);
-    }
+    substr_with_idx[i][1] = token;
+    token = strtok_s(NULL, delim, next_pos);
   }
 
   return substr_with_idx;
