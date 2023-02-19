@@ -111,6 +111,40 @@ char *is_arr_eq_ptr(int arr_test[3])
   return CMP_PAIR(third_1, third_2);
 }
 
+// NOTE: `struct` are just a `sizeof` and a bunch of offset types.
+typedef struct MyStructType
+{
+  unsigned int type;
+  char name[32];
+  float size;
+} MyStructType;
+
+// Calculate the offset of a specified attribute from its own struct type.
+char *get_offset_from_type(void)
+{
+  MyStructType *tmp = &(struct MyStructType){
+      .type = 100,
+      .name = "MST",
+      .size = 10,
+  };
+  MyStructType *alter = malloc(sizeof *tmp);
+  memmove(alter, tmp, sizeof *alter);
+
+  size_t _size_attr_offset = offsetof(MyStructType, size);
+  char *val = CMP_PAIR((size_t)(&alter->size), _size_attr_offset); // False.
+  if (strcmp("False", val) == 0)
+  {
+    // NOTE: At address zero, a null pointer was created that points to our structure.
+    MyStructType *mst_nullptr = (MyStructType *)NULL; // Akin with: `(MyStructType *)0`.
+
+    // NOTE: Starting from the beginning of this struct pointer,
+    //    we counted how many steps (offset) it took to reach `size`.
+    size_t cal_offset = (size_t)(&mst_nullptr->size);
+    val = CMP_PAIR(cal_offset, _size_attr_offset);
+  }
+  return val;
+}
+
 int main(void)
 {
   int x = 0;
@@ -224,6 +258,9 @@ int main(void)
 
   int arr_test[3] = {1e3, 1e3, 1e3};
   printf("Is pointers equal array: %s\n", is_arr_eq_ptr(arr_test));
+
+  char *size_attr_offset = get_offset_from_type();
+  printf("%s\n", size_attr_offset);
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
