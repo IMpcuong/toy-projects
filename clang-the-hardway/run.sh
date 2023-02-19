@@ -26,4 +26,4 @@ fi
   printf "ERROR: Runtime error in [%s]" "$outfile"
   exit 1
 }
-rm -f "$outfile" && exit 0
+printf 'FINISH: Permission of "%s" := %s' "$outfile" $(stat -c "%a" "$outfile") && exit 0
