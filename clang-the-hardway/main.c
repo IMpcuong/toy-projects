@@ -146,6 +146,29 @@ char *get_offset_from_type(void)
   return val;
 }
 
+// https://gcc.gnu.org/onlinedocs/gcc/Inline.html
+char *karatsuba_algo(size_t lfactor, size_t rfactor)
+{
+  // FIXME: Wrong!
+  size_t a = lfactor / 10;
+  size_t c = rfactor / 10;
+  size_t b = lfactor % 10;
+  size_t d = rfactor % 10;
+
+  char *first = malloc(sizeof(char));
+  sprintf(first, "%zu", a * c);
+  printf("%s\n", first);
+  char *last = malloc(sizeof(char));
+  sprintf(last, "%zu", b * d);
+  printf("%s\n", last);
+
+  char *middle = malloc(sizeof(char));
+  sprintf(middle, "%zu", (a + b) * (c + d) - (a * c + b * d));
+  printf("%s\n", middle);
+
+  return strcat(strcat(first, middle), last);
+}
+
 int main(void)
 {
   int x = 0;
@@ -270,9 +293,14 @@ int main(void)
 
   size_t _type_attr_offset = (size_t)(&((MyStructType *)NULL)->name);
   size_t _real_offset = offsetof(MyStructType, name);
-  printf("`MyStructType::name` (Manual: %zu == Builtin-macro: %zu) := %s",
+  printf("`MyStructType::name` (Manual: %zu == Builtin-macro: %zu) := %s\n",
          _type_attr_offset, _real_offset,
          CMP_PAIR(_type_attr_offset, _real_offset));
+
+  size_t lfactor = 11;
+  size_t rfactor = 12;
+  printf("%s\n", karatsuba_algo(lfactor, rfactor));
+  printf("%zu\n", lfactor * rfactor);
 
   free(size_attr_offset);
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
