@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 
 #include "main.h"
 
@@ -114,9 +114,9 @@ char *is_arr_eq_ptr(int arr_test[3])
 // NOTE: `struct` are just a `sizeof` and a bunch of offset types.
 typedef struct MyStructType
 {
-  unsigned int type;
-  char name[32];
-  float size;
+  unsigned int type; // Offset: 0.
+  char name[32];     // Offset: 4.
+  float size;        // Offset: 36.
 } MyStructType;
 
 // Calculate the offset of a specified attribute from its own struct type.
@@ -182,7 +182,8 @@ int main(void)
   //
   //  For example, when an array is passed to a function or is assigned to a
   //  pointer it implicitly converted to a pointer.
-  printf("Array's pointer: %p, Dereferences/indirects to the first element: %d\n", (void *)arr_ptr, *arr_ptr);
+  printf("Array's pointer: %p, Dereferences/indirects to the first element: %d\n",
+         (void *)arr_ptr, *arr_ptr);
 
   // FIXME: `int (*ptr_to_arr)[ARR_SIZE] = &arr;`, `&arr` is NOT of type `int *` but `[20]int *`!
   int *ptr_to_arr = &arr[0];
@@ -206,10 +207,12 @@ int main(void)
   printf("The average of the %d grades is: %d\n", arr_len, average);
 
   bool first_ptr = (*grades == grades[0]);
-  printf("Is underlying value of first element == array's pointer: %s\n", CMP_ONE(first_ptr));
+  printf("Is underlying value of first element == array's pointer: %s\n",
+         CMP_ONE(first_ptr));
 
   bool cmp_macro_result = (SIZEOF_ARR(grades) == SIZEOF_ARR_ALT(grades));
-  printf("Tranquilize the comparision above by using macro rule instead: %s\n", CMP_ONE(cmp_macro_result));
+  printf("Tranquilize the comparision above by using macro rule instead: %s\n",
+         CMP_ONE(cmp_macro_result));
 
   // NOTE: Characters sequence initialization (string).
   char hello_0[6] = {'H', 'e', 'l', 'l', 'o', '\0'};
@@ -227,7 +230,9 @@ int main(void)
   int ref_val = double_input_as_ref(magic_no);
   printf("to %p address\n", (void *)&ref_val);
 
-  printf("Compare value after doubling (%d == %d): %s\n", ref_val, magic_no, CMP_PAIR(ref_val, magic_no));
+  printf("Compare value after doubling (%d == %d): %s\n",
+         ref_val, magic_no,
+         CMP_PAIR(ref_val, magic_no));
 
   looping_through_ptr_arr();
 
@@ -260,7 +265,13 @@ int main(void)
   printf("Is pointers equal array: %s\n", is_arr_eq_ptr(arr_test));
 
   char *size_attr_offset = get_offset_from_type();
-  printf("%s\n", size_attr_offset);
+  printf("`MyStructType::size` offset comparision: %s\n", size_attr_offset);
+
+  size_t _type_attr_offset = (size_t)(&((MyStructType *)NULL)->name);
+  size_t _real_offset = offsetof(MyStructType, name);
+  printf("`MyStructType::name` (Manual: %zu == Builtin-macro: %zu) := %s",
+         _type_attr_offset, _real_offset,
+         CMP_PAIR(_type_attr_offset, _real_offset));
 
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
