@@ -42,7 +42,7 @@ void looping_through_ptr_arr(void)
 {
   for (char **name = (char *[]){"uid", "gid", "oid", 0}; *name; name++)
   {
-    printf("%s\t", *name);
+    printf("Process keyword: %s | ", *name);
   }
   printf("\n");
 
@@ -52,6 +52,7 @@ void looping_through_ptr_arr(void)
   };
 
   // NOTE: Pointer to an array -> { `char **char_ptr` == `char *char_ptr[]` || `**` == `*[]` }.
+  //    Noting that a pointer is also an array, we can infer that this is an alias for a two-dimensional array.
   struct NestedControl *controllers[] = {
       &(struct NestedControl){
           .outer = "controller0",
@@ -273,6 +274,7 @@ int main(void)
          _type_attr_offset, _real_offset,
          CMP_PAIR(_type_attr_offset, _real_offset));
 
+  free(size_attr_offset);
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
   return 0;
 }
