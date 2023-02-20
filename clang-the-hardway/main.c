@@ -113,6 +113,7 @@ char *is_arr_eq_ptr(int arr_test[3])
 }
 
 // NOTE: `struct` are just a `sizeof` and a bunch of offset types.
+//    The first member of a struct has an offset of 0.
 typedef struct MyStructType
 {
   unsigned int type; // Offset: 0.
@@ -146,10 +147,31 @@ char *get_offset_from_type(void)
   return val;
 }
 
+char *convert_to_binary(size_t _src_num)
+{
+  char *binary_str;
+  // NOTE: Allocate a buffer to hold the binary string.
+  binary_str = malloc(/* optional */ sizeof(*binary_str) * sizeof(_src_num) * 8 + 1); // Expression `+ 1` := '\0' terminated character.
+  if (binary_str == NULL)
+    fprintf(stderr, "Errno = %d\n", ENOMEM);
+  binary_str[0] = '\0';
+
+  // NOTE: Extract each bit of the number and add it to the binary string.
+  int i;
+  for (i = sizeof(_src_num) * 8 - 1; i >= 0; i--)
+  {
+    if (_src_num & (1 << i))
+      strcat(binary_str, "1");
+    else
+      strcat(binary_str, "0");
+  }
+  return binary_str;
+}
+
 // https://gcc.gnu.org/onlinedocs/gcc/Inline.html
 char *karatsuba_algo(size_t lfactor, size_t rfactor)
 {
-  // FIXME: Wrong!
+  // FIXME: Missing the plus operation memoization for the sequence of digits.
   size_t a = lfactor / 10;
   size_t c = rfactor / 10;
   size_t b = lfactor % 10;
@@ -297,10 +319,13 @@ int main(void)
          _type_attr_offset, _real_offset,
          CMP_PAIR(_type_attr_offset, _real_offset));
 
-  size_t lfactor = 11;
-  size_t rfactor = 12;
+  size_t lfactor = 45;
+  size_t rfactor = 45;
   printf("%s\n", karatsuba_algo(lfactor, rfactor));
   printf("%zu\n", lfactor * rfactor);
+
+  size_t enum_len = (size_t)MET_PRJ + 1;
+  printf("Conversion from `size_t` (%zu) to `binary`: %s", enum_len, convert_to_binary(enum_len));
 
   free(size_attr_offset);
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
