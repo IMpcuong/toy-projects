@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sysinfoapi.h>
 #include <tchar.h>
-#include <windows.h>
+#include <Windows.h>
 
 #define DIV 1048576
 #define WIDTH 7
