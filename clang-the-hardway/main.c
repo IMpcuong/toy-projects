@@ -161,9 +161,9 @@ char *convert_to_binary(size_t _src_num)
   for (i = sizeof(_src_num) * 8 - 1; i >= 0; i--)
   {
     if (_src_num & (1 << i))
-      strcat(binary_str, "1");
+      strcat_s(binary_str, 33, "1");
     else
-      strcat(binary_str, "0");
+      strcat_s(binary_str, 33, "0");
   }
   return binary_str;
 }
@@ -325,7 +325,10 @@ int main(void)
   printf("%zu\n", lfactor * rfactor);
 
   size_t enum_len = (size_t)MET_PRJ + 1;
-  printf("Conversion from `size_t` (%zu) to `binary`: %s", enum_len, convert_to_binary(enum_len));
+  printf("Conversion from `size_t` (%zu) to `binary`: %s\n", enum_len, convert_to_binary(enum_len));
+
+  size_t sth_len = 4;
+  printf("Conversion from `size_t` (%zu) to `binary`: %s\n", sth_len, convert_to_binary(sth_len));
 
   free(size_attr_offset);
   // NOTE(learning): Until `char otherarr[] = "foobarbazquirk";`.
