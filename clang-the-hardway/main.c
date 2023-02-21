@@ -116,16 +116,16 @@ char *is_arr_eq_ptr(int arr_test[3])
 //    The first member of a struct has an offset of 0.
 typedef struct MyStructType
 {
-  unsigned int type; // Offset: 0.
-  char name[32];     // Offset: 4.
-  float size;        // Offset: 36.
+  MyEnumType type; // Offset: 0.
+  char name[32];   // Offset: 4.
+  float size;      // Offset: 36.
 } MyStructType;
 
 // Calculate the offset of a specified attribute from its own struct type.
 char *get_offset_from_type(void)
 {
   MyStructType *tmp = &(struct MyStructType){
-      .type = 100,
+      .type = MET_NW,
       .name = "MST",
       .size = 10,
   };
@@ -149,21 +149,30 @@ char *get_offset_from_type(void)
 
 char *convert_to_binary(size_t _src_num)
 {
+  size_t size_t_bitlen;
+#if defined(__x86_64__)
+  size_t_bitlen = (sizeof _src_num) / 2 * 8; // 8 (size_t) / 2 * 8 (char) = 32.
+#elif defined(__i386__)
+  size_t_bitlen = (sizeof _src_num) * 8; // 4 (size_t) * 8 (char) = 32.
+#endif
+  size_t binary_str_bufsize = size_t_bitlen + 1;
+
   char *binary_str;
   // NOTE: Allocate a buffer to hold the binary string.
-  binary_str = malloc(/* optional */ sizeof(*binary_str) * sizeof(_src_num) * 8 + 1); // Expression `+ 1` := '\0' terminated character.
+  //    Expression `+ 1` := '\0' terminated character.
+  binary_str = malloc(/* optional := char ~ 1 byte */ sizeof(*binary_str) * binary_str_bufsize + 1);
   if (binary_str == NULL)
     fprintf(stderr, "Errno = %d\n", ENOMEM);
   binary_str[0] = '\0';
 
   // NOTE: Extract each bit of the number and add it to the binary string.
   int i;
-  for (i = sizeof(_src_num) * 8 - 1; i >= 0; i--)
+  for (/* 31 -> 0 */ i = size_t_bitlen - 1; i >= 0; i--)
   {
     if (_src_num & (1 << i))
-      strcat_s(binary_str, 33, "1");
+      strcat_s(binary_str, binary_str_bufsize, "1");
     else
-      strcat_s(binary_str, 33, "0");
+      strcat_s(binary_str, binary_str_bufsize, "0");
   }
   return binary_str;
 }
@@ -207,10 +216,11 @@ int main(void)
   printf("(Dereference value: %d) == (Original value: %d)\n", *ptr, x);
 
   // Array in C:
+  // NOTE: Cannot change the initialized size of an array.
 #ifndef ARR_SIZE
   int arr[20];
 #else
-  int arr[ARR_SIZE]; // NOTE: Cannot change the initialized size of an array.
+  int arr[ARR_SIZE];
 #endif
 
   for (int i = 0; i < ARR_SIZE; i++)
@@ -219,15 +229,14 @@ int main(void)
     printf("Idx: %d, Val: %d, Size: %zu\n", i, arr[i], sizeof(i));
   }
 
-  // NOTE: Declare a pointer of type int and initialize it to point
-  //  to our arr.
+  // NOTE: Declare a pointer of type int and initialize it to point to our arr.
   int *arr_ptr = arr;
   // NOTE: arr_ptr now points to the first element of the array.
-  //  The reason behind this behaviour depend on the way arrays often decay
-  //  into pointer to their first element.
+  //    The reason behind this behaviour depend on the way arrays often decay
+  //    into pointer to their first element.
   //
-  //  For example, when an array is passed to a function or is assigned to a
-  //  pointer it implicitly converted to a pointer.
+  //    For example, when an array is passed to a function or is assigned to a
+  //    pointer it implicitly converted to a pointer.
   printf("Array's pointer: %p, Dereferences/indirects to the first element: %d\n",
          (void *)arr_ptr, *arr_ptr);
 
@@ -321,13 +330,13 @@ int main(void)
 
   size_t lfactor = 45;
   size_t rfactor = 45;
-  printf("%s\n", karatsuba_algo(lfactor, rfactor));
-  printf("%zu\n", lfactor * rfactor);
+  printf("Karatsuba algorithm's implementation result: %s\n", karatsuba_algo(lfactor, rfactor));
+  printf("Normal multiplication operation: %zu\n", lfactor * rfactor);
 
-  size_t enum_len = (size_t)MET_PRJ + 1;
+  size_t enum_len = (size_t)MET_PRJ + 1; // Equality with: `MET_COUNT`.
   printf("Conversion from `size_t` (%zu) to `binary`: %s\n", enum_len, convert_to_binary(enum_len));
 
-  size_t sth_len = 4;
+  size_t sth_len = (1 << 31);
   printf("Conversion from `size_t` (%zu) to `binary`: %s\n", sth_len, convert_to_binary(sth_len));
 
   free(size_attr_offset);

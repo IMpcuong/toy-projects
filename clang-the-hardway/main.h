@@ -10,6 +10,7 @@ typedef enum MyEnumType
   MET_NW /* 0: Networking */,
   MET_ALGO /* 1: Algorithms */,
   MET_PRJ /* 2: Projects */,
+  MET_COUNT,
 } MyEnumType;
 
 extern int double_input_as_ref(int x);
