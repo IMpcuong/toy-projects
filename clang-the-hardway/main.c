@@ -7,10 +7,6 @@
 #define ARR_SIZE 20
 
 #define SIZEOF_ARR(arr) (sizeof(arr) / sizeof(*arr))
-#define SIZEOF_ARR_ALT(arr) (sizeof(arr) / sizeof((arr)[0]))
-
-#define CMP_PAIR(lhs, rhs) (lhs == rhs ? "True" : "False")
-#define CMP_ONE(bool_val) (bool_val == 1 ? "True" : "False")
 
 // Resource: https://learnxinyminutes.com/docs/c/
 
