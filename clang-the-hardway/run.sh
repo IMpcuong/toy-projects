@@ -20,10 +20,6 @@ fi
   printf "ERROR: Cannot locate the binaries executable file [%s]" "$outfile"
   exit 1
 }
-./"$outfile"
 
-[[ "$?" == 0 ]] || {
-  printf "ERROR: Runtime error in [%s]" "$outfile"
-  exit 1
-}
+bash -c "./$outfile"
 printf 'FINISH: Permission of "%s" := %s' "$outfile" $(stat -c "%a" "$outfile") && exit 0
