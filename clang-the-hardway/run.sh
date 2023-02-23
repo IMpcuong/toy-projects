@@ -6,11 +6,11 @@ declare -x filename="$1"
 # NOTE: `-e "$filename"` is identical with `test -n "$filename"`.
 if [[ -e "${filename:-}" && "$filename" == *".c"* ]]; then
   gcc -Wall -Wextra -pedantic \
-  -Wshadow -Wformat=2 -Wconversion \
-  -Wpointer-arith -Wredundant-decls -Wnested-externs \
-  -Wno-long-long -Wcast-qual -ggdb \
-  -std=c11 -O2 \
-  -o "$outfile" "$filename"
+    -Wshadow -Wformat=2 -Wconversion \
+    -Wpointer-arith -Wredundant-decls -Wnested-externs \
+    -Wno-long-long -Wcast-qual -ggdb \
+    -std=c11 -O2 \
+    -o "$outfile" "$filename"
 else
   printf "ERROR: Please provide a C source code file to serve the compiler\n"
   exit 1
