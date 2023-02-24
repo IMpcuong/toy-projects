@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -98,8 +99,8 @@ OrderingTestStruct *packing_mem_manually(int size)
   return ots;
 }
 
-// NOTE: Working perfectly fine if all fields have the `char` type.
-void overlay_struct_stats(OrderingTestStruct *_src_struct)
+// NOTE: Working perfectly fine if all fields are filled with the `char` type.
+void print_overlay_struct(OrderingTestStruct *_src_struct)
 {
   union
   {
@@ -110,6 +111,47 @@ void overlay_struct_stats(OrderingTestStruct *_src_struct)
   overlay.dest.a = _src_struct->a;
   overlay.dest.b = _src_struct->b;
   printf("%s\n", overlay.buf);
+}
+
+void print_overlay_struct_generic(void *struct_ptr, size_t struct_size)
+{
+  // NOTE: There is no guarantee of type safety here.
+  //    Reason: With `void *` as an argument, the compiler doesn't perform any
+  //    type-checking to ensure that the pointer points to the correct type of data.
+  //    The function will still accept the pointer, but when you try to access
+  //    the data pointed to by the pointer, you will run into problems, because
+  //    the data isn't in the expected format.
+  char *field_ptr = (char *)struct_ptr;
+  size_t i;
+  for (i = 0; i < struct_size; i++)
+  {
+    if ('\0' == field_ptr[i])
+      printf("%s", "*");
+    printf("%c", /* field_ptr[i] */ *(field_ptr + i));
+  }
+  printf("\n");
+}
+
+void print_overlay_struct_by_field(void *struct_ptr, size_t offset, char field_type)
+{
+  switch (field_type)
+  {
+  case 'c':
+    printf("Char type field: %c\n", *((char *)struct_ptr + offset));
+    break;
+
+  case 'd':
+    printf("Integer type field: %d\n", *((int *)struct_ptr + offset));
+    break;
+
+  case 'f':
+    printf("Float type field: %f\n", *((float *)struct_ptr + offset));
+    break;
+
+  default:
+    printf("Invalid data type\n");
+    break;
+  }
 }
 
 int main(void)
@@ -158,10 +200,13 @@ int main(void)
   printf("Test narrow casting: %u\n", (char)test_no);
 
   OrderingTestStruct test_ots = {
-      .a = 100,
-      .b = 65 // ASCII := 'A',
+      .a = 97, // ASCII := 'a'.
+      .b = 65, // ASCII := 'A'.
   };
-  overlay_struct_stats(&test_ots);
+  print_overlay_struct(&test_ots);
+  print_overlay_struct_generic(&test_ots, sizeof test_ots);
+  print_overlay_struct_by_field(&test_ots, offsetof(OrderingTestStruct, b), 'd');
+  print_overlay_struct_by_field(&test_ots, offsetof(OrderingTestStruct, a), 'c');
 
   OrderingTestStruct *ots = packing_mem_manually(10);
   printf("`OrderingTestStruct` := (a: %d) / (b: %d)\n", ots->a, ots->b);
