@@ -126,7 +126,7 @@ void print_overlay_struct_generic(void *struct_ptr, size_t struct_size)
   for (i = 0; i < struct_size; i++)
   {
     if ('\0' == field_ptr[i])
-      printf("%s", "*");
+      continue;
     printf("%c", /* field_ptr[i] */ *(field_ptr + i));
   }
   printf("\n");
@@ -152,6 +152,48 @@ void print_overlay_struct_by_field(void *struct_ptr, size_t offset, char field_t
     printf("Invalid data type\n");
     break;
   }
+}
+
+// 2. Trick to reduce memory allocations:
+
+typedef struct
+{
+  unsigned int length;
+  unsigned char data[1]; // Version < C99, from C99 := `data[]`.
+} MyArrayOfBytes;        // An array container.
+
+MyArrayOfBytes *init_zero(MyArrayOfBytes *array, unsigned int length)
+{
+  array = malloc((sizeof *array) * sizeof(unsigned char) * /* From: data[1] */ length - 1);
+  array->length = length;
+  unsigned int i;
+  for (i = 0; i < length; i++)
+    array->data[i] = 0;
+  return array;
+}
+
+typedef struct
+{
+  int a;
+  long b;
+} FirstPackedStruct;
+
+typedef struct
+{
+  char x[128];
+  short y;
+  long long z;
+} SecondPackedStruct;
+
+// NOTE: Really dangerous; because these two structs may have different alignment.
+//    Need to understand deeply about how alignment work.
+void init_both(FirstPackedStruct *first_buf, SecondPackedStruct *second_buf)
+{
+  first_buf = malloc((sizeof *first_buf) + (sizeof *second_buf)); // Subscript := 0.
+
+  // NOTE: Subscript := 1, an access point to `SecondPackedStruct` was created
+  //    and stored adjacent with `FirstPackedStruct`.
+  second_buf = (SecondPackedStruct *)&first_buf[1];
 }
 
 int main(void)
@@ -211,6 +253,26 @@ int main(void)
   OrderingTestStruct *ots = packing_mem_manually(10);
   printf("`OrderingTestStruct` := (a: %d) / (b: %d)\n", ots->a, ots->b);
 
+  MyArrayOfBytes *zeros = (void *)0; // Equality with: `{0}`, `NULL`.
+  zeros = init_zero(zeros, 10);
+  printf("Size comparision: %s\n", CMP_PAIR(10, zeros->length));
+  for (unsigned int i = 0; i < zeros->length; i++)
+    printf("%d: %d == %d\n", i, *(zeros->data + i), zeros->data[i]);
+
+  FirstPackedStruct first_pack = {
+      .a = 73, // ASCII: 'I'.
+      .b = 77, // ASCII: 'M'.
+  };
+  SecondPackedStruct second_pack = {
+      .x = "Pcuo",
+      .y = 110, // ASCII: 'n'.
+      .z = 103, // ASCII: 'g'.
+  };
+  init_both(&first_pack, &second_pack); // NOTE: Pass by references (reference == pointer).
+  print_overlay_struct_generic(&first_pack, sizeof first_pack);
+  print_overlay_struct_generic(&second_pack, sizeof second_pack);
+
   free(ots);
+  free(zeros);
   return 0;
 }
