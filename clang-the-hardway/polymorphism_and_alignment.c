@@ -53,7 +53,7 @@ void set_value_from(MyHeader *h, double value)
     ((MyStructFloat *)h)->value = (float)value;
 }
 
-// 1: Alignment (memory) makes things more complicated:
+// 1. Alignment (memory) makes things more complicated:
 
 typedef struct
 {
@@ -110,7 +110,7 @@ void print_overlay_struct(OrderingTestStruct *_src_struct)
   // Abbrev: `overlay.dest = _src_struct;`
   overlay.dest.a = _src_struct->a;
   overlay.dest.b = _src_struct->b;
-  printf("%s\n", overlay.buf);
+  printf("Accept field(s) with `char` typed only (because of `buf`): %s\n", overlay.buf);
 }
 
 void print_overlay_struct_generic(void *struct_ptr, size_t struct_size)
@@ -120,7 +120,7 @@ void print_overlay_struct_generic(void *struct_ptr, size_t struct_size)
   //    type-checking to ensure that the pointer points to the correct type of data.
   //    The function will still accept the pointer, but when you try to access
   //    the data pointed to by the pointer, you will run into problems, because
-  //    the data isn't in the expected format.
+  //    the data wasn't presenting in the expected format.
   char *field_ptr = (char *)struct_ptr;
   size_t i;
   for (i = 0; i < struct_size; i++)
