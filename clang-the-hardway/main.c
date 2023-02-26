@@ -163,7 +163,7 @@ char *convert_to_binary(size_t _src_num)
 
   // NOTE: Extract each bit of the number and add it to the binary string.
   int i;
-  for (/* 31 -> 0 */ i = size_t_bitlen - 1; i >= 0; i--)
+  for (/* 31 -> 0 */ i = (int)size_t_bitlen - 1; i >= 0; i--)
   {
     if (_src_num & (1 << i))
       strcat_s(binary_str, binary_str_bufsize, "1");
@@ -332,7 +332,7 @@ int main(void)
   size_t enum_len = (size_t)MET_PRJ + 1; // Equality with: `MET_COUNT`.
   printf("Conversion from `size_t` (%zu) to `binary`: %s\n", enum_len, convert_to_binary(enum_len));
 
-  size_t sth_len = (1 << 31);
+  size_t sth_len = (size_t)(1 << 31);
   printf("Conversion from `size_t` (%zu) to `binary`: %s\n", sth_len, convert_to_binary(sth_len));
 
   free(size_attr_offset);
