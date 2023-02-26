@@ -2,11 +2,13 @@ package bot
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"telebot/logger"
 	"time"
 
 	"github.com/google/go-github/v49/github"
+	"github.com/graphql-go/graphql"
 )
 
 type Report struct {
@@ -58,6 +60,74 @@ func SetRateLimits(ctx context.Context, maximum int, client *github.Client) {
 	}
 }
 
+const PROJECT_QUERY string = `
+query($organization: String! $number: Int!){
+	organization(login: $organization){
+		projectV2(first: $number) {
+			id
+			url
+			name
+			body
+		}
+	}
+}
+`
+
+func ExecGraphQL(query string, maxProjects int) ([]*github.Project, error) {
+	fields := graphql.Fields{
+		"project": &graphql.Field{
+			Type: graphql.NewObject(graphql.ObjectConfig{
+				Name: "Project",
+				Fields: graphql.Fields{
+					"id":   &graphql.Field{Type: graphql.Int},
+					"url":  &graphql.Field{Type: graphql.String},
+					"name": &graphql.Field{Type: graphql.String},
+					"body": &graphql.Field{Type: graphql.String},
+				},
+			}),
+			Args: graphql.FieldConfigArgument{
+				"organization": &graphql.ArgumentConfig{Type: graphql.String},
+				"number":       &graphql.ArgumentConfig{Type: graphql.Int},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				last, ok := p.Args["number"].(int64)
+				if !ok {
+					return nil, fmt.Errorf("Missing maximum projects needed!\n")
+				}
+				projects := []*github.Project{
+					{ID: &last},
+					{ID: &last},
+				}
+				return projects, nil
+			},
+		},
+	}
+	rootQuery := graphql.ObjectConfig{
+		Name:   "RootQuery",
+		Fields: fields,
+	}
+	schemaConfig := graphql.SchemaConfig{
+		Query: graphql.NewObject(rootQuery),
+	}
+	schema, err := graphql.NewSchema(schemaConfig)
+	if err != nil {
+		out := logger.CustomError(logger.RuntimeError, err)
+		logger.Error.Print(out)
+	}
+	result := graphql.Do(graphql.Params{
+		Schema:        schema,
+		RequestString: query,
+	})
+	if len(result.Errors) > 0 {
+		out := logger.CustomError(logger.RuntimeError, result.Errors[len(result.Errors)-1])
+		logger.Error.Print(out)
+	}
+
+	jsonString, _ := json.MarshalIndent(result.Data, "", "    ")
+	fmt.Printf("%s\n", jsonString)
+	return nil, nil
+}
+
 func CollectTask(ctx context.Context, orgName string, client *github.Client) (tasks []Task) {
 	org, _, err := client.Organizations.Get(ctx, orgName)
 	if err != nil {
@@ -72,13 +142,14 @@ func CollectTask(ctx context.Context, orgName string, client *github.Client) (ta
 	// + https://docs.github.com/en/rest/projects/projects?apiVersion=2022-11-28
 	// + https://pkg.go.dev/github.com/google/go-github/v49/github#Organization
 
-	// FIXME: Cannot retrieve list projects.
-	projs, _, err := client.Organizations.ListProjects(ctx, orgName, &github.ProjectListOptions{State: "open"})
+	// FIXME: List of projects from are belonged to our organization cannot be retrieved using JSON query.
+	projects, _, err := client.Organizations.ListProjects(ctx, orgName, &github.ProjectListOptions{State: "open"})
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
 		logger.Error.Println(out)
 	}
-	for _, p := range projs {
+
+	for _, p := range projects {
 		t := Task{}
 		t.Status = p.GetState()
 		t.Owners = append(t.Owners, p.GetOwnerURL())

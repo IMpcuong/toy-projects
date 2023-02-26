@@ -47,6 +47,8 @@ func main() {
 	}
 	autobot := bot.NewAutobot(new(bot.Report), commands, titles, urls, buttons, auth)
 
+	bot.ExecGraphQL(bot.PROJECT_QUERY, 20)
+
 	client := autobot.RegisterGHClient(ctx)
 	bot.SetRateLimits(ctx, 100, client)
 	tasks := bot.CollectTask(ctx, bot.OrgName, client)
