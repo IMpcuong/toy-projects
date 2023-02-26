@@ -25,7 +25,7 @@ void reverse_str_method0(char *src)
 
 void reverse_str_method1(char *src)
 {
-  char *end = src + (strlen_custom(src) - 1); // NOTE: Offset started from subscript 0 -> `last_offset = length - 1`.
+  char *end = src + (strlen_custom(src) - 1); // NOTE: Offset started from subscript 0 --> `last_offset = length - 1`.
   while (src < end)
   {
     // NOTE: `char *tmp = src;` --> `(*src == *end) := True`.
@@ -49,6 +49,12 @@ void reverse_str_method2(char *src, int length)
   reverse_str_method2(src + 1, length - 2);
 }
 
+unsigned int f_randi(unsigned int index)
+{
+  index = (index << 13) ^ index;
+  return ((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff);
+}
+
 int main(void)
 {
   char *test_length = "IMpcuong can do it!!!";
@@ -56,15 +62,18 @@ int main(void)
 
   char test_string0[128] = "IMpcuong";
   reverse_str_method0(test_string0);
-  printf("%s\n", test_string0);
+  printf("Reversal method 1: %s\n", test_string0);
 
   char test_string1[128] = "IMpcuong";
   reverse_str_method1(test_string1);
-  printf("%s\n", test_string1);
+  printf("Reversal method 1: %s\n", test_string1);
 
   char test_string2[128] = "IMpcuong";
   reverse_str_method2(test_string2, (int)strlen_custom(test_string2));
-  printf("%s\n", test_string2);
+  printf("Reversal method 1: %s\n", test_string2);
+
+  unsigned int rand = f_randi(0xFFFF);
+  printf("Randomize algorithm output: %d\n", rand);
 
   return 0;
 }
