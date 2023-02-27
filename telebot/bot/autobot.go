@@ -9,6 +9,7 @@ import (
 
 	telebot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/go-github/v49/github"
+	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
@@ -81,7 +82,7 @@ func (b *Autobot) RegisterBotAPI() *telebot.BotAPI {
 	return bot
 }
 
-func (b *Autobot) RegisterGHClient(ctx context.Context) *github.Client {
+func (b *Autobot) RegisterGHClient(ctx context.Context) (*github.Client, *githubv4.Client) {
 	if b.Auth["GithubAPI"] == "" {
 		logger.Error.Fatalln("Missing authentication token for bot to collect Github datasource")
 	}
@@ -89,8 +90,8 @@ func (b *Autobot) RegisterGHClient(ctx context.Context) *github.Client {
 	oauth2Token := &oauth2.Token{AccessToken: b.Auth["GithubAPI"]}
 	tokenSrc := oauth2.StaticTokenSource(oauth2Token)
 
-	oauth2Client := oauth2.NewClient(ctx, tokenSrc)
-	return github.NewClient(oauth2Client)
+	httpCLient := oauth2.NewClient(ctx, tokenSrc)
+	return github.NewClient(httpCLient), githubv4.NewClient(httpCLient)
 }
 
 func getBotInfo(botAPI *telebot.BotAPI) string {

@@ -2,41 +2,43 @@ package bot
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"telebot/logger"
 	"time"
 
 	"github.com/google/go-github/v49/github"
-	"github.com/graphql-go/graphql"
+	"github.com/shurcooL/githubv4"
 )
 
 type Report struct {
-	Desc  string
-	Date  string
-	Tasks []Task
+	Desc     string
+	Date     string
+	Projects []Project
 }
 
 func (r Report) Stringify() string {
-	strTasks := func(tasks []Task) string {
+	strTasks := func(projects []Project) string {
 		var report string
-		for _, t := range tasks {
+		for _, t := range projects {
 			report += t.Stringify()
 		}
 		return report
-	}(r.Tasks)
+	}(r.Projects)
 
 	return fmt.Sprintf("%s\n%s\n%s", r.Date, r.Desc, strTasks)
 }
 
-type Task struct {
+type Project struct {
+	ID       string
+	URL      string
+	Title    string
 	Status   string
 	Data     string
 	Owners   []string
 	Deadline github.Timestamp
 }
 
-func (t Task) Stringify() string {
+func (t Project) Stringify() string {
 	d := t.Deadline.String()
 	owners := func(arr []string) string {
 		var urls string
@@ -46,7 +48,8 @@ func (t Task) Stringify() string {
 		return urls
 	}(t.Owners)
 
-	return fmt.Sprintf("%s\n%s\n%s\n%s", t.Status, d, t.Data, owners)
+	data := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s", t.ID, t.URL, t.Title, t.Status, d, t.Data, owners)
+	return data
 }
 
 func SetRateLimits(ctx context.Context, maximum int, client *github.Client) {
@@ -60,89 +63,60 @@ func SetRateLimits(ctx context.Context, maximum int, client *github.Client) {
 	}
 }
 
-const PROJECT_QUERY string = `
-query($organization: String! $number: Int!){
-	organization(login: $organization){
-		projectV2(first: $number) {
-			id
-			url
-			name
-			body
-		}
-	}
+type Projects struct {
+	Organization struct {
+		ProjectsV2 struct {
+			Nodes []struct {
+				ID    string `graphql:"id"`
+				URL   string `graphql:"url"`
+				Title string `graphql:"title"`
+			} `graphql:"nodes"`
+		} `graphql:"projectsV2(first: $limit)"`
+	} `graphql:"organization(login: $orgName)"`
 }
-`
 
-func ExecGraphQL(query string, maxProjects int) ([]*github.Project, error) {
-	fields := graphql.Fields{
-		"project": &graphql.Field{
-			Type: graphql.NewObject(graphql.ObjectConfig{
-				Name: "Project",
-				Fields: graphql.Fields{
-					"id":   &graphql.Field{Type: graphql.Int},
-					"url":  &graphql.Field{Type: graphql.String},
-					"name": &graphql.Field{Type: graphql.String},
-					"body": &graphql.Field{Type: graphql.String},
-				},
-			}),
-			Args: graphql.FieldConfigArgument{
-				"organization": &graphql.ArgumentConfig{Type: graphql.String},
-				"number":       &graphql.ArgumentConfig{Type: graphql.Int},
-			},
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				last, ok := p.Args["number"].(int64)
-				if !ok {
-					return nil, fmt.Errorf("Missing maximum projects needed!\n")
-				}
-				projects := []*github.Project{
-					{ID: &last},
-					{ID: &last},
-				}
-				return projects, nil
-			},
-		},
+func CollectTaskV4(ctx context.Context, orgName string, limit int, client *githubv4.Client) (projects []Project, err error) {
+	var projectsV4 Projects
+	params := map[string]any{
+		"orgName": githubv4.String(orgName),
+		"limit":   githubv4.Int(limit),
 	}
-	rootQuery := graphql.ObjectConfig{
-		Name:   "RootQuery",
-		Fields: fields,
-	}
-	schemaConfig := graphql.SchemaConfig{
-		Query: graphql.NewObject(rootQuery),
-	}
-	schema, err := graphql.NewSchema(schemaConfig)
+	err = client.Query(ctx, &projectsV4, params)
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
 		logger.Error.Print(out)
-	}
-	result := graphql.Do(graphql.Params{
-		Schema:        schema,
-		RequestString: query,
-	})
-	if len(result.Errors) > 0 {
-		out := logger.CustomError(logger.RuntimeError, result.Errors[len(result.Errors)-1])
-		logger.Error.Print(out)
+		return projects, nil
 	}
 
-	jsonString, _ := json.MarshalIndent(result.Data, "", "    ")
-	fmt.Printf("%s\n", jsonString)
-	return nil, nil
+	for _, p := range projectsV4.Organization.ProjectsV2.Nodes {
+		t := Project{}
+		t.ID = p.ID
+		t.URL = p.URL
+		t.Title = p.Title
+		// FIXME: Retrieve correct deadline.
+		t.Deadline = github.Timestamp{}
+		projects = append(projects, t)
+	}
+	return
 }
 
-func CollectTask(ctx context.Context, orgName string, client *github.Client) (tasks []Task) {
+func CollectTaskV3(ctx context.Context, orgName string, client *github.Client) (tasks []Project, err error) {
 	org, _, err := client.Organizations.Get(ctx, orgName)
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
 		logger.Error.Println(out)
+		return nil, err
 	}
 	if !org.GetHasOrganizationProjects() {
 		logger.Error.Print("WIZ-Team currently has no opened projects")
+		return nil, err
 	}
 
 	// NOTE(doc):
 	// + https://docs.github.com/en/rest/projects/projects?apiVersion=2022-11-28
 	// + https://pkg.go.dev/github.com/google/go-github/v49/github#Organization
 
-	// FIXME: List of projects from are belonged to our organization cannot be retrieved using JSON query.
+	// FIXME: Projects that belong to our organization cannot be retrieved using a JSON query alone.
 	projects, _, err := client.Organizations.ListProjects(ctx, orgName, &github.ProjectListOptions{State: "open"})
 	if err != nil {
 		out := logger.CustomError(logger.RuntimeError, err)
@@ -150,7 +124,7 @@ func CollectTask(ctx context.Context, orgName string, client *github.Client) (ta
 	}
 
 	for _, p := range projects {
-		t := Task{}
+		t := Project{}
 		t.Status = p.GetState()
 		t.Owners = append(t.Owners, p.GetOwnerURL())
 		t.Deadline = p.GetCreatedAt()
@@ -159,13 +133,13 @@ func CollectTask(ctx context.Context, orgName string, client *github.Client) (ta
 	return
 }
 
-func DailyReport(tasks []Task) (r Report) {
+func DailyReport(projects []Project) (r Report) {
 	day := time.Now().Day()
 	month := time.Now().Month().String()
 	year := time.Now().Year()
 	today := fmt.Sprintf("%d-%s-%d", day, month, year)
 	r.Desc = "DailyReport for WIZ-Team projects:\n"
 	r.Date = today
-	r.Tasks = tasks
+	r.Projects = projects
 	return
 }

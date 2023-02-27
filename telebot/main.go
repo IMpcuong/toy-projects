@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 	"telebot/bot"
 	"telebot/cmd"
@@ -32,7 +31,7 @@ func main() {
 
 	s := cmd.NewStatement("Get-Item", ".")
 	s.Execute()
-	fmt.Print(s.CaptureOutput())
+	logger.Tracer.Print(s.CaptureOutput())
 
 	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the current context.
 	ctx := context.Background()
@@ -40,6 +39,7 @@ func main() {
 
 	// TODO: Find out a better solution to store Telegram authentication teleToken.
 	teleToken := bot.GatherToken("teletoken")
+	// NOTE: Fine-grained API credentials cannot be used on this case.
 	ghToken := bot.GatherToken("ghtoken")
 	auth := map[string]string{
 		"TeleAPI":   teleToken,
@@ -47,11 +47,12 @@ func main() {
 	}
 	autobot := bot.NewAutobot(new(bot.Report), commands, titles, urls, buttons, auth)
 
-	bot.ExecGraphQL(bot.PROJECT_QUERY, 20)
-
-	client := autobot.RegisterGHClient(ctx)
-	bot.SetRateLimits(ctx, 100, client)
-	tasks := bot.CollectTask(ctx, bot.OrgName, client)
+	clientV3, clientV4 := autobot.RegisterGHClient(ctx)
+	bot.SetRateLimits(ctx, 100, clientV3)
+	tasks, _ := bot.CollectTaskV3(ctx, bot.OrgName, clientV3)
+	if len(tasks) == 0 {
+		tasks, _ = bot.CollectTaskV4(ctx, bot.OrgName, 20, clientV4)
+	}
 	report := bot.DailyReport(tasks)
 	autobot.Data = &report
 
