@@ -6,7 +6,6 @@ typedef struct
   char first;
   int middle;
   char last;
-
 } OrderingVolatility;
 
 typedef struct
@@ -14,7 +13,6 @@ typedef struct
   char first;
   char middle;
   int last;
-
 } OrderingMatter;
 
 int main(void)

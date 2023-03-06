@@ -10,7 +10,7 @@
  *   a FIFO, a pipe, a terminal, a real on-the-disk file, or anything else that you could imagine.
  *
  * - All kind of sockets can be listed adjacently: DARPA Internet addresses (Internet Sockets), path names on a local nodes
- *   (Unix Sockets), CCITT X.25 addresses (X.25 Sockets ignorable), etc. This document mainly focus on the first: Internet Sockets.
+ *   (Unix Sockets), CCITT X.25 addresses (X.25 Sockets, ignorable), etc. This document mainly focus on the first: Internet Sockets.
  * - We're only dealing with 2 types of Internet Sockets here: "Stream Sockets" (`SOCK_STREAM`) and "Datagram Sockets" (`SOCK_DGRAM`),
  *   Datagram Sockets are sometimes called "connectionless sockets" (unreliable) ("Raw Sockets" is also powerful).
  *
@@ -19,7 +19,7 @@
  * - "The Transmission Control Protocol (TCP)": make sure our data arrives sequentially and error-free.
  *   "TCP/IP": where "IP" stands for "Internet Protocol", deals primarily with Internet routing and not generally responsible for data integrity.
  *
- * - Facts: if you send a datagram (datagram := {data[1..n]})
+ * - Facts: if you send a datagram (datagram := { data[1..n] })
  *           -> may arrive or not
  *           -> may arrive out of order
  *           -> if it arrives, the data within the packet will be error-free.
@@ -29,7 +29,12 @@
  *               -> slap an IP header on it with destination information
  *               -> send it out.
  *   No connection needed, they are generally used either TCP stack are unavailable or when a few dropped packets are acceptable.
- *   `tftp` (trivial file transfer protocol), `dhpcd` (a DHCP client), multiplayer games, streaming audio, video conferencing, etc.
+ *   `tftp` (trivial file transfer protocol), `dhpcd` (a DHCP ~ Dynamic Host Configuration Protocol client), multiplayer games,
+ *   streaming audio, video conferencing, etc.
+ *   DHCP: is a protocol for configuring hosts, and runs periodically to keep their addresses ans other configurations up-to-date.
+ *         The traffic is between host and DHCP server; typically both are on the same network, but not always.
+ *   NAT: a process is for rewriting packets as they are forwarded across router. Specifically, it translates the addresses/ports.
+ *        The traffic is across a router; typically between an ISP (Internet Service Provider) and its client, or between two organizations.
  *   Facts: Data can be lost when it arrives, but the application still work as expected
  *           -> `tftp` and similar programs have their own protocol on top of UDP
  *           -> the `tftp` protocol says that for each packet that gets sent,
