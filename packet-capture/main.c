@@ -2,30 +2,36 @@
 
 #define MAX_SIZE (1 << 20)
 
-char *detect_device_guid(char *cmd, char *str_storage)
+void close_pipe_status(FILE *stream)
+{
+  int eof_val = feof(stream);
+  int exit_code = _pclose(stream);
+  if (eof_val)
+  {
+    printf("INFO: Process returned %d\n", exit_code);
+    return;
+  }
+  fprintf(stderr, "ERROR: Failed to read the pipe until the end.\n");
+  exit(1);
+}
+
+char *detect_device_guid(char *cmd, char *str_guid)
 {
   if (!strlen(cmd))
-    fprintf(stderr, "Error: Command syntax/arguments incorrect!\n");
+    fprintf(stderr, "ERROR: Command syntax/arguments incorrect!\n");
 
   FILE *pipe = _popen(cmd, "rt");
   if (!pipe)
-    fprintf(stderr, "Error: Failed to execute command!\n");
+    fprintf(stderr, "ERROR: Failed to execute command!\n");
 
   char ps_buffer[MAX_SIZE];
   while (fgets(ps_buffer, sizeof ps_buffer, pipe))
   {
     fputs(ps_buffer, stdout);
-    strcat_s(str_storage, sizeof ps_buffer, ps_buffer);
+    strcat_s(str_guid, sizeof ps_buffer, ps_buffer);
   }
-
-  int eof_val = feof(pipe);
-  int exit_code = _pclose(pipe);
-  if (eof_val)
-    printf("Info: Process returned %d\n", exit_code);
-  else
-    fprintf(stderr, "Error: Failed to read the pipe until the end.\n");
-
-  return str_storage;
+  close_pipe_status(pipe);
+  return str_guid;
 }
 
 char *trim_blank_lines(char *content)
@@ -52,19 +58,51 @@ char *trim_blank_lines(char *content)
   return beautified;
 }
 
+char **append_guid_to_list(char *raw_guid)
+{
+  static char *guid_list[3];
+  regex_t reg_enable;
+  regmatch_t match;
+  int status;
+
+  status = regcomp(&reg_enable, "{(?:.*)}", REG_EXTENDED);
+  if (status != 0)
+  {
+    printf("ERROR: Compiling regular expression\n");
+    exit(1);
+  }
+  status = regexec(&reg_enable, raw_guid, 10, &match, 0);
+  if (status != 0)
+  {
+    printf("ERROR: No match found\n");
+    exit(1);
+  }
+  char *matched_pattern = raw_guid + match.rm_so;
+  int matched_len = match.rm_eo - match.rm_so;
+  size_t i;
+  for (i = 0; i < sizeof(guid_list) / sizeof(*guid_list); i++)
+  {
+    guid_list[i] = matched_pattern;
+  }
+  regfree(&reg_enable);
+  return guid_list;
+}
+
 void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
-  printf("Packet captured with length: %d\n", header->len);
-  printf("Take (seconds): %ld\n", header->ts.tv_sec);
+  printf("INFO: Packet captured with length: %d\n", header->len);
+  printf("INFO: Take (seconds): %ld\n", header->ts.tv_sec);
 }
 
 int main(void)
 {
   char cmd[] = {"wmic nic get guid"};
-  char *output;
-  output = (char *)malloc(MAX_SIZE * (sizeof *output));
-  output = detect_device_guid(cmd, output);
+  char *guid_list;
+  guid_list = (char *)malloc(MAX_SIZE * (sizeof *guid_list));
+  guid_list = detect_device_guid(cmd, guid_list);
+  guid_list = trim_blank_lines(guid_list);
 
-  char *beautified = trim_blank_lines(output);
-  printf("%s\n", beautified);
+  char *test_blank_string = "Nothing\r\n\n\ncan\tkick\nyour\tass";
+  char *beautified = trim_blank_lines(test_blank_string);
+  printf("1:\n%s\n2:\n%s\n", test_blank_string, beautified);
 }
