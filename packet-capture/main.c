@@ -1,6 +1,8 @@
 #include "main.h"
 
 #define MAX_SIZE (1 << 20)
+#define MAX_SUBSTRINGS 50
+#define MAX_SUBSTR_LEN 38
 
 void close_pipe_status(FILE *stream)
 {
@@ -34,23 +36,23 @@ char *detect_device_guid(char *cmd, char *str_guid)
   return str_guid;
 }
 
-char *trim_blank_lines(char *content)
+char *remove_curly_braces_and_blank_lines(char *content)
 {
   static char beautified[MAX_SIZE];
+  uint8_t is_blank_line = 1;
   size_t len_after_trim = 0;
-  int is_blank = 1;
-
   size_t i;
   for (i = 0; i < strlen(content); i++)
   {
-    if (content[i] != '\r' && content[i] != '\n')
+    if ((content[i] != '{' && content[i] != '}') &&
+        (content[i] != '\r' && content[i] != '\n'))
     {
-      is_blank = 0;
+      is_blank_line = 0;
       beautified[len_after_trim++] = content[i];
     }
-    else if (!is_blank)
+    else if (!is_blank_line)
     {
-      is_blank = 1;
+      is_blank_line = 1;
       beautified[len_after_trim++] = '\n';
     }
   }
@@ -58,34 +60,31 @@ char *trim_blank_lines(char *content)
   return beautified;
 }
 
-char **append_guid_to_list(char *raw_guid)
+size_t str_count_num_delim(char *_src_str, const char *delim)
 {
-  static char *guid_list[3];
-  regex_t reg_enable;
-  regmatch_t match;
-  int status;
+  size_t count = 0;
+  for (size_t i = 0; i < strlen(_src_str); i++)
+    if (_src_str[i] == *delim)
+      count++;
+  return count;
+}
 
-  status = regcomp(&reg_enable, "{(?:.*)}", REG_EXTENDED);
-  if (status != 0)
-  {
-    printf("ERROR: Compiling regular expression\n");
-    exit(1);
-  }
-  status = regexec(&reg_enable, raw_guid, 10, &match, 0);
-  if (status != 0)
-  {
-    printf("ERROR: No match found\n");
-    exit(1);
-  }
-  char *matched_pattern = raw_guid + match.rm_so;
-  int matched_len = match.rm_eo - match.rm_so;
+char **str_separate_with_delim(char *_src_str, const char *delim, char **next_pos)
+{
+  size_t list_size = str_count_num_delim(_src_str, delim) + 1;
+  char **substr_with_idx;
+  substr_with_idx = malloc(list_size * (sizeof *substr_with_idx));
+
+  char *substr = strtok_s(_src_str, delim, next_pos);
   size_t i;
-  for (i = 0; i < sizeof(guid_list) / sizeof(*guid_list); i++)
+  for (i = 0; i < list_size && substr != NULL; i++)
   {
-    guid_list[i] = matched_pattern;
+    size_t substr_len = strlen(substr) + list_size;
+    substr_with_idx[i] = malloc(substr_len * (sizeof substr_with_idx[i]));
+    substr_with_idx[i] = substr;
+    substr = strtok_s(NULL, delim, next_pos);
   }
-  regfree(&reg_enable);
-  return guid_list;
+  return substr_with_idx;
 }
 
 void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
@@ -96,13 +95,25 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char
 
 int main(void)
 {
-  char cmd[] = {"wmic nic get guid"};
-  char *guid_list;
-  guid_list = (char *)malloc(MAX_SIZE * (sizeof *guid_list));
-  guid_list = detect_device_guid(cmd, guid_list);
-  guid_list = trim_blank_lines(guid_list);
+  char cmd[] = {"wmic nic get guid | findstr /r /i /c:{.*}"};
+  char *raw_guids;
+  raw_guids = (char *)malloc(MAX_SIZE * (sizeof *raw_guids));
+  raw_guids = detect_device_guid(cmd, raw_guids);
+  raw_guids = remove_curly_braces_and_blank_lines(raw_guids);
+  printf("%s\n", raw_guids);
+
+  char *next_pos = NULL;
+  char **guid_list = str_separate_with_delim(raw_guids, "\n", &next_pos);
+  printf("%p\n", (void *)guid_list);
+  size_t i;
+  for (i = 0; i < 6; i++)
+    // NOTE: Because the deviceID sequence contains all of these nonsense characters on Windows.
+    if (strcmp("  ", guid_list[i]))
+      printf("=====> %s\n", guid_list[i]);
 
   char *test_blank_string = "Nothing\r\n\n\ncan\tkick\nyour\tass";
-  char *beautified = trim_blank_lines(test_blank_string);
+  char *beautified = remove_curly_braces_and_blank_lines(test_blank_string);
   printf("1:\n%s\n2:\n%s\n", test_blank_string, beautified);
+
+  free(guid_list);
 }
