@@ -1,8 +1,6 @@
 #include "main.h"
 
 #define MAX_SIZE (1 << 20)
-#define MAX_SUBSTRINGS 50
-#define MAX_SUBSTR_LEN 38
 
 void close_pipe_status(FILE *stream)
 {
@@ -44,9 +42,11 @@ char *remove_curly_braces_and_blank_lines(char *content)
   size_t i;
   for (i = 0; i < strlen(content); i++)
   {
-    if ((content[i] != '{' && content[i] != '}') &&
-        (content[i] != '\r' && content[i] != '\n'))
+    // NOTE: Document https://en.wikipedia.org/wiki/Control_character
+    if (content[i] != '\r' && content[i] != '\n')
     {
+      if (content[i] == '{' || content[i] == '}')
+        memset(&content[i], content[i + 1], 1); // NOTE: Identical with `content[i] = content[i + 1]`.
       is_blank_line = 0;
       beautified[len_after_trim++] = content[i];
     }
@@ -69,8 +69,9 @@ size_t str_count_num_delim(char *_src_str, const char *delim)
   return count;
 }
 
-char **str_separate_with_delim(char *_src_str, const char *delim, char **next_pos)
+FixedSizeGUIDs *str_separate_with_delim(char *_src_str, const char *delim, char **next_pos)
 {
+  FixedSizeGUIDs *guids = {0};
   size_t list_size = str_count_num_delim(_src_str, delim) + 1;
   char **substr_with_idx;
   substr_with_idx = malloc(list_size * (sizeof *substr_with_idx));
@@ -84,7 +85,10 @@ char **str_separate_with_delim(char *_src_str, const char *delim, char **next_po
     substr_with_idx[i] = substr;
     substr = strtok_s(NULL, delim, next_pos);
   }
-  return substr_with_idx;
+  guids = malloc(1 * (sizeof *guids));
+  guids->fixed_size = list_size - 1;
+  guids->list_guids = substr_with_idx;
+  return guids;
 }
 
 void packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
@@ -103,17 +107,18 @@ int main(void)
   printf("%s\n", raw_guids);
 
   char *next_pos = NULL;
-  char **guid_list = str_separate_with_delim(raw_guids, "\n", &next_pos);
-  printf("%p\n", (void *)guid_list);
+  FixedSizeGUIDs *guid_arr = str_separate_with_delim(raw_guids, "\n", &next_pos);
+  printf("%p\n", (void *)guid_arr);
   size_t i;
-  for (i = 0; i < 6; i++)
+  for (i = 0; i < guid_arr->fixed_size; i++)
     // NOTE: Because the deviceID sequence contains all of these nonsense characters on Windows.
-    if (strcmp("  ", guid_list[i]))
-      printf("=====> %s\n", guid_list[i]);
+    //    Condition statement: `if (strcmp("  ", guid_list[i])) { ... }`.
+    printf("=====> %s\n", *(guid_arr->list_guids + i));
 
+  // NOTE: Unit test manual section.
   char *test_blank_string = "Nothing\r\n\n\ncan\tkick\nyour\tass";
   char *beautified = remove_curly_braces_and_blank_lines(test_blank_string);
   printf("1:\n%s\n2:\n%s\n", test_blank_string, beautified);
 
-  free(guid_list);
+  free(guid_arr);
 }
