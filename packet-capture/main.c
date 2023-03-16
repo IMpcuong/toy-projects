@@ -113,11 +113,12 @@ int main(void)
   for (i = 0; i < guid_arr->fixed_size; i++)
     // NOTE: Because the deviceID sequence contains all of these nonsense characters on Windows.
     //    Condition statement: `if (strcmp("  ", guid_list[i])) { ... }`.
-    printf("=====> %s\n", *(guid_arr->list_guids + i));
+    printf("GUID[%zu]: %s\n", i, *(guid_arr->list_guids + i));
 
   // NOTE: Unit test manual section.
   char *test_blank_string = "Nothing\r\n\n\ncan\tkick\nyour\tass";
   char *beautified = remove_curly_braces_and_blank_lines(test_blank_string);
+  printf("\nUnit-test section:\n");
   printf("1:\n%s\n2:\n%s\n", test_blank_string, beautified);
 
   free(guid_arr);
