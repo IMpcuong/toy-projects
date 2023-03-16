@@ -115,6 +115,26 @@ int main(void)
     //    Condition statement: `if (strcmp("  ", guid_list[i])) { ... }`.
     printf("GUID[%zu]: %s\n", i, *(guid_arr->list_guids + i));
 
+  pcap_t *pcap_handle;
+  char error_buffer[PCAP_ERRBUF_SIZE];
+  struct bpf_program filter;
+  char filter_exp[] = "tcp port 80";
+  bpf_u_int32 subnet_mask, ip;
+
+  // FIXME: Incompatible version between the vcpkg's `libpcap` (`pcap.lib` file)
+  //    and the mingw32-gcc's linker tool `ld.exe`.
+  // Solution: Build `libpcap` from source (`git clone https://github.com/the-tcpdump-group/libpcap`)
+  //    and then link it onto the `tasks.json` file.
+  // FYI: https://www.tcpdump.org/.
+
+  // Open the capture device.
+  // pcap_handle = pcap_open_live("eth0", BUFSIZ, 1, 1000, error_buffer);
+  // if (pcap_handle == NULL)
+  // {
+  // fprintf(stderr, "Error opening capture device: %s\n", error_buffer);
+  // exit(1);
+  // }
+
   // NOTE: Unit test manual section.
   char *test_blank_string = "Nothing\r\n\n\ncan\tkick\nyour\tass";
   char *beautified = remove_curly_braces_and_blank_lines(test_blank_string);
