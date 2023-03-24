@@ -36,7 +36,7 @@ def convert_os_attributes() -> typing.Dict[str, str]:
   return result
 
 
-# CMD: `python main.py`
+# CMD: `python3 main.py`
 if __name__ == "__main__":
   main()
   sys.exit(0)
