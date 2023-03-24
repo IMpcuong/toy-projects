@@ -26,6 +26,7 @@ def division_comprehension(list_int: typing.List[int]) -> typing.List[int]:
 def convert_os_attributes() -> typing.Dict[str, str]:
   result = {}
   env_dict = os.environ.copy()
+  # NOTE(impcuong): https://stackoverflow.com/questions/152580/whats-the-canonical-way-to-check-for-type-in-python
   if not isinstance(env_dict, dict):
     env_dict = dict(env_dict)
 
