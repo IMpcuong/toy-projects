@@ -42,7 +42,7 @@ type ServerPool struct {
 	servers    []*Server
 }
 
-var pool *ServerPool
+var pool ServerPool
 
 func (p *ServerPool) Add(server *Server) {
 	p.servers = append(p.servers, server)
@@ -126,7 +126,7 @@ func countCtxBasedOnAction(req *http.Request, ctxLevel int) int {
 }
 
 func healthCheckRoutine() {
-	t := time.NewTicker(time.Minute * 1)
+	t := time.NewTicker(time.Minute * 1 / 2)
 	for {
 		select {
 		case <-t.C:
