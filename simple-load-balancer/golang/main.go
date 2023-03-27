@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -58,7 +59,7 @@ func (p *ServerPool) NextPeer() *Server {
 	nextPos := p.NextPos()
 	cycle := total + nextPos
 	for i := nextPos; i < cycle; i++ {
-		pos := i % total // NOTE: Even if `i > total` --> `i % total == correctPos`.
+		pos := i % total // NOTE: Even if `i > total` --> Still `i % total == correctPos`.
 		if p.servers[pos].IsAlive() {
 			if i != nextPos {
 				atomic.StoreUint64(&p.currentPos /* addr */, uint64(pos) /* val */)
@@ -157,10 +158,46 @@ func lbHandler(w http.ResponseWriter, r *http.Request) {
 		http.StatusServiceUnavailable /* StatusCode */)
 }
 
+func splitServerArgs(args string, token string) ([]string, error) {
+	if len(args) == 0 {
+		return nil, errors.New("List of server arguments cannot be empty!")
+	}
+	if !strings.Contains(args, token /* comma */) {
+		return nil, errors.New("List of server arguments must be comma-separated!")
+	}
+	return strings.Split(args, token), nil
+}
+
+func lbProxyServer(url *url.URL, maxRetries int /* 3 */) *httputil.ReverseProxy {
+	var newProxyServer *httputil.ReverseProxy
+
+	newProxyServer = httputil.NewSingleHostReverseProxy(url)
+	newProxyServer.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("[%s] %s\n", url.Host, err.Error())
+		retries := countCtxBasedOnAction(r, Retry)
+		if retries < maxRetries {
+			select {
+			case <-time.After(10 * time.Microsecond /* 10ms */):
+				ctx := context.WithValue(r.Context() /* ParentCtx */, Retry /* Key */, retries+1 /* Value */)
+				newProxyServer.ServeHTTP(w /* ResponseWriter */, r.WithContext(ctx))
+				return
+			}
+		}
+		pool.MarkStatus(url, false) // NOTE: If number of retries is more than 3 times, marks the server as unavailable.
+
+		attempts := countCtxBasedOnAction(r, Attempts)
+		log.Printf("%s(%s) Attempting retry %d\n", r.RemoteAddr, r.URL.Path, attempts)
+		ctx := context.WithValue(r.Context() /* ParentCtx */, Attempts /* Key */, attempts+1 /* Value */)
+		lbHandler(w, r.WithContext(ctx))
+	}
+
+	return newProxyServer
+}
+
 func main() {
 	var serverList string
 	var port int
-	flag.StringVar(&serverList, "backends", "", "Usage: Load balanced servers, use commas to separate")
+	flag.StringVar(&serverList, "servers", "", "Usage: Load balanced servers, use commas to separate")
 	flag.IntVar(&port, "port", 9999, "Usage: Port to serve")
 	flag.Parse()
 
@@ -168,33 +205,14 @@ func main() {
 		log.Println("Please provide one or more backends to load balance!")
 	}
 
-	servers := strings.Split(serverList, ",")
+	servers, _ := splitServerArgs(serverList, ",")
 	for _, s := range servers {
 		url, err := url.Parse(s)
 		if err != nil {
 			log.Println("Error parsing URL: ", err)
 		}
 
-		proxy := httputil.NewSingleHostReverseProxy(url)
-		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-			log.Printf("[%s] %s\n", url.Host, err.Error())
-			retries := countCtxBasedOnAction(r, Retry)
-			if retries < 3 {
-				select {
-				case <-time.After(10 * time.Microsecond):
-					ctx := context.WithValue(r.Context() /* ParentCtx */, Retry /* Key */, retries+1 /* Value */)
-					proxy.ServeHTTP(w /* ResponseWriter */, r.WithContext(ctx))
-					return
-				}
-			}
-			pool.MarkStatus(url, false) // NOTE: If number of retries is more than 3 times, marks the server as unavailable.
-
-			attempts := countCtxBasedOnAction(r, Attempts)
-			log.Printf("%s(%s) Attempting retry %d\n", r.RemoteAddr, r.URL.Path, attempts)
-			ctx := context.WithValue(r.Context() /* ParentCtx */, Attempts /* Key */, attempts+1 /* Value */)
-			lbHandler(w, r.WithContext(ctx))
-		}
-
+		proxy := lbProxyServer(url, 3 /* maxRetries */)
 		pool.Add(&Server{
 			URL:          url,
 			Aliveness:    true,
