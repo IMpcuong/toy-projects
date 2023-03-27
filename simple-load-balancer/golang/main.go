@@ -82,7 +82,7 @@ func (p *ServerPool) MarkStatus(hostURl *url.URL, aliveness bool) {
 func (p *ServerPool) PingAll() {
 	for _, s := range p.servers {
 		status := "up"
-		aliveness := isServerAlive(s.URL)
+		aliveness := isServerAlive(s.URL, 2 /* pingDuration */)
 		s.SetAlive(aliveness)
 		if !aliveness {
 			status = "down"
@@ -91,8 +91,8 @@ func (p *ServerPool) PingAll() {
 	}
 }
 
-func isServerAlive(hostURL *url.URL) bool {
-	timeout := 2 * time.Second
+func isServerAlive(hostURL *url.URL, pingDuration time.Duration) bool {
+	timeout := pingDuration * time.Second
 	conn, err := net.DialTimeout("tcp", hostURL.Host, timeout)
 	if err != nil {
 		log.Println("Site unreachable, error: ", err)
@@ -126,8 +126,8 @@ func countCtxBasedOnAction(req *http.Request, ctxLevel int) int {
 	}
 }
 
-func healthCheckRoutine() {
-	t := time.NewTicker(time.Minute * 1 / 2)
+func healthCheckRoutine(duration time.Duration) {
+	t := time.NewTicker(time.Minute * duration)
 	for {
 		select {
 		case <-t.C:
@@ -141,8 +141,9 @@ func healthCheckRoutine() {
 
 func lbHandler(w http.ResponseWriter, r *http.Request) {
 	notAvailableMsg := "Server's current state is not available"
+	maxAttempts := 3
 	realAttempts := countCtxBasedOnAction(r, Attempts)
-	if realAttempts > 3 {
+	if realAttempts > maxAttempts {
 		log.Printf("%s(%s) Max attempts reached, terminating\n", r.RemoteAddr, r.URL.Path)
 		http.Error(w /* ResponseWriter */, notAvailableMsg,
 			http.StatusServiceUnavailable /* StatusCode */)
@@ -168,7 +169,7 @@ func splitServerArgs(args string, token string) ([]string, error) {
 	return strings.Split(args, token), nil
 }
 
-func lbProxyServer(url *url.URL, maxRetries int /* 3 */) *httputil.ReverseProxy {
+func lbProxyServer(url *url.URL, maxRetries int /* 3 */, retryDuration time.Duration) *httputil.ReverseProxy {
 	var newProxyServer *httputil.ReverseProxy
 
 	newProxyServer = httputil.NewSingleHostReverseProxy(url)
@@ -177,7 +178,7 @@ func lbProxyServer(url *url.URL, maxRetries int /* 3 */) *httputil.ReverseProxy 
 		retries := countCtxBasedOnAction(r, Retry)
 		if retries < maxRetries {
 			select {
-			case <-time.After(10 * time.Microsecond /* 10ms */):
+			case <-time.After(retryDuration * time.Microsecond /* 10ms */):
 				ctx := context.WithValue(r.Context() /* ParentCtx */, Retry /* Key */, retries+1 /* Value */)
 				newProxyServer.ServeHTTP(w /* ResponseWriter */, r.WithContext(ctx))
 				return
@@ -212,7 +213,7 @@ func main() {
 			log.Println("Error parsing URL: ", err)
 		}
 
-		proxy := lbProxyServer(url, 3 /* maxRetries */)
+		proxy := lbProxyServer(url, 3 /* maxRetries */, 10 /* retryDuration */)
 		pool.Add(&Server{
 			URL:          url,
 			Aliveness:    true,
@@ -226,7 +227,7 @@ func main() {
 		Handler: http.HandlerFunc(lbHandler),
 	}
 
-	go healthCheckRoutine()
+	go healthCheckRoutine(1 / 2 /* Half of a minute */)
 	log.Printf("Load Balancer started at :%d\n", port)
 	if err := newServer.ListenAndServe(); err != nil {
 		log.Fatal(err)
