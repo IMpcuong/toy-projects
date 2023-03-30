@@ -30,7 +30,10 @@ def main() -> None:
     pprint.pprint(even_or_not, indent=2, stream=sys.stdout)
 
     butcher = Executioner(None, "**/*", {})
-    pprint.pprint(vars(butcher), indent=2, stream=sys.stdout)
+    butcher.print_paths()
+    butcher.print_paths_class()
+    Executioner.print_paths_class()
+    butcher.print_paths_static("Welcome to the hotel hell!")
 
 
 def division_comprehension(list_int: typing.List[int]) -> typing.List[int]:
@@ -52,6 +55,10 @@ def convert_os_attributes() -> typing.Dict[str, str]:
 
 
 class Executioner(object):
+    # Global fields/attributes:
+    pid = 0
+    paths = []
+
     def __init__(
         self,
         pid: int,
@@ -88,6 +95,25 @@ class Executioner(object):
 
     def __eq__(self, __other: object) -> bool:
         return len(self.paths) == len(__other.paths)
+
+    # NOTE: https://stackoverflow.com/a/1669524/12535617
+    def print_paths(self) -> None:
+        # NOTE(impcuong): `self.paths` == `Executioner(...).paths`.
+        pprint.pprint(f"{vars(self)}, {self}")
+
+    @classmethod
+    def print_paths_class(cls) -> None:
+        # NOTE(impcuong): `cls.paths` == `Executioner.paths`.
+        #     With classmethods, the class of the object instance is implicitly passed
+        #     as the first argument instead of self.
+        pprint.pprint(f"{cls}, {cls.paths}")
+
+    @staticmethod
+    def print_paths_static(greeting: str) -> None:
+        # NOTE(impcuong): With staticmethods, neither self (the object instance) nor cls (the class)
+        #     is implicitly passed as the first argument. They behave like plain functions
+        #     except that you can call them from an instance or the class.
+        pprint.pprint(f"{greeting}")
 
 
 # CMD: `python3 main.py`
