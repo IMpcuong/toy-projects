@@ -29,7 +29,7 @@ def main() -> None:
     pprint.pprint(dis.dis(is_even), indent=2, stream=sys.stdout)
     pprint.pprint(even_or_not, indent=2, stream=sys.stdout)
 
-    butcher = Executioner(None, None)
+    butcher = Executioner(None, "**/*", {})
     pprint.pprint(vars(butcher), indent=2, stream=sys.stdout)
 
 
@@ -52,15 +52,42 @@ def convert_os_attributes() -> typing.Dict[str, str]:
 
 
 class Executioner(object):
-    def __init__(self, pid: int, path: typing.List[pathlib.Path]) -> None:
-        if pid or path is None:
+    def __init__(
+        self,
+        pid: int,
+        lookup_path_pattern: str,
+        paths: typing.Dict[str, typing.List[pathlib.Path]],
+    ) -> None:
+        if pid is None:
             pid = os.getpid()
-            path = [p for p in pathlib.Path("..").iterdir() if p.is_dir()]
         self.pid = pid
-        self.path = path
+
+        cur_dir_path = "."
+        if not lookup_path_pattern:
+            self.lookup_path_pattern = cur_dir_path
+
+        parent_dir_path = "../.."
+        glob = "*"
+        list_dirs_lookup = []
+        if lookup_path_pattern.__contains__(glob):
+            list_dirs_lookup = sorted(
+                pathlib.Path(parent_dir_path).rglob(lookup_path_pattern)
+            )
+
+        if not paths:
+            for dir_path in list_dirs_lookup:
+                # NOTE(impcuong): Bypass the `.git` directory.
+                if dir_path.is_file() or str(dir_path).__contains__(".git"):
+                    continue
+                dirs = [d for d in dir_path.iterdir() if d.is_dir()]
+                for cur_dir in dirs:
+                    paths[cur_dir.resolve()] = [
+                        p for p in cur_dir.iterdir() if p.is_file()
+                    ]
+        self.paths = paths
 
     def __eq__(self, __other: object) -> bool:
-        return len(self.path) == len(__other.path)
+        return len(self.paths) == len(__other.paths)
 
 
 # CMD: `python3 main.py`
