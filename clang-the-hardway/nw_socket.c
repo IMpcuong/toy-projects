@@ -35,6 +35,7 @@
  *         The traffic is between host and DHCP server; typically both are on the same network, but not always.
  *   NAT: a process is for rewriting packets as they are forwarded across router. Specifically, it translates the addresses/ports.
  *        The traffic is across a router; typically between an ISP (Internet Service Provider) and its client, or between two organizations.
+ *   CIDR: Classless Inter-Domain Routing.
  *   Facts: Data can be lost when it arrives, but the application still work as expected
  *           -> `tftp` and similar programs have their own protocol on top of UDP
  *           -> the `tftp` protocol says that for each packet that gets sent,
