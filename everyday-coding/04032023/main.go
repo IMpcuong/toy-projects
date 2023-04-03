@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
@@ -14,16 +15,11 @@ const (
 	DEFAULT_SNAPLEN    = 262144
 )
 
-func snapshotLivePackets(iface string, portExpr string) (<-chan gopacket.Packet, error) {
-	handler, err := pcap.OpenLive(iface, DEFAULT_SNAPLEN, true, pcap.BlockForever)
-	defer handler.Close()
-	if err != nil {
+func snapshotLivePackets(pcapHandler *pcap.Handle, iface, portExpr string) (<-chan gopacket.Packet, error) {
+	if err := pcapHandler.SetBPFFilter(portExpr); err != nil {
 		panic(err)
 	}
-	if err := handler.SetBPFFilter(portExpr); err != nil {
-		panic(err)
-	}
-	packetSrc := gopacket.NewPacketSource(handler, handler.LinkType())
+	packetSrc := gopacket.NewPacketSource(pcapHandler, pcapHandler.LinkType())
 	packets := packetSrc.Packets()
 	return packets, nil
 }
@@ -66,14 +62,30 @@ func main() {
 	var interfaces []net.Interface
 	interfaces, _ = detectNetInterfaces()
 	for _, iface := range interfaces {
-		fmt.Println("[INFO]: Network interface >> ", iface.Name)
-		ipAddrs, _ := detectListAddrsFrom(iface, "tcp4")
+		fmt.Println("[INFO]: Network interface >>", iface.Name)
+		ipAddrs, _ := detectListAddrsFrom(iface, "tcp")
 		for _, addr := range ipAddrs {
 			fmt.Printf("%+v\n", *addr)
 		}
-		packets, _ := snapshotLivePackets(iface.Name, "port 9999")
-		for pkt := range packets {
-			fmt.Printf("%#v\n", pkt.Data())
+
+		if iface.Name == "lo0" {
+			handler, err := pcap.OpenLive(iface.Name, DEFAULT_SNAPLEN, true, pcap.BlockForever)
+			if err != nil {
+				panic(err)
+			}
+			packetCounters := 0
+			packets, _ := snapshotLivePackets(handler, iface.Name, "port 3030")
+			for pkt := range packets {
+				if tcpLayer := pkt.Layer(layers.LayerTypeTCP); tcpLayer != nil {
+					tcp := tcpLayer.(*layers.TCP)
+					fmt.Printf("%#v\n", string(tcp.Payload))
+				}
+				packetCounters++
+				if packetCounters == 10 {
+					break
+				}
+			}
+			defer handler.Close()
 		}
 	}
 }
