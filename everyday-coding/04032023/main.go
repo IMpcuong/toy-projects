@@ -67,7 +67,9 @@ func main() {
 		for _, addr := range ipAddrs {
 			fmt.Printf("%+v\n", *addr)
 		}
+	}
 
+	for _, iface := range interfaces {
 		if iface.Name == "lo0" {
 			handler, err := pcap.OpenLive(iface.Name, DEFAULT_SNAPLEN, true, pcap.BlockForever)
 			if err != nil {
