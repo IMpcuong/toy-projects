@@ -84,6 +84,18 @@ impl Noobie {
     }
 }
 
+fn string_manipulate<'a>(users: Vec<&'a str>) -> Vec<&'a str> {
+    for idx in 0..users.len() {
+        let mut usr: &'a str = users.get(idx).expect("Error");
+        if usr.len() < 5 {
+            let filled_str = Box::<&'a str>::new("TEST");
+            usr = &filled_str;
+        }
+        println!("{}", usr);
+    }
+    users
+}
+
 fn main() {
     let x: i32 = 12; // By default this is i32.
 
@@ -164,4 +176,10 @@ fn main() {
     //     fav: ReallyStupid,
     // }
     // 8
+
+    let mut users: Vec<&str> = vec!["some", "thing", "wrong"];
+    users.push("right");
+    users.push("dude");
+
+    string_manipulate(users);
 }
