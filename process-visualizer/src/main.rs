@@ -1,8 +1,10 @@
-use std::fmt::{self, Display};
+use std::fmt::{self, Debug, Display};
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
+
+use regex::Regex;
 
 type Result<T> = std::result::Result<T, ErrorWrapper>;
 
@@ -31,33 +33,72 @@ impl From<std::io::Error> for ErrorWrapper {
   }
 }
 
-#[derive(Clone, Copy, Debug)]
-struct ProcAttribute<'invoke> {
+const FILE_NAME: &str = "./proc_stat.txt";
+
+fn read_file_ignore_first_line(src: File) -> Vec<String> {
+  let reader = BufReader::new(src);
+  let mut lines = Vec::new();
+  let mut buffer = String::new();
+  let mut first_line_skipped = false;
+
+  for line in reader.lines() {
+    let current_line = line.unwrap();
+    if first_line_skipped {
+      lines.push(buffer.clone());
+      buffer.clear();
+    } else {
+      first_line_skipped = true;
+    }
+    buffer.push_str(&current_line);
+  }
+
+  // Push the final line to the vector if it's not empty
+  if !buffer.is_empty() {
+    lines.push(buffer);
+  }
+
+  lines.split_off(1)
+}
+
+#[derive(Clone, Debug)]
+struct ProcAttribute {
   pid: usize,
   cpu: f32,
   memory: f32,
   priority: u8,
-  execution: &'invoke str,
+  execution: String,
 }
 
-impl<'invoke> ProcAttribute<'invoke> {
+impl<'invoke> ProcAttribute {
   fn new(
     pid: usize,
     cpu: f32,
     memory: f32,
     priority: u8,
-    execution: &'invoke str,
+    execution: &str,
   ) -> Self {
-    Self { pid, cpu, memory, priority, execution }
+    Self { pid, cpu, memory, priority, execution: String::from(execution) }
   }
 
-  fn mapping_attr(mut self, _stat_file: File) -> Self {
-    self.pid = 0;
-    self.cpu = 0 as f32;
-    self.memory = 0 as f32;
-    self.priority = 0;
-    self.execution = "";
-    self
+  fn mapping_attr(self, stat_file: File) -> Vec<Self> {
+    let mut proc_attrs: Vec<Self> = vec![];
+    let file_lines = read_file_ignore_first_line(stat_file);
+    let re = Regex::new(r"\s+").unwrap();
+    for line_data in file_lines {
+      let words_per_line: Vec<&str> = re.split(&line_data).collect();
+      if words_per_line.len() < 5 {
+        continue; // NOTE: Skip invalid lines.
+      }
+      // FIXME: Parsing wrong attribute's index position.
+      let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
+      let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
+      let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
+      let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
+      let execution = words_per_line[4];
+      let proc_obj = ProcAttribute::new(pid, cpu, memory, priority, execution);
+      proc_attrs.push(proc_obj);
+    }
+    proc_attrs
   }
 }
 
@@ -85,9 +126,8 @@ where
 
 fn redirect_procs_stat_to_file<T>(stat: T, mut path: &Path)
 where
-  T: 'static + std::fmt::Debug + ToString,
+  T: 'static + Debug + ToString,
 {
-  const FILE_NAME: &str = "./proc_stat.txt";
   let default_path = Box::new(Path::new(FILE_NAME));
   if path.to_str() == Some("") {
     unsafe {
@@ -107,14 +147,12 @@ where
 }
 
 fn main() -> std::io::Result<()> {
-  let proc_attrs = ProcAttribute::new(1, 1., 1., 1, "");
-  println!("{:?}", proc_attrs.to_owned());
+  let proc_attr = ProcAttribute::new(0, 0., 0., 0, "");
+  println!("{:?}", proc_attr.to_owned());
 
-  let mut proc_invoker = invoke_process_with(
-    Command::new("ps"),
-    vec!["-eo", "pid,pcpu,pmem,pri,comm"],
-  )
-  .unwrap();
+  let mut proc_invoker =
+    invoke_process_with(Command::new("ps"), vec!["-eo pid,pcpu,pmem,pri,comm"])
+      .unwrap();
 
   // NOTE: Over-complicated as described above.
   let output =
@@ -122,6 +160,13 @@ fn main() -> std::io::Result<()> {
   proc_invoker.wait()?;
 
   redirect_procs_stat_to_file(output, Path::new(""));
+
+  let stat_file = match File::open(FILE_NAME) {
+    Err(why) => panic!("{}", why),
+    Ok(f) => f,
+  };
+  let procs = proc_attr.mapping_attr(stat_file);
+  println!("{:?}", procs[1]);
 
   Ok(())
 }
