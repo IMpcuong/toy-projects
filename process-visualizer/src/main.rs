@@ -1,6 +1,7 @@
 use std::fmt::{self, Debug, Display};
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Write};
+use std::os::unix::prelude::OpenOptionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -39,17 +40,12 @@ fn read_file_ignore_first_line(src: File) -> Vec<String> {
   let reader = BufReader::new(src);
   let mut lines = Vec::new();
   let mut buffer = String::new();
-  let mut first_line_skipped = false;
 
   for line in reader.lines() {
     let current_line = line.unwrap();
-    if first_line_skipped {
-      lines.push(buffer.clone());
-      buffer.clear();
-    } else {
-      first_line_skipped = true;
-    }
+    buffer.clear();
     buffer.push_str(&current_line);
+    lines.push(buffer.clone());
   }
 
   // Push the final line to the vector if it's not empty
@@ -69,7 +65,7 @@ struct ProcAttribute {
   execution: String,
 }
 
-impl<'invoke> ProcAttribute {
+impl ProcAttribute {
   fn new(
     pid: usize,
     cpu: f32,
@@ -82,14 +78,16 @@ impl<'invoke> ProcAttribute {
 
   fn mapping_attr(self, stat_file: File) -> Vec<Self> {
     let mut proc_attrs: Vec<Self> = vec![];
-    let file_lines = read_file_ignore_first_line(stat_file);
     let re = Regex::new(r"\s+").unwrap();
+
+    let file_lines = read_file_ignore_first_line(stat_file);
     for line_data in file_lines {
+      let line_data = line_data.trim_start();
       let words_per_line: Vec<&str> = re.split(&line_data).collect();
       if words_per_line.len() < 5 {
         continue; // NOTE: Skip invalid lines.
       }
-      // FIXME: Parsing wrong attribute's index position.
+
       let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
       let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
       let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
@@ -129,18 +127,37 @@ where
   T: 'static + Debug + ToString,
 {
   let default_path = Box::new(Path::new(FILE_NAME));
-  if path.to_str() == Some("") {
+  if let Some("") = path.to_str()
+  /* Syntax equivalent with: `if path.to_str() == Some("")` */
+  {
     unsafe {
       path = *Box::into_raw(default_path);
     }
+  }
+
+  let proc_stat_data = stat.to_string();
+  if path.exists() {
+    let mut existed = std::fs::OpenOptions::new()
+      .create(false)
+      .write(true)
+      .mode(0o770)
+      .open(path)
+      .expect("INFO: Successfully open our existing file");
+
+    match existed.write_all(proc_stat_data.as_bytes()) {
+      Err(why) => {
+        panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
+      }
+      Ok(_) => println!("INFO: Successfully wrote to {}", path.display()),
+    };
+    return;
   }
 
   let mut stat_file = match File::create(path) {
     Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
     Ok(opened) => opened,
   };
-
-  match stat_file.write_all(stat.to_string().as_bytes()) {
+  match stat_file.write_all(proc_stat_data.as_bytes()) {
     Err(why) => panic!("Error: Couldn't write to {}: {}", path.display(), why),
     Ok(_) => println!("INFO: Successfully wrote to {}", path.display()),
   }
@@ -150,9 +167,11 @@ fn main() -> std::io::Result<()> {
   let proc_attr = ProcAttribute::new(0, 0., 0., 0, "");
   println!("{:?}", proc_attr.to_owned());
 
-  let mut proc_invoker =
-    invoke_process_with(Command::new("ps"), vec!["-eo pid,pcpu,pmem,pri,comm"])
-      .unwrap();
+  let mut proc_invoker = invoke_process_with(
+    Command::new("ps"),
+    vec!["-eo", "pid,pcpu,pmem,pri,comm"],
+  )
+  .unwrap();
 
   // NOTE: Over-complicated as described above.
   let output =
@@ -165,8 +184,21 @@ fn main() -> std::io::Result<()> {
     Err(why) => panic!("{}", why),
     Ok(f) => f,
   };
-  let procs = proc_attr.mapping_attr(stat_file);
-  println!("{:?}", procs[1]);
+  let procs: Box<dyn std::any::Any> =
+    Box::new(proc_attr.mapping_attr(stat_file));
+  if let Some(procs) = procs.downcast_ref::<Vec<ProcAttribute>>() {
+    for (i, proc_attr) in procs.iter().enumerate() {
+      println!(
+        "Procs[{:?}]: {:?} / {:?} / {:?} / {:?} / {:?}",
+        i,
+        proc_attr.pid,
+        proc_attr.cpu,
+        proc_attr.memory,
+        proc_attr.priority,
+        proc_attr.execution
+      );
+    }
+  }
 
   Ok(())
 }
