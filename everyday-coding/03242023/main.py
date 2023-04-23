@@ -49,7 +49,7 @@ def main() -> None:
     cmd = ["curl", "-sSL"]
     Executioner.request_domain(cmd, URLS)
     # https://docs.python.org/3/library/concurrent.futures.html?highlight=concurrent%20futures%20threadpoolexecutor#concurrent.futures.ThreadPoolExecutor
-    Executioner.request_stress_test(5, 5, Executioner.load_url)
+    Executioner.request_stress_test(5, URLS)
 
 
 def division_comprehension(list_int: typing.List[int]) -> typing.List[int]:
@@ -138,27 +138,31 @@ class Executioner(object):
         return list_rq
 
     @classmethod
-    def load_url(cls, url: str, timeout: int):
+    def load_url(cls, url: str, timeout: int) -> typing.Any:
         with urllib.request.urlopen(url, timeout=timeout) as conn:
             return conn.read()
 
     @classmethod
     def request_stress_test(
-        cls, max_threads: int, _concur: int, func: typing.Callable
+        cls,
+        max_threads: int,
+        urls: typing.List[str],
     ) -> None:
         with concurrent.futures.ThreadPoolExecutor(max_threads) as executor:
             future_to_url = {
-                executor.submit(func, url, 60): url
-                for url in URLS.extend([cls.paths.get("gg")])
+                executor.submit(cls.load_url, url, 60): url
+                for url in urls.extend([cls.paths.get("gg")])
             }
+            pprint.pprint(future_to_url)
+            pprint.pprint(isinstance(future_to_url, typing.Iterator))
             for f in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[f]
-            try:
-                data = f.result()
-            except Exception as expt:
-                print("%r generated an exception: %s" % (url, expt))
-            else:
-                print("%r page is %d bytes" % (url, len(data)))
+                try:
+                    data = f.result()
+                except Exception as expt:
+                    print("%r generated an exception: %s" % (url, expt))
+                else:
+                    print("%r page is %d bytes" % (url, len(data)))
 
     # NOTE: https://stackoverflow.com/a/1669524/12535617
     def print_paths(self) -> None:
