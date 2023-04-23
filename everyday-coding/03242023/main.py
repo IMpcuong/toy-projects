@@ -121,26 +121,25 @@ class Executioner(object):
     def request_domain(
         cls, commands: typing.List[str], urls: typing.List[str]
     ) -> typing.List[rq.Request]:
+        pprint.pprint(f">> {isinstance(cls.paths, typing.Dict)}")
         list_rq: typing.List[rq.Request] = []
         if urls[0] and not urls[0].isspace():
-            for url in urls:
+            cls.paths["cmd"] = "".join(
+                map(lambda opt: "{}://{}".format("https", opt.upper()), commands[1:])
+            )
+            pprint.pprint(f'>> {cls.paths["cmd"]}')
+            if not cls.paths.__contains__("gg"):
+                cls.paths["gg"] = "https://google.com"
+            for url in urls + [cls.paths["gg"]]:
                 r = rq.request("GET", url, headers={}, data="")
                 cls.request_response(r)
                 list_rq.append(r)
-        else:
-            pprint.pprint(f">> {isinstance(cls.paths, typing.List)}")
-            cls.paths["gg"] = "https://google.com"
-            cls.paths["cmd"] = "".join(map(lambda opt: opt.upper(), commands[1:]))
-            pprint.pprint(f'>> {cls.paths.get("cmd")}')
-            r = rq.request("GET", cls.paths.get("gg"), headers={}, data="")
-            cls.request_response(r)
-            list_rq.append(r)
         return list_rq
 
     @classmethod
-    def load_url(cls, url: str, timeout: int) -> typing.Any:
+    def load_url(cls, url: str, timeout: int) -> typing.Tuple[str, bytes]:
         with urllib.request.urlopen(url, timeout=timeout) as conn:
-            return conn.read()
+            return conn.geturl(), conn.read()
 
     @classmethod
     def request_stress_test(
@@ -149,20 +148,19 @@ class Executioner(object):
         urls: typing.List[str],
     ) -> None:
         with concurrent.futures.ThreadPoolExecutor(max_threads) as executor:
+            future_to_url: typing.Dict[str, any] = {}
             future_to_url = {
                 executor.submit(cls.load_url, url, 60): url
-                for url in urls.extend([cls.paths.get("gg")])
+                for url in urls + [cls.paths.get("gg")]
             }
-            pprint.pprint(future_to_url)
-            pprint.pprint(isinstance(future_to_url, typing.Iterator))
             for f in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[f]
                 try:
                     data = f.result()
                 except Exception as expt:
-                    print("%r generated an exception: %s" % (url, expt))
+                    pprint.pprint("%r generated an exception: %s" % (url, expt))
                 else:
-                    print("%r page is %d bytes" % (url, len(data)))
+                    pprint.pprint("%r page is %d bytes" % (url, len(data)))
 
     # NOTE: https://stackoverflow.com/a/1669524/12535617
     def print_paths(self) -> None:
