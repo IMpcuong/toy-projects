@@ -32,6 +32,7 @@ fn main() -> std::io::Result<()> {
 
   let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
   println!("INFO: Server started at http://localhost:9999");
+
   for stream in listener.incoming() {
     match stream {
       Ok(mut stream) => {
@@ -41,22 +42,11 @@ fn main() -> std::io::Result<()> {
         if let Some(procs) = procs.downcast_ref::<Vec<ProcAttribute>>() {
           let mut response =
             String::from("HTTP/1.1 200 OK \r\nConnection: Keep-Alive\r\nContent-Type: application/json\r\n\r\n");
-          for (_i, proc_attr) in procs.iter().enumerate() {
-            let json_response = match serde_json::to_string(&proc_attr) {
-              Ok(response) => response,
-              Err(_) => "[]".to_string(),
-            };
-            // response.push_str(&format!(
-            //   "Procs[{:?}]: {:?} / {:?} / {:?} / {:?} / {:?}\n",
-            //   i,
-            //   proc_attr.pid,
-            //   proc_attr.cpu,
-            //   proc_attr.memory,
-            //   proc_attr.priority,
-            //   proc_attr.execution
-            // ));
-            response.push_str(&json_response);
-          }
+          let json_response = match serde_json::to_string(&procs) {
+            Ok(response) => response + "\r\n",
+            Err(_) => "[]".to_string(),
+          };
+          response.push_str(&json_response);
           stream.write(response.as_bytes()).unwrap();
           stream.flush().unwrap();
         }
