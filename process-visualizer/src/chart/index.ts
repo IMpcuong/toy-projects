@@ -1,16 +1,17 @@
 const PROC_API = 'http://localhost:9999';
 
-async function collectProcessStats(endpoint: string): Promise<string> {
-  if (!endpoint)
+async function collectProcessStats(scheme: string, host: string, port: number): Promise<string> {
+  let endpoint = "";
+  if (!scheme && !host && !port) {
+    endpoint = scheme.concat("://" + host + ':' + port.toString());
+  } else {
     endpoint = PROC_API;
+  }
 
   const response = await fetch(endpoint);
-  if (response.ok) {
-    const result = await response;
-    return result.text();
-  }
-  console.error(`ERROR: API call failed with status ${response.status}: ${response.statusText}`);
-  return response.statusText;
+  const result: string = response.ok ? await response.text() : response.statusText;
+  return result;
 }
 
-collectProcessStats("");
+const procStats: Promise<string> = collectProcessStats("http", "localhost", 9999);
+console.log(`Process stats: ${await procStats}`);
