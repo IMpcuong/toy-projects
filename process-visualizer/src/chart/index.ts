@@ -14,7 +14,6 @@ async function collectProcessStats(scheme: string, host: string, port: number): 
 }
 
 const rawProcStats: string = await collectProcessStats("http", "localhost", 9999);
-console.log(`Process stats JSON: ${rawProcStats}`);
 
 interface ProcessStat {
   pid: number,
@@ -35,6 +34,14 @@ class Conversion extends Object {
 }
 
 const procStats: ProcessStat[] = Conversion.castToSpecifiedObject<ProcessStat[]>(rawProcStats);
+const pidList: Set<number> = new Set();
 Array.from(procStats).forEach((proc) => {
-  console.log(`${proc.execution}`);
-})
+  pidList.add(proc.pid)
+  console.log(`${proc.pid}: ${proc.memory} / ${proc.execution}`);
+});
+
+let lenPidList = 0;
+pidList.forEach((_) => { lenPidList++; })
+lenPidList != procStats.length
+  ? console.log(`${lenPidList} != ${procStats.length} => Inadequate!`)
+  : console.log("Identical");
