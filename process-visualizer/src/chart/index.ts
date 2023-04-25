@@ -13,5 +13,28 @@ async function collectProcessStats(scheme: string, host: string, port: number): 
   return result;
 }
 
-const procStats: string = await collectProcessStats("http", "localhost", 9999);
-console.log(`Process stats: ${procStats}`);
+const rawProcStats: string = await collectProcessStats("http", "localhost", 9999);
+console.log(`Process stats JSON: ${rawProcStats}`);
+
+interface ProcessStat {
+  pid: number,
+  cpu: number,
+  memory: number,
+  priority: number,
+  execution: string,
+}
+
+class Conversion extends Object {
+  static castToSpecifiedObject<Type>(json: string): Type {
+    return JSON.parse(json)
+  }
+
+  static uncasetFromSpecifiedObject<Type>(json: Type): string {
+    return JSON.stringify(json, undefined, 2)
+  }
+}
+
+const procStats: ProcessStat[] = Conversion.castToSpecifiedObject<ProcessStat[]>(rawProcStats);
+Array.from(procStats).forEach((proc) => {
+  console.log(`${proc.execution}`);
+})
