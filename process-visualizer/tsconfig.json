@@ -1,5 +1,4 @@
 {
-  "extends": "@tsconfig/deno/tsconfig.json",
   "compilerOptions": {
     "module": "System",
     "noImplicitAny": true,
