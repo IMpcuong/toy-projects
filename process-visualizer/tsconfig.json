@@ -1,11 +1,21 @@
 {
   "compilerOptions": {
-    "module": "System",
+    "allowJs": true,
+    "target": "ESNext",
+    "lib": [
+      "DOM",
+      "ES2017",
+      "ESNext",
+    ],
+    "jsx": "react",
+    "module": "ESNext",
+    "noUnusedLocals": true,
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "outFile": "../../built/local/tsc.js",
-    "sourceMap": true
+    "sourceMap": true,
+    "strict": true
   },
   "include": [
     "src/fe/**/*"

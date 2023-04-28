@@ -40,8 +40,11 @@ fn main() -> std::io::Result<()> {
         stream.read(&mut buffer).unwrap();
 
         if let Some(procs) = procs.downcast_ref::<Vec<ProcAttribute>>() {
-          let mut response =
-            String::from("HTTP/1.1 200 OK \r\nConnection: Keep-Alive\r\nContent-Type: application/json\r\n\r\n");
+          let mut response = String::from("HTTP/1.1 200 OK \r\n");
+          response.push_str("Access-Control-Allow-Origin: *\r\n");
+          response.push_str("Connection: Keep-Alive\r\n");
+          response.push_str("Content-Type: application/json\r\n");
+          response.push_str("\r\n");
           let json_response = match serde_json::to_string(&procs) {
             Ok(response) => response + "\r\n",
             Err(_) => "[]".to_string(),
