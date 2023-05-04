@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::{self, Debug, Display};
-use std::fs::File;
-use std::io::{prelude::*, BufReader, Write};
-use std::os::unix::prelude::OpenOptionsExt;
-use std::path::Path;
-use std::process::{Command, Stdio};
+use std::{
+  fmt::{self, Debug, Display},
+  fs::File,
+  io::{prelude::*, BufReader, Write},
+  os::unix::prelude::OpenOptionsExt,
+  path::Path,
+  process::{Command, Stdio},
+};
 
 use regex::Regex;
 
@@ -150,6 +152,7 @@ where
   if path.exists() {
     let mut existed = std::fs::OpenOptions::new()
       .create(false)
+      .truncate(true)
       .write(true)
       .mode(0o770)
       .open(path)
