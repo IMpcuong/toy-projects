@@ -1,14 +1,16 @@
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{
   fmt::{self, Debug, Display},
   fs::File,
   io::{prelude::*, BufReader, Write},
+  net::TcpListener,
   os::unix::prelude::OpenOptionsExt,
   path::Path,
   process::{Command, Stdio},
+  // NOTE: `Multi-producers, single-consumer FIFO queue communication primitives`.
+  // sync::mpsc::{channel, Sender},
 };
-
-use regex::Regex;
 
 pub(crate) type Result<T> = std::result::Result<T, ErrorWrapper>;
 
@@ -63,7 +65,10 @@ pub fn read_file_ignore_first_line(src: File) -> Vec<String> {
     lines.push(buffer);
   }
 
-  lines.split_off(1)
+  if lines.len() > 1 {
+    return lines.split_off(1);
+  }
+  lines
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -86,7 +91,7 @@ impl ProcAttribute {
     Self { pid, cpu, memory, priority, execution: String::from(execution) }
   }
 
-  pub fn mapping_attr(self, stat_file: File) -> Vec<Self> {
+  pub fn mapping_attr_from(self, stat_file: File) -> Vec<Self> {
     let mut proc_attrs: Vec<Self> = vec![];
     let re = Regex::new(r"\s+").unwrap();
 
@@ -127,7 +132,7 @@ pub fn invoke_process_with(
 
 pub fn convert_process_stat_to_string<T>(reader: T) -> std::io::Result<String>
 where
-  T: Read,
+  T: Read + Sync,
 {
   let mut buf_reader = BufReader::new(reader);
   let mut proc_content = String::new();
@@ -135,46 +140,122 @@ where
   Ok(proc_content)
 }
 
-pub fn redirect_procs_stat_to_file<T>(stat: T, mut path: &Path)
+pub fn redirect_procs_stat_to_file<T>(stat: T, mut path: &'static Path)
 where
-  T: 'static + Debug + ToString,
+  T: 'static + Debug + Send + Sync + ToString,
 {
-  let default_path = Box::new(Path::new(FILE_NAME));
-  if let Some("") = path.to_str()
-  /* Syntax equivalent with: `if path.to_str() == Some("")` */
-  {
-    unsafe {
-      path = *Box::into_raw(default_path);
-    }
-  }
-
   let proc_stat_data = stat.to_string();
-  if path.exists() {
-    let mut existed = std::fs::OpenOptions::new()
-      .create(false)
-      .truncate(true)
-      .write(true)
-      .mode(0o770)
-      .open(path)
-      .expect("INFO: Successfully open our existing file");
-
-    match existed.write_all(proc_stat_data.as_bytes()) {
-      Err(why) => {
-        panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
+  std::thread::spawn(move || {
+    let default_path = Box::new(Path::new(FILE_NAME));
+    if let Some("") = path.to_str()
+    /* Syntax equivalent with: `if path.to_str() == Some("")` */
+    {
+      unsafe {
+        path = *Box::into_raw(default_path);
       }
-      Ok(_) => println!("INFO: Successfully wrote to {}", path.display()),
-    };
-    return;
-  }
+    }
 
-  let mut stat_file = match File::create(path) {
-    Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
-    Ok(opened) => opened,
-  };
-  match stat_file.write_all(proc_stat_data.as_bytes()) {
-    Err(why) => panic!("Error: Couldn't write to {}: {}", path.display(), why),
-    Ok(_) => println!("INFO: Successfully wrote to {}", path.display()),
-  }
+    if path.exists() {
+      let mut existed = std::fs::OpenOptions::new()
+        .truncate(true)
+        .write(true)
+        .create(false)
+        .mode(0o770)
+        .open(path)
+        .expect("INFO: Successfully open our existing file");
+
+      match existed.write_all(proc_stat_data.as_bytes()) {
+        Err(why) => {
+          panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
+        }
+        Ok(_) => println!(
+          "INFO: Successfully wrote to {}, at {:?}",
+          path.display(),
+          date_time_helper().unwrap()
+        ),
+      };
+      return;
+    }
+
+    let mut stat_file = match File::create(path) {
+      Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
+      Ok(opened) => opened,
+    };
+    match stat_file.write_all(proc_stat_data.as_bytes()) {
+      Err(why) => {
+        panic!("Error: Couldn't write to {}: {}", path.display(), why)
+      }
+      Ok(_) => println!(
+        "INFO: Successfully wrote to {}, at {:?}",
+        path.display(),
+        date_time_helper().unwrap()
+      ),
+    }
+  });
+}
+
+pub fn serve_process_stats_from(
+  host: &str,
+  port: u16,
+  file_path: String,
+) -> Result<()> {
+  let addr = format!("{}:{}", host, port);
+  std::thread::spawn(move || {
+    let listener = TcpListener::bind(addr).unwrap();
+    println!(
+      "INFO: Server hosted at address {:?}, {:?}",
+      listener.local_addr().unwrap(),
+      date_time_helper().unwrap()
+    );
+
+    // NOTE: Open the stats file simultaneously.
+    let stat_file = match File::open(file_path) {
+      Err(why) => panic!("{}", why),
+      Ok(f) => f,
+    };
+
+    // NOTE: Mapping the raw string data into a `ProcAttribute` structure.
+    let proc_attr = ProcAttribute::new(0, 0., 0., 0, "");
+    let procs: Box<dyn std::any::Any> =
+      Box::new(proc_attr.mapping_attr_from(stat_file));
+    let procs = match procs.downcast::<Vec<ProcAttribute>>() {
+      Err(why) => panic!("{:?}", why.as_ref()),
+      Ok(procs) => procs,
+    };
+
+    for stream in listener.incoming() {
+      match stream {
+        Ok(mut stream) => {
+          let mut buffer = [0; 1024];
+          stream.read(&mut buffer).unwrap();
+
+          let mut response = String::from("HTTP/1.1 200 OK \r\n");
+          response.push_str("Access-Control-Allow-Origin: *\r\n");
+          response.push_str("Connection: Keep-Alive\r\n");
+          response.push_str("Content-Type: application/json\r\n");
+          response.push_str("\r\n");
+          let json_response = match serde_json::to_string(&procs) {
+            Ok(response) => response + "\r\n",
+            Err(_) => "[]".to_string(),
+          };
+          response.push_str(&json_response);
+          stream.write(response.as_bytes()).unwrap();
+          // stream.flush().unwrap();
+        }
+        Err(e) => {
+          println!("Error: {}", e);
+        }
+      }
+    }
+  });
+  Ok(())
+}
+
+const DATETIME_FORMAT: &'static str = "%Y-%m-%d | %H:%M:%S";
+
+fn date_time_helper() -> Result<String> {
+  let now = chrono::Local::now();
+  return Ok(format!("{}", now.format(DATETIME_FORMAT)));
 }
 
 #[cfg(test)]
