@@ -8,10 +8,24 @@
   <title>Process Visualizer</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <style type="text/scss">
+    body {
+      background-origin: border-box;
+      background-color: #4a36b8;
+    }
+
+    canvas #proc-chart {
+      width: 100vh;
+      max-width: fit-content;
+      margin: 2em auto;
+      border: 2px solid grey;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 
 <body>
-  <canvas id="proc-chart" style="width: 100%; max-width: 700px; border: 1px solid grey;"></canvas>
+  <canvas id="proc-chart" style="width: 100%; max-width: 100%; border: 1px solid grey;"></canvas>
   <!-- https://stackoverflow.com/a/67688660/12535617 -->
   <script type="module" src="./index.js"></script>
 </body>
