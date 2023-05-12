@@ -4,12 +4,15 @@ use std::{
   fmt::{self, Debug, Display},
   fs::File,
   io::{prelude::*, BufReader, Write},
-  net::TcpListener,
+  net::{TcpListener, TcpStream},
   os::unix::prelude::OpenOptionsExt,
   path::Path,
   process::{Command, Stdio},
-  // NOTE: `Multi-producers, single-consumer FIFO queue communication primitives`.
-  // sync::mpsc::{channel, Sender},
+  sync::{
+    mpsc::{channel, Receiver, Sender},
+    Arc, Mutex,
+  },
+  time::Duration,
 };
 
 pub(crate) type Result<T> = std::result::Result<T, ErrorWrapper>;
@@ -71,13 +74,17 @@ pub fn read_file_ignore_first_line(src: File) -> Vec<String> {
   lines
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+lazy_static::lazy_static! {
+  static ref DATA_MUTEX: Arc<Mutex<Vec<ProcAttribute>>> = Arc::new(Mutex::new(Vec::new()));
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct ProcAttribute {
   pub(crate) pid: usize,
   pub(crate) cpu: f32,
   pub(crate) memory: f32,
   pub(crate) priority: u8,
-  pub(crate) execution: String,
+  pub(crate) execution: &'static str,
 }
 
 impl ProcAttribute {
@@ -86,32 +93,63 @@ impl ProcAttribute {
     cpu: f32,
     memory: f32,
     priority: u8,
-    execution: &str,
+    execution: &'static str,
   ) -> Self {
-    Self { pid, cpu, memory, priority, execution: String::from(execution) }
+    Self { pid, cpu, memory, priority, execution }
   }
 
-  pub fn mapping_attr_from(self, stat_file: File) -> Vec<Self> {
-    let mut proc_attrs: Vec<Self> = vec![];
+  pub fn mapping_attr_from(
+    self,
+    stat_file: File,
+    proc_attrs: &Vec<ProcAttribute>,
+  ) {
     let re = Regex::new(r"\s+").unwrap();
+    let mut procs_attrs_clone = proc_attrs.clone();
+    std::thread::spawn(move || {
+      loop {
+        let file_lines =
+          read_file_ignore_first_line(stat_file.try_clone().unwrap());
+        for line_data in file_lines {
+          // FIXME: @@@ `line_data` doesn't live long enough.
+          let line_data = line_data.trim_start();
+          let words_per_line: Vec<&str> = re.split(line_data).collect();
+          if words_per_line.len() < 5 {
+            continue; // NOTE: Skip invalid lines.
+          }
 
-    let file_lines = read_file_ignore_first_line(stat_file);
-    for line_data in file_lines {
-      let line_data = line_data.trim_start();
-      let words_per_line: Vec<&str> = re.split(&line_data).collect();
-      if words_per_line.len() < 5 {
-        continue; // NOTE: Skip invalid lines.
+          let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
+          let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
+          let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
+          let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
+          let execution = words_per_line[4];
+          let proc_obj =
+            ProcAttribute::new(pid, cpu, memory, priority, execution);
+          procs_attrs_clone.push(proc_obj);
+        }
       }
+    });
+  }
+}
 
-      let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
-      let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
-      let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
-      let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
-      let execution = words_per_line[4];
-      let proc_obj = ProcAttribute::new(pid, cpu, memory, priority, execution);
-      proc_attrs.push(proc_obj);
+impl std::ops::Add for ProcAttribute {
+  type Output = ProcAttribute;
+
+  fn add(self, rhs: ProcAttribute) -> Self {
+    ProcAttribute {
+      pid: self.pid + rhs.pid,
+      cpu: self.cpu + rhs.cpu,
+      memory: self.memory + rhs.memory,
+      priority: self.priority,
+      execution: self.execution,
     }
-    proc_attrs
+  }
+}
+
+impl std::ops::AddAssign for ProcAttribute {
+  fn add_assign(&mut self, rhs: Self) {
+    self.pid += rhs.pid;
+    self.cpu += rhs.cpu;
+    self.memory += rhs.memory;
   }
 }
 
@@ -194,66 +232,87 @@ where
   });
 }
 
-pub fn serve_process_stats_from(
-  host: &str,
-  port: u16,
-  file_path: String,
-) -> Result<()> {
-  let addr = format!("{}:{}", host, port);
-  std::thread::spawn(move || {
-    let listener = TcpListener::bind(addr).unwrap();
-    println!(
-      "INFO: Server hosted at address {:?}, {:?}",
-      listener.local_addr().unwrap(),
-      date_time_helper().unwrap()
-    );
+// pub fn serve_process_stats_from(
+//   host: &str,
+//   port: u16,
+//   procs_stat: Vec<ProcAttribute>,
+// ) -> Result<()> {
+//   let addr = format!("{}:{}", host, port);
+//   let procs_stat_vec = procs_stat.into_boxed_slice().into_vec();
+//   println!("{:?}", procs_stat_vec);
 
-    // NOTE: Open the stats file simultaneously.
-    let stat_file = match File::open(file_path) {
-      Err(why) => panic!("{}", why),
-      Ok(f) => f,
-    };
+//   // for proc_data in procs_stat_vec {
+//   //   let (tx, proc_data) = (tx.clone(), Arc::new(Mutex::new(proc_data)));
+//   //   let mut lock_data = proc_data.lock().unwrap();
+//   //   *lock_data += ProcAttribute::new(0, 0., 0., 0, "");
+//   //   if let Err(_) = tx.send(lock_data.to_owned()) {
+//   //     break;
+//   //   }
+//   // }
 
-    // NOTE: Mapping the raw string data into a `ProcAttribute` structure.
-    let proc_attr = ProcAttribute::new(0, 0., 0., 0, "");
-    let procs: Box<dyn std::any::Any> =
-      Box::new(proc_attr.mapping_attr_from(stat_file));
-    let procs = match procs.downcast::<Vec<ProcAttribute>>() {
-      Err(why) => panic!("{:?}", why.as_ref()),
-      Ok(procs) => procs,
-    };
+//   // let wrapper = Arc::new(Mutex::new(rx));
+//   // for stream in listener.incoming() {
+//   //   let mut stream_clone = stream.unwrap();
 
-    for stream in listener.incoming() {
-      match stream {
-        Ok(mut stream) => {
-          let mut buffer = [0; 1024];
-          stream.read(&mut buffer).unwrap();
+//   //   match wrapper.lock().unwrap().recv_timeout(Duration::from_secs(1)) {
+//   //     Ok(data) => {
+//   //       let mut response = String::from("HTTP/1.1 200 OK \r\n");
+//   //       response.push_str("Access-Control-Allow-Origin: *\r\n");
+//   //       response.push_str("Connection: Keep-Alive\r\n");
+//   //       response.push_str("Content-Type: application/json\r\n");
+//   //       response.push_str("\r\n");
+//   //       let json_response = match serde_json::to_string(&data.clone()) {
+//   //         Ok(response) => response + "\r\n",
+//   //         Err(_) => "[]".to_string(),
+//   //       };
+//   //       response.push_str(&json_response);
 
-          let mut response = String::from("HTTP/1.1 200 OK \r\n");
-          response.push_str("Access-Control-Allow-Origin: *\r\n");
-          response.push_str("Connection: Keep-Alive\r\n");
-          response.push_str("Content-Type: application/json\r\n");
-          response.push_str("\r\n");
-          let json_response = match serde_json::to_string(&procs) {
-            Ok(response) => response + "\r\n",
-            Err(_) => "[]".to_string(),
-          };
-          response.push_str(&json_response);
-          stream.write(response.as_bytes()).unwrap();
-          // stream.flush().unwrap();
-        }
-        Err(e) => {
-          println!("Error: {}", e);
-        }
-      }
-    }
-  });
-  Ok(())
-}
+//   //       let mut buffer = [0; 1024];
+//   //       stream_clone.read(&mut buffer).unwrap();
+//   //       stream_clone.write_all(response.as_bytes()).unwrap();
+//   //       stream_clone.flush().unwrap();
+//   //     }
+//   //     Err(_) => {}
+//   //   };
+//   // }
+
+//   let listener = TcpListener::bind(addr).unwrap();
+//   println!(
+//     "INFO: Server hosted at address {:?}, {:?}",
+//     listener.local_addr().unwrap(),
+//     date_time_helper().unwrap()
+//   );
+
+//   for stream in listener.incoming() {
+//     let mut buffer = [0; 1024];
+//     let mut response = String::from("HTTP/1.1 200 OK \r\n");
+//     response.push_str("Access-Control-Allow-Origin: *\r\n");
+//     response.push_str("Connection: Keep-Alive\r\n");
+//     response.push_str("Content-Type: application/json\r\n");
+//     response.push_str("\r\n");
+
+//     match stream {
+//       Ok(mut stream) => loop {
+//         stream.read(&mut buffer)?;
+//         let json_response = match serde_json::to_string(&procs_stat_vec) {
+//           Ok(response) => response + "\r\n",
+//           Err(_) => "[]".to_string(),
+//         };
+//         response.push_str(&json_response);
+//         stream.write_all(response.as_bytes())?;
+//         stream.flush().unwrap();
+//       },
+//       Err(e) => {
+//         println!("Error: {}", e);
+//       }
+//     }
+//   }
+//   Ok(())
+// }
 
 const DATETIME_FORMAT: &'static str = "%Y-%m-%d | %H:%M:%S";
 
-fn date_time_helper() -> Result<String> {
+pub(crate) fn date_time_helper() -> Result<String> {
   let now = chrono::Local::now();
   return Ok(format!("{}", now.format(DATETIME_FORMAT)));
 }
