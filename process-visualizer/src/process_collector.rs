@@ -119,9 +119,7 @@ impl ProcAttribute {
     let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
     let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
     let execution = words_per_line[4];
-    let proc_obj =
-      ProcAttribute::new(pid, cpu, memory, priority, execution.to_string());
-    proc_obj
+    ProcAttribute::new(pid, cpu, memory, priority, execution.to_string())
   }
 
   pub fn manual_alloc_process(self) -> Self {
@@ -140,7 +138,6 @@ impl ProcAttribute {
     unsafe {
       let mut guard = DATA_MUTEX.lock().unwrap();
       DATA_PROCESSES = Box::leak(procs_stat_vec.into_boxed_slice()).into();
-      println!("=====> Assign {:#?}", DATA_PROCESSES);
       *guard = &DATA_PROCESSES;
     }
   }
@@ -211,9 +208,9 @@ where
 {
   let proc_stat_data = stat.to_string();
   let default_path = Box::new(Path::new(FILE_NAME));
-  if let Some("") = path.to_str()
-  /* Syntax equivalent with: `if path.to_str() == Some("")` */
-  {
+
+  // NOTE: Syntax equivalent with: `if path.to_str() == Some("")`.
+  if let Some("") = path.to_str() {
     unsafe {
       path = *Box::into_raw(default_path);
     }
@@ -274,6 +271,7 @@ mod test {
   fn test_init_proc_attr() {
     let proc_attr = ProcAttribute::new(0, 0., 0., 0, "".to_string());
     assert_eq!(proc_attr.execution, "");
+    assert_eq!(proc_attr.execution, ProcAttribute::default().execution);
     assert_ne!(proc_attr.to_owned().execution, String::from("Something"));
   }
 

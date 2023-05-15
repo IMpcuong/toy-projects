@@ -73,49 +73,50 @@ fn main() -> std::io::Result<()> {
           convert_process_stat_to_string(proc_invoker.stdout.as_mut().unwrap())
             .unwrap_or_default();
         redirect_procs_stat_to_file(output, Path::new(""));
-
         std::thread::sleep(std::time::Duration::from_secs(1));
-        // NOTE: Open the stats file simultaneously.
-        let stat_file =
-          File::open(FILE_NAME).expect("Failed to open stats file");
 
-        // NOTE: Mapping the raw string data into a `ProcAttribute` structure.
-        let mut procs_stat_vec = Vec::<ProcAttribute>::new();
-        let file_lines =
-          read_file_ignore_first_line(stat_file.try_clone().unwrap());
-        for stat_line_data in file_lines {
-          let stat_line_data = stat_line_data.trim_start();
-          let proc_data =
-            ProcAttribute::mapping_attr_from(stat_line_data.to_string());
-          procs_stat_vec.push(proc_data);
-        }
+        std::thread::spawn(move || {
+          // NOTE: Open the stats file simultaneously.
+          let stat_file =
+            File::open(FILE_NAME).expect("Failed to open stats file");
 
-        // NOTE: Experimental `Box` heap allocator feature for our implementation.
-        let procs: Box<dyn std::any::Any> = Box::new(procs_stat_vec.clone());
+          // NOTE: Mapping the raw string data into a `ProcAttribute` structure.
+          let mut procs_stat_vec = Vec::<ProcAttribute>::new();
+          let file_lines =
+            read_file_ignore_first_line(stat_file.try_clone().unwrap());
+          for stat_line_data in file_lines {
+            let stat_line_data = stat_line_data.trim_start();
+            let proc_data =
+              ProcAttribute::mapping_attr_from(stat_line_data.to_string());
+            procs_stat_vec.push(proc_data);
+          }
 
-        let procs = match procs.downcast::<Vec<ProcAttribute>>() {
-          Ok(procs) => procs,
-          Err(why) => panic!("{:?}", why.as_ref()),
-        };
-        let procs_stat_vec = procs.into_boxed_slice().into_vec();
-        println!(
-          "INFO: {:?} processes counter, at {:?}",
-          procs_stat_vec.clone().into_boxed_slice().into_vec().len(),
-          process_collector::date_time_helper().unwrap(),
-        );
+          // NOTE: Experimental `Box` heap allocator feature for our implementation.
+          let procs: Box<dyn std::any::Any> = Box::new(procs_stat_vec.clone());
 
-        // NOTE: Accessing the entire collector's stats data to prevent data corruption/intersection/intervention.
-        ProcAttribute::assign_to_global_var(procs_stat_vec);
-        std::thread::sleep(std::time::Duration::from_secs(1));
+          let procs = match procs.downcast::<Vec<ProcAttribute>>() {
+            Ok(procs) => procs,
+            Err(why) => panic!("{:?}", why.as_ref()),
+          };
+          let procs_stat_vec = procs.into_boxed_slice().into_vec();
+          println!(
+            "INFO: {:?} processes counter, at {:?}",
+            procs_stat_vec.clone().into_boxed_slice().into_vec().len(),
+            process_collector::date_time_helper().unwrap(),
+          );
+
+          // NOTE: Accessing the entire collector's stats data to prevent data corruption/intersection/intervention.
+          ProcAttribute::assign_to_global_var(procs_stat_vec);
+          std::thread::sleep(std::time::Duration::from_secs(1));
+        });
       }
     });
 
-    // NOTE: Using `lazy_static` crate to avoid redundant initialization variables with static lifetime.
-    let guard = DATA_MUTEX.lock().unwrap();
-    let procs_stat_vec_clone = *guard;
-    println!("=====> Clone {:?}", procs_stat_vec_clone);
-
     for stream in listener.incoming() {
+      // NOTE: Using `lazy_static` crate to avoid redundant initialization variables with static lifetime.
+      let guard = DATA_MUTEX.lock().unwrap();
+      let procs_stat_vec_clone = *guard;
+
       let mut buffer = [0; 1024];
       let mut response = String::from("HTTP/1.1 200 OK \r\n");
       response.push_str("Access-Control-Allow-Origin: *\r\n");
@@ -132,7 +133,6 @@ fn main() -> std::io::Result<()> {
             Ok(response) => response + "\r\n",
             Err(_) => "[]".to_string(),
           };
-          println!("=====> Response {}", json_response);
           response.push_str(&json_response);
           stream.write_all(response.as_bytes())?;
           stream.flush().unwrap();
