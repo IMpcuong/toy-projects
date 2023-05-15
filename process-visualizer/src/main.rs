@@ -105,7 +105,9 @@ fn main() -> std::io::Result<()> {
             process_collector::date_time_helper().unwrap(),
           );
 
-          // NOTE: Accessing the entire collector's stats data to prevent data corruption/intersection/intervention.
+          // NOTE: Accessing the entire collector's stats data to prevent data corruption/intersection/intervention
+          //  by using the atomic operations counter on a global variable named `DATA_PROCESSES`
+          //  which is guarded by `Mutex` (treating as a shared-variable between each threads).
           ProcAttribute::assign_to_global_var(procs_stat_vec);
           std::thread::sleep(std::time::Duration::from_secs(1));
         });
