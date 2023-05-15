@@ -1,19 +1,23 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{
+  alloc::{alloc, handle_alloc_error, Layout},
   fmt::{self, Debug, Display},
   fs::File,
   io::{prelude::*, BufReader, Write},
-  net::{TcpListener, TcpStream},
   os::unix::prelude::OpenOptionsExt,
   path::Path,
   process::{Command, Stdio},
-  sync::{
-    mpsc::{channel, Receiver, Sender},
-    Arc, Mutex,
-  },
-  time::Duration,
+  sync::{Arc, Mutex},
 };
+
+#[warn(unused_macros)]
+macro_rules! _static_slice {
+  ($_type:ty: $($item:expr),*) => ({
+    static STATIC_SLICE: &'static [$_type] = &[$($item),*];
+    STATIC_SLICE
+  });
+}
 
 pub(crate) type Result<T> = std::result::Result<T, ErrorWrapper>;
 
@@ -74,17 +78,22 @@ pub fn read_file_ignore_first_line(src: File) -> Vec<String> {
   lines
 }
 
+pub(crate) static mut DATA_PROCESSES: Vec<ProcAttribute> = vec![];
+
 lazy_static::lazy_static! {
-  static ref DATA_MUTEX: Arc<Mutex<Vec<ProcAttribute>>> = Arc::new(Mutex::new(Vec::new()));
+  // NOTE: `Arc` := Atomically Reference Counted.
+  pub(crate) static ref DATA_MUTEX: Arc<Mutex<&'static Vec<ProcAttribute>>> = Arc::new(Mutex::new(
+    unsafe { &DATA_PROCESSES }
+  ));
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ProcAttribute {
   pub(crate) pid: usize,
   pub(crate) cpu: f32,
   pub(crate) memory: f32,
   pub(crate) priority: u8,
-  pub(crate) execution: &'static str,
+  pub(crate) execution: String,
 }
 
 impl ProcAttribute {
@@ -93,41 +102,47 @@ impl ProcAttribute {
     cpu: f32,
     memory: f32,
     priority: u8,
-    execution: &'static str,
+    execution: String,
   ) -> Self {
     Self { pid, cpu, memory, priority, execution }
   }
 
-  pub fn mapping_attr_from(
-    self,
-    stat_file: File,
-    proc_attrs: &Vec<ProcAttribute>,
-  ) {
+  pub fn mapping_attr_from(stat_line_data: String) -> Self {
     let re = Regex::new(r"\s+").unwrap();
-    let mut procs_attrs_clone = proc_attrs.clone();
-    std::thread::spawn(move || {
-      loop {
-        let file_lines =
-          read_file_ignore_first_line(stat_file.try_clone().unwrap());
-        for line_data in file_lines {
-          // FIXME: @@@ `line_data` doesn't live long enough.
-          let line_data = line_data.trim_start();
-          let words_per_line: Vec<&str> = re.split(line_data).collect();
-          if words_per_line.len() < 5 {
-            continue; // NOTE: Skip invalid lines.
-          }
+    let words_per_line: Vec<&str> = re.split(&stat_line_data).collect();
+    if words_per_line.len() < 5 {
+      return ProcAttribute::new(0, 0., 0., 0, "".to_string()); // NOTE: Skip invalid lines.
+    }
 
-          let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
-          let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
-          let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
-          let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
-          let execution = words_per_line[4];
-          let proc_obj =
-            ProcAttribute::new(pid, cpu, memory, priority, execution);
-          procs_attrs_clone.push(proc_obj);
-        }
+    let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
+    let cpu = words_per_line[1].parse::<f32>().unwrap_or_default();
+    let memory = words_per_line[2].parse::<f32>().unwrap_or_default();
+    let priority = words_per_line[3].parse::<u8>().unwrap_or_default();
+    let execution = words_per_line[4];
+    let proc_obj =
+      ProcAttribute::new(pid, cpu, memory, priority, execution.to_string());
+    proc_obj
+  }
+
+  pub fn manual_alloc_process(self) -> Self {
+    unsafe {
+      let layout = Layout::new::<Self>();
+      let procs_attrs_ptr = alloc(layout);
+      if procs_attrs_ptr.is_null() {
+        handle_alloc_error(layout);
       }
-    });
+      (procs_attrs_ptr as *mut Self).write(self);
+      return std::ptr::read(procs_attrs_ptr as *const Self);
+    }
+  }
+
+  pub fn assign_to_global_var(procs_stat_vec: Vec<Self>) {
+    unsafe {
+      let mut guard = DATA_MUTEX.lock().unwrap();
+      DATA_PROCESSES = Box::leak(procs_stat_vec.into_boxed_slice()).into();
+      println!("=====> Assign {:#?}", DATA_PROCESSES);
+      *guard = &DATA_PROCESSES;
+    }
   }
 }
 
@@ -150,6 +165,18 @@ impl std::ops::AddAssign for ProcAttribute {
     self.pid += rhs.pid;
     self.cpu += rhs.cpu;
     self.memory += rhs.memory;
+  }
+}
+
+impl Default for ProcAttribute {
+  fn default() -> Self {
+    Self {
+      pid: Default::default(),
+      cpu: Default::default(),
+      memory: Default::default(),
+      priority: Default::default(),
+      execution: Default::default(),
+    }
   }
 }
 
@@ -183,132 +210,52 @@ where
   T: 'static + Debug + Send + Sync + ToString,
 {
   let proc_stat_data = stat.to_string();
-  std::thread::spawn(move || {
-    let default_path = Box::new(Path::new(FILE_NAME));
-    if let Some("") = path.to_str()
-    /* Syntax equivalent with: `if path.to_str() == Some("")` */
-    {
-      unsafe {
-        path = *Box::into_raw(default_path);
-      }
+  let default_path = Box::new(Path::new(FILE_NAME));
+  if let Some("") = path.to_str()
+  /* Syntax equivalent with: `if path.to_str() == Some("")` */
+  {
+    unsafe {
+      path = *Box::into_raw(default_path);
     }
+  }
 
-    if path.exists() {
-      let mut existed = std::fs::OpenOptions::new()
-        .truncate(true)
-        .write(true)
-        .create(false)
-        .mode(0o770)
-        .open(path)
-        .expect("INFO: Successfully open our existing file");
+  if path.exists() {
+    let mut existed = std::fs::OpenOptions::new()
+      .truncate(true)
+      .write(true)
+      .create(false)
+      .mode(0o770)
+      .open(path)
+      .expect("INFO: Successfully open our existing file");
 
-      match existed.write_all(proc_stat_data.as_bytes()) {
-        Err(why) => {
-          panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
-        }
-        Ok(_) => println!(
-          "INFO: Successfully wrote to {}, at {:?}",
-          path.display(),
-          date_time_helper().unwrap()
-        ),
-      };
-      return;
-    }
-
-    let mut stat_file = match File::create(path) {
-      Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
-      Ok(opened) => opened,
-    };
-    match stat_file.write_all(proc_stat_data.as_bytes()) {
+    match existed.write_all(proc_stat_data.as_bytes()) {
       Err(why) => {
-        panic!("Error: Couldn't write to {}: {}", path.display(), why)
+        panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
       }
       Ok(_) => println!(
         "INFO: Successfully wrote to {}, at {:?}",
         path.display(),
         date_time_helper().unwrap()
       ),
+    };
+    return;
+  }
+
+  let mut stat_file = match File::create(path) {
+    Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
+    Ok(opened) => opened,
+  };
+  match stat_file.write_all(proc_stat_data.as_bytes()) {
+    Err(why) => {
+      panic!("Error: Couldn't write to {}: {}", path.display(), why)
     }
-  });
+    Ok(_) => println!(
+      "INFO: Successfully wrote to {}, at {:?}",
+      path.display(),
+      date_time_helper().unwrap()
+    ),
+  }
 }
-
-// pub fn serve_process_stats_from(
-//   host: &str,
-//   port: u16,
-//   procs_stat: Vec<ProcAttribute>,
-// ) -> Result<()> {
-//   let addr = format!("{}:{}", host, port);
-//   let procs_stat_vec = procs_stat.into_boxed_slice().into_vec();
-//   println!("{:?}", procs_stat_vec);
-
-//   // for proc_data in procs_stat_vec {
-//   //   let (tx, proc_data) = (tx.clone(), Arc::new(Mutex::new(proc_data)));
-//   //   let mut lock_data = proc_data.lock().unwrap();
-//   //   *lock_data += ProcAttribute::new(0, 0., 0., 0, "");
-//   //   if let Err(_) = tx.send(lock_data.to_owned()) {
-//   //     break;
-//   //   }
-//   // }
-
-//   // let wrapper = Arc::new(Mutex::new(rx));
-//   // for stream in listener.incoming() {
-//   //   let mut stream_clone = stream.unwrap();
-
-//   //   match wrapper.lock().unwrap().recv_timeout(Duration::from_secs(1)) {
-//   //     Ok(data) => {
-//   //       let mut response = String::from("HTTP/1.1 200 OK \r\n");
-//   //       response.push_str("Access-Control-Allow-Origin: *\r\n");
-//   //       response.push_str("Connection: Keep-Alive\r\n");
-//   //       response.push_str("Content-Type: application/json\r\n");
-//   //       response.push_str("\r\n");
-//   //       let json_response = match serde_json::to_string(&data.clone()) {
-//   //         Ok(response) => response + "\r\n",
-//   //         Err(_) => "[]".to_string(),
-//   //       };
-//   //       response.push_str(&json_response);
-
-//   //       let mut buffer = [0; 1024];
-//   //       stream_clone.read(&mut buffer).unwrap();
-//   //       stream_clone.write_all(response.as_bytes()).unwrap();
-//   //       stream_clone.flush().unwrap();
-//   //     }
-//   //     Err(_) => {}
-//   //   };
-//   // }
-
-//   let listener = TcpListener::bind(addr).unwrap();
-//   println!(
-//     "INFO: Server hosted at address {:?}, {:?}",
-//     listener.local_addr().unwrap(),
-//     date_time_helper().unwrap()
-//   );
-
-//   for stream in listener.incoming() {
-//     let mut buffer = [0; 1024];
-//     let mut response = String::from("HTTP/1.1 200 OK \r\n");
-//     response.push_str("Access-Control-Allow-Origin: *\r\n");
-//     response.push_str("Connection: Keep-Alive\r\n");
-//     response.push_str("Content-Type: application/json\r\n");
-//     response.push_str("\r\n");
-
-//     match stream {
-//       Ok(mut stream) => loop {
-//         stream.read(&mut buffer)?;
-//         let json_response = match serde_json::to_string(&procs_stat_vec) {
-//           Ok(response) => response + "\r\n",
-//           Err(_) => "[]".to_string(),
-//         };
-//         response.push_str(&json_response);
-//         stream.write_all(response.as_bytes())?;
-//         stream.flush().unwrap();
-//       },
-//       Err(e) => {
-//         println!("Error: {}", e);
-//       }
-//     }
-//   }
-//   Ok(())
-// }
 
 const DATETIME_FORMAT: &'static str = "%Y-%m-%d | %H:%M:%S";
 
@@ -325,7 +272,7 @@ mod test {
 
   #[test]
   fn test_init_proc_attr() {
-    let proc_attr = ProcAttribute::new(0, 0., 0., 0, "");
+    let proc_attr = ProcAttribute::new(0, 0., 0., 0, "".to_string());
     assert_eq!(proc_attr.execution, "");
     assert_ne!(proc_attr.to_owned().execution, String::from("Something"));
   }
