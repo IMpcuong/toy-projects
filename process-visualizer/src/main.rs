@@ -13,6 +13,11 @@ use std::{
 
 use crate::process_collector::*;
 
+// TODO:
+// - FIXME: Analyze the performance issues of the following write -> read -> shared data operations.
+// - Support recover from frozen state.
+// - Beautify the UI behavior for a better user's experience.
+
 // NOTE: Define the interval between updates (in seconds).
 const UPDATE_INTERVAL_SEC: u64 = 5;
 
@@ -26,6 +31,15 @@ fn main() -> std::io::Result<()> {
       priority: 10,
       execution: String::from("")
     })
+  );
+
+  let (host, port) = ("127.0.0.1", 9999);
+  let addr = format!("{}:{}", host, port);
+  let listener = TcpListener::bind(addr).unwrap();
+  println!(
+    "INFO: Server hosted at address {:?}, {:?}",
+    listener.local_addr().unwrap(),
+    date_time_helper().unwrap()
   );
 
   // NOTE: Open process-statistics file for writing with an initial update.
@@ -50,15 +64,6 @@ fn main() -> std::io::Result<()> {
     }
     start_time = Instant::now();
 
-    let (host, port) = ("127.0.0.1", 9999);
-    let addr = format!("{}:{}", host, port);
-    let listener = TcpListener::bind(addr).unwrap();
-    println!(
-      "INFO: Server hosted at address {:?}, {:?}",
-      listener.local_addr().unwrap(),
-      date_time_helper().unwrap()
-    );
-
     std::thread::spawn(move || {
       loop {
         let mut proc_invoker = invoke_process_with(
@@ -73,7 +78,7 @@ fn main() -> std::io::Result<()> {
           convert_process_stat_to_string(proc_invoker.stdout.as_mut().unwrap())
             .unwrap_or_default();
         redirect_procs_stat_to_file(output, Path::new(""));
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_secs(3));
 
         std::thread::spawn(move || {
           // NOTE: Open the stats file simultaneously.
@@ -130,7 +135,7 @@ fn main() -> std::io::Result<()> {
         Ok(mut stream) => {
           stream.read(&mut buffer)?;
 
-          let json_response = match serde_json::to_string(&procs_stat_vec_clone)
+          let json_response = match serde_json::to_string(procs_stat_vec_clone)
           {
             Ok(response) => response + "\r\n",
             Err(_) => "[]".to_string(),

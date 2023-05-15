@@ -111,7 +111,7 @@ impl ProcAttribute {
     let re = Regex::new(r"\s+").unwrap();
     let words_per_line: Vec<&str> = re.split(&stat_line_data).collect();
     if words_per_line.len() < 5 {
-      return ProcAttribute::new(0, 0., 0., 0, "".to_string()); // NOTE: Skip invalid lines.
+      return ProcAttribute::default(); // NOTE: Skip invalid lines.
     }
 
     let pid = words_per_line[0].parse::<usize>().unwrap_or_default();
@@ -206,52 +206,54 @@ pub fn redirect_procs_stat_to_file<T>(stat: T, mut path: &'static Path)
 where
   T: 'static + Debug + Send + Sync + ToString,
 {
-  let proc_stat_data = stat.to_string();
-  let default_path = Box::new(Path::new(FILE_NAME));
+  std::thread::spawn(move || {
+    let proc_stat_data = stat.to_string();
+    let default_path = Box::new(Path::new(FILE_NAME));
 
-  // NOTE: Syntax equivalent with: `if path.to_str() == Some("")`.
-  if let Some("") = path.to_str() {
-    unsafe {
-      path = *Box::into_raw(default_path);
+    // NOTE: Syntax equivalent with: `if path.to_str() == Some("")`.
+    if let Some("") = path.to_str() {
+      unsafe {
+        path = *Box::into_raw(default_path);
+      }
     }
-  }
 
-  if path.exists() {
-    let mut existed = std::fs::OpenOptions::new()
-      .truncate(true)
-      .write(true)
-      .create(false)
-      .mode(0o770)
-      .open(path)
-      .expect("INFO: Successfully open our existing file");
+    if path.exists() {
+      let mut existed = std::fs::OpenOptions::new()
+        .truncate(true)
+        .write(true)
+        .create(false)
+        .mode(0o770)
+        .open(path)
+        .expect("INFO: Successfully open our existing file");
 
-    match existed.write_all(proc_stat_data.as_bytes()) {
+      match existed.write_all(proc_stat_data.as_bytes()) {
+        Err(why) => {
+          panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
+        }
+        Ok(_) => println!(
+          "INFO: Successfully wrote to {}, at {:?}",
+          path.display(),
+          date_time_helper().unwrap()
+        ),
+      };
+      return;
+    }
+
+    let mut stat_file = match File::create(path) {
+      Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
+      Ok(opened) => opened,
+    };
+    match stat_file.write_all(proc_stat_data.as_bytes()) {
       Err(why) => {
-        panic!("Error: Couldn't write to {}: {:?}", path.display(), why)
+        panic!("Error: Couldn't write to {}: {}", path.display(), why)
       }
       Ok(_) => println!(
         "INFO: Successfully wrote to {}, at {:?}",
         path.display(),
         date_time_helper().unwrap()
       ),
-    };
-    return;
-  }
-
-  let mut stat_file = match File::create(path) {
-    Err(why) => panic!("ERROR: Couldn't open {}: {}", path.display(), why),
-    Ok(opened) => opened,
-  };
-  match stat_file.write_all(proc_stat_data.as_bytes()) {
-    Err(why) => {
-      panic!("Error: Couldn't write to {}: {}", path.display(), why)
     }
-    Ok(_) => println!(
-      "INFO: Successfully wrote to {}, at {:?}",
-      path.display(),
-      date_time_helper().unwrap()
-    ),
-  }
+  });
 }
 
 const DATETIME_FORMAT: &'static str = "%Y-%m-%d | %H:%M:%S";
