@@ -93,7 +93,7 @@ let iterable = (function* (array) {
   yield* array;
 })(values); // NOTE: Analogy/equivalent with the closure/lambda/anonymous function syntax in Golang.
 
-// Another implementation method:
+// NOTE(impcuong): Another implementation method.
 // let iterable = (function* () {
 //   yield* values;
 // })()
@@ -114,7 +114,7 @@ console.info("Null object assignments:", obj3);
 // NOTE: Reassure the object is an instance of array type.
 // if (!Array.isArray(values)) return;
 
-// Update data for our null map:
+// NOTE: Update data for our null map.
 indices.forEach((i) => {
   const newAge = i !== 0 ? Math.pow(i, 2) : i;
   const impc = new AdvancedHuman(AdvancedHuman.defaultName, newAge.toFixed());
