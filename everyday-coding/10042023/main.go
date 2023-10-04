@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
+
+	"golang.org/x/sync/singleflight"
 )
 
 func collectLocalNwAddrs() []string {
@@ -25,16 +28,28 @@ func collectLocalNwAddrs() []string {
 }
 
 func main() {
+	var sfg = singleflight.Group{}
+
 	allAbtIPs := collectLocalNwAddrs()
+	allAbtIPs = append(allAbtIPs, allAbtIPs[len(allAbtIPs)-1])
 	for _, addr := range allAbtIPs {
 		fmt.Println(addr)
 	}
 	http.HandleFunc("/addresses", func(w http.ResponseWriter, r *http.Request) {
 		queriedAddr := r.URL.Query().Get("ip_pos")
-		if curPos, err := strconv.Atoi(queriedAddr); curPos >= len(allAbtIPs) || curPos < 0 || err != nil {
+		curPos, err := strconv.Atoi(queriedAddr)
+
+		log.Printf("Howdy, looks how far you have come!!!")
+		if curPos >= len(allAbtIPs) || curPos < 0 || err != nil {
 			fmt.Fprint(w, "You sucks, dude!")
 		} else {
+			// NOTE: Normal implementation.
 			fmt.Fprint(w, allAbtIPs[curPos], "\n")
+			// NOTE: Singleflight implementation.
+			resp, _, _ := sfg.Do(queriedAddr, func() (interface{}, error) {
+				return allAbtIPs[curPos], nil
+			})
+			fmt.Fprint(w, resp, "\n")
 		}
 	})
 	// Exp: `curl "http://localhost:8888/addresses?ip_pos=3"`.
