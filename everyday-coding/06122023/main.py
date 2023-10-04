@@ -14,7 +14,7 @@ def explore_args_(*args):
         print(arg, end="\n")
 
 
-# `kwargs`: An arguments list with their precendence named key.
+# `kwargs`: An arguments list with their precedence named key.
 def explore_kwargs_(**kwargs):
     if not isinstance(kwargs, dict):
         print(f"{kwargs.__class__}")
@@ -31,7 +31,8 @@ if __name__ == "__main__":
     sample_dict["three"] = 3
     dict_based = isinstance(sample_dict, dict)
     print(f"{sample_dict.__class__}: {dict_based}", end="\n")
-    print(repr(sample_dict), dir(__builtins__), end="\n")
+    print(repr(sample_dict))
+    print(dir(__builtins__), end="\n")
 
     ageless = TestDict("unknown")
     print(ageless.__dict__)
@@ -43,10 +44,10 @@ if __name__ == "__main__":
     explore_kwargs_(one=1, two=2, three=3)
     explore_kwargs_(four=["failover"])
 
-    array_2D: typing.List[typing.List[str]] = [['1', '2', '3', '5'], ['a', 'b', 'c']]
+    array_2D: typing.List[typing.List[str]] = [["1", "2", "3", "5"], ["a", "b", "c"]]
     for i, _ in enumerate(array_2D):
-      print(i)
-      for val in array_2D[i]:
-        print(val)
+        print(i)
+        for val in array_2D[i]:
+            print(val)
 
     sys.exit(0)
