@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -24,37 +25,33 @@ func collectLocalNwAddrs() []string {
 		errorFreeAddrs, _ := i.Addrs()
 		addrs = append(netAddrsToSliceFnOnce(errorFreeAddrs), addrs...)
 	}
-	return addrs
+	return slices.Compact(addrs)
 }
 
 func main() {
 	var sfg = singleflight.Group{}
 
 	allAbtIPs := collectLocalNwAddrs()
-	allAbtIPs = append(allAbtIPs, allAbtIPs[len(allAbtIPs)-1])
 	for _, addr := range allAbtIPs {
-		fmt.Println(addr)
+		log.Println(addr)
 	}
 	http.HandleFunc("/addresses", func(w http.ResponseWriter, r *http.Request) {
 		queriedAddr := r.URL.Query().Get("ip_pos")
-		curPos, err := strconv.Atoi(queriedAddr)
-
-		log.Printf("Howdy, looks how far you have come!!!")
-		if curPos >= len(allAbtIPs) || curPos < 0 || err != nil {
-			fmt.Fprint(w, "You sucks, dude!")
-		} else {
-			// NOTE: Normal implementation.
-			fmt.Fprint(w, allAbtIPs[curPos], "\n")
-			// NOTE: Singleflight implementation.
-			resp, _, _ := sfg.Do(queriedAddr, func() (interface{}, error) {
+		// NOTE: Singleflight implementation.
+		resp, _, _ := sfg.Do(queriedAddr, func() (interface{}, error) {
+			if curPos, err := strconv.Atoi(queriedAddr); err != nil ||
+				(curPos >= len(allAbtIPs) || curPos < 0) {
+				return "You sucks, dude!", nil
+			} else {
+				log.Printf("Howdy, looks how far you have become!!!")
 				return allAbtIPs[curPos], nil
-			})
-			fmt.Fprint(w, resp, "\n")
-		}
+			}
+		})
+		fmt.Fprint(w, resp, "\n")
 	})
 	// Exp: `curl "http://localhost:8888/addresses?ip_pos=3"`.
 	err := http.ListenAndServe(":8888", nil)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 const (
 	ENDPOINT   string = "http://localhost:8888/addresses?ip_pos="
-	TOTAL_REQS int    = 12
+	TOTAL_REQS int    = 18
 )
 
 func triggerAPIFrom(endpoint string) {
