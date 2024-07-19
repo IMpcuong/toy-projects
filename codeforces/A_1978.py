@@ -4,4 +4,4 @@ t = int(input())
 for _ in range(t):
     books = int(input())
     pages = list(map(int, input().split()))
-    print(pages[books - 1] + max(pages[:books - 1]))
+    print(pages[books - 1] + max(pages[: books - 1]))
