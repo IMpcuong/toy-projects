@@ -6,7 +6,7 @@ while t > 0:
     a = list(map(int, input().split()))
     b = list(map(int, input().split()))
     zipped = list(zip(a, b))
-    zipped.sort() # NOTE: Sorting based on the first element of the tuple.
+    zipped.sort()  # NOTE: Sorting based on the first element of the tuple.
     p1 = [tup[0] for tup in zipped]
     p2 = [tup[1] for tup in zipped]
     print(*p1)

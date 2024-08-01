@@ -1,5 +1,6 @@
 # Link: https://codeforces.com/problemset/problem/1915/C
 
+
 def binary_search(l, r) -> bool:
     if r < 1:
         return True
