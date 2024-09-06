@@ -11,7 +11,7 @@ while t > 0:
             ops += 1
             break
         x += x
-        l_x <<= 1 # l_x = l_x * 2
+        l_x <<= 1  # l_x = l_x * 2
         ops += 1
     print(ops if s in x else -1)
     t -= 1
