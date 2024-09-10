@@ -5,6 +5,7 @@
 *.tag
 *.xml
 *.gdb
+out*
 
 .vscode/
 output/
