@@ -1,6 +1,6 @@
 # Link: https://codeforces.com/problemset/problem/1883/C
 
-from typing import List, Tuple
+from typing import List
 
 
 def find_optimal_ops(k: int, n: int, arr: List[int]) -> int:
