@@ -6,9 +6,9 @@ while t > 0:
     p = list(map(int, input().split()))
     s = input()
     ans = [0] * n
+    visited = [False] * n
     for i in range(n):
         cur = i
-        visited = [False] * n
         reached = []
         if visited[i]:
             continue
@@ -16,8 +16,12 @@ while t > 0:
             reached.append(cur)
             visited[cur] = True
             cur = p[cur] - 1
+        count = 0
         for r in reached:
             if s[r] == "0":
-                ans[i] += 1
+                # ans[i] += 1
+                count += 1
+        for r in reached:
+            ans[r] = count
     print(*ans)
     t -= 1
