@@ -9,19 +9,20 @@ while t > 0:
     visited = [False] * n
     for i in range(n):
         cur = i
-        reached = []
+        path = []
+        # NOTE: non-directed graph, node[i] -> node[j] through n nodes, the reverse path is identical.
         if visited[i]:
             continue
         while not visited[cur]:
-            reached.append(cur)
+            path.append(cur)
             visited[cur] = True
             cur = p[cur] - 1
         count = 0
-        for r in reached:
+        for r in path:
             if s[r] == "0":
                 # ans[i] += 1
                 count += 1
-        for r in reached:
+        for r in path:
             ans[r] = count
     print(*ans)
     t -= 1
