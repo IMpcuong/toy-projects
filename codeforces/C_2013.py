@@ -1,65 +1,46 @@
 # Link: https://codeforces.com/contest/2013/problem/C
 
 import sys
+from typing import Deque
+
 
 input = lambda: sys.stdin.readline().rstrip()
 input_to_int = lambda: int(input())
 input_to_map = lambda: map(int, input().split())
 input_to_list = lambda: list(input_to_map())
-fmt_query = lambda sign, str: print(f"{sign} {str}", sep="", flush=True)
+send_fmt_query = lambda sign, s: print(f"{sign} {''.join(map(str, s))}", sep="", flush=True)
 
-t = int(input())
-while t > 0:
-    n = int(input())
-    ans = ""
-    if n == 1:
-        fmt_query("?", "0")
-        if input() == "1":
-            ans = "0"
-        else:
-            ans = "1"
-        fmt_query("!", ans)
-        continue
-    addRight = False
-    ans1 = "01" + ans
-    ans2 = "10" + ans
-    fmt_query("?", ans1)
-    r1 = input()
-    r2 = "0"
-    if r1 == "1":
-        ans = ans1
-    else:
-        fmt_query("?", ans2)
-        r2 = input()
-        if r2 == "1":
-            ans = ans2
-    if r1 == "1" or r2 == "1":
-        while len(ans) < n:
-            if not addRight:
-                fmt_query("?", "0" + ans)
-                if input() == "1":
-                    ans = "0" + ans
-                else:
-                    fmt_query("?", "1" + ans)
-                    if input() == "1":
-                        ans = "1" + ans
-                    else:
-                        addRight = True
-            else:
-                fmt_query("?", ans + "0")
-                if input() == "1":
-                    ans = ans + "0"
-                else:
-                    fmt_query("?", ans + "1")
-                    if input() == "1":
-                        ans = ans + "1"
-        fmt_query("!", ans)
-    else:
-        ans = "0" * n
-        fmt_query("?", ans)
-        if input() == "1":
-            fmt_query("!", ans)
-        else:
-            ans = "1" * n
-            fmt_query("!", ans)
-    t -= 1
+
+def ask(s: Deque) -> bool:
+    send_fmt_query("?", s)
+    return input() == "1"
+
+
+def answer(s: Deque) -> str:
+    send_fmt_query("!", s)
+
+
+from collections import deque
+
+
+def solve():
+    n = input_to_int()
+    dq = deque()
+    # NOTE: Cannot go further than the leftmost character.
+    while len(dq) < n:
+        dq.appendleft("0")  # dq[0] = "0"
+        if not ask(dq):
+            dq[0] = "1"
+            if not ask(dq):
+                dq.popleft()
+                break
+    # NOTE: Turn around + head to the rightmost character.
+    while len(dq) < n:
+        dq.append("0")  # dq[-1] = "0"
+        if not ask(dq):
+            dq[-1] = "1"
+    answer(dq)
+
+
+for _ in range(input_to_int()):
+    solve()
