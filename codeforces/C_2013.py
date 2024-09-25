@@ -8,7 +8,9 @@ input = lambda: sys.stdin.readline().rstrip()
 input_to_int = lambda: int(input())
 input_to_map = lambda: map(int, input().split())
 input_to_list = lambda: list(input_to_map())
-send_fmt_query = lambda sign, s: print(f"{sign} {''.join(map(str, s))}", sep="", flush=True)
+send_fmt_query = lambda sign, s: print(
+    f"{sign} {''.join(map(str, s))}", sep="", flush=True
+)
 
 
 def ask(s: Deque) -> bool:
