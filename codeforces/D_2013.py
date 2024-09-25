@@ -10,20 +10,15 @@ input_to_list = lambda: list(input_to_map())
 
 
 def indicate_last_max_idx(n: int, a: list[int]) -> int:
-    m = max(a)
-    c = a.count(m)
-    while m == a[n - 1]:
-        if c > 0:
-            n -= 1
-            c -= 1
-        if c == 0:
-            m = max(a[:n])
-            c = a[:n].count(m)
-    for i in range(n):
-        if a[i] == m:
-            c -= 1
-            if c == 0:
-                return i
+    interm_a = [
+        i for i, _ in sorted(enumerate(a), key=lambda x: x[1], reverse=True)
+    ]
+    for idx in interm_a:
+        if idx == n - 1:
+            continue
+        if a[idx] > a[idx + 1]:
+            return idx
+    return n - 1
 
 
 def calc_delta(greater: int, smaller: int) -> int:
