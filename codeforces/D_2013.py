@@ -9,25 +9,6 @@ input_to_map = lambda: map(int, input().split())
 input_to_list = lambda: list(input_to_map())
 
 
-def indicate_last_max_idx(n: int, a: list[int]) -> int:
-    interm_a = [
-        i for i, _ in sorted(enumerate(a), key=lambda x: x[1], reverse=True)
-    ]
-    for idx in interm_a:
-        if idx == n - 1:
-            continue
-        if a[idx] > a[idx + 1]:
-            return idx
-    return n - 1
-
-
-def calc_delta(greater: int, smaller: int) -> int:
-    d = greater - smaller
-    if d % 2 == 0:
-        return d // 2
-    return d // 2 + 1
-
-
 def solve() -> int:
     n = input_to_int()
     a = input_to_list()
@@ -39,15 +20,30 @@ def solve() -> int:
         elif a[0] < a[1]:
             return a[1] - a[0]
         return (a[0] - a[1]) % 2
-    m_idx = indicate_last_max_idx(n, a)
-    while m_idx < n - 1:
-        if a[m_idx] < a[m_idx + 1]:
-            break
-        d = calc_delta(a[m_idx], a[m_idx + 1])
-        a[m_idx] -= d
-        a[m_idx + 1] += d
-        m_idx = indicate_last_max_idx(n, a)
-    return max(a) - min(a)
+    # NOTE: The stack only got 2 forms after any steps of balancing:
+    #   + stack = [(n + m), a]
+    #   + stack = [(n, a), (m, a + 1)]
+    stack = []
+    for i in range(n):
+        cur_c, cur_v = 1, a[i]
+        while stack and a[i] < stack[-1][1]:
+            s_c, s_v = stack.pop()
+            cur_c += s_c
+            cur_v += s_c * s_v
+            a[i] = cur_v // cur_c
+        a[i], remain = divmod(cur_v, cur_c)
+        if remain == 0:
+            stack.append([cur_c, a[i]])
+        # NOTE: After balancing:
+        #   stack := [(n, a[i]), (m, a[i] + 1)]
+        #   +> n + m = cur_c
+        #   +> n * a[i] + m * (a[i] + 1) = cur_v
+        if remain > 0:
+            stack.append([cur_c - remain, a[i]])
+            # stack.append([cur_v - a[i] * cur_c, a[i] + 1])
+            stack.append([remain, a[i] + 1])  # NOTE: cur_v = a[i] * cur_c + remain
+        # print("1>", stack)
+    return stack[-1][1] - stack[0][1]
 
 
 for _ in range(input_to_int()):
