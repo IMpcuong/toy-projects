@@ -40,8 +40,7 @@ def solve() -> int:
         #   cur_c = n + m
         # + After balancing:
         #   stack := [(n, a[i]), (m, a[i] + 1)]
-        #   +> n + m = cur_c
-        #   +> n * a[i] + m * (a[i] + 1) = cur_v
+        #   n * a[i] + m * (a[i] + 1) = cur_v
         #     <-> (n + m) * a[i] + m = cur_v
         #     <-> cur_c * a[i] + m = a[i] * cur_c + remain
         #     <-> m = remain && n = cur_c - remain
