@@ -34,13 +34,19 @@ def solve() -> int:
         a[i], remain = divmod(cur_v, cur_c)
         if remain == 0:
             stack.append([cur_c, a[i]])
-        # NOTE: After balancing:
+        # NOTE:
+        # + Given conditions:
+        #   cur_v = a[i] * cur_c + remain
+        #   cur_c = n + m
+        # + After balancing:
         #   stack := [(n, a[i]), (m, a[i] + 1)]
         #   +> n + m = cur_c
         #   +> n * a[i] + m * (a[i] + 1) = cur_v
+        #     <-> (n + m) * a[i] + m = cur_v
+        #     <-> cur_c * a[i] + m = a[i] * cur_c + remain
+        #     <-> m = remain && n = cur_c - remain
         if remain > 0:
             stack.append([cur_c - remain, a[i]])
-            # stack.append([cur_v - a[i] * cur_c, a[i] + 1])
             stack.append([remain, a[i] + 1])  # NOTE: cur_v = a[i] * cur_c + remain
         # print("1>", stack)
     return stack[-1][1] - stack[0][1]

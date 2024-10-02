@@ -17,6 +17,9 @@ while t > 0:
             path.append(cur)
             visited[cur] = True
             cur = p[cur] - 1
+        # NOTE: path = [i, j, k, ...] = cycle.
+        #   -> node[i] -> node[j] -> node[k] -> ... -> node[i].
+        #   -> reached(node[i]) = reached(node[j]) = reached(node[k]) = ...
         count = 0
         for r in path:
             if s[r] == "0":
