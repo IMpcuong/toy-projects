@@ -19,7 +19,7 @@ def solve() -> list:
     # + [1, -2, -2] -> k = 1 satisfied.
     # + [3, -2, -2] -> k = 2 satisfied.
     # + [5, -2, -2] -> k = 3 satisfied.
-    #   -> We use -2 as the basis element to apply the odd and even rule.
+    #   -> We use -2 as the basis element to apply the "odd-even" rule.
     #   -> res[i] = 2 * k - 1.
     # + [5, 1, -2] -> k = 4 satisfied && k > n.
     #   -> The first element now point the next index by shifting the array by 1 unit.

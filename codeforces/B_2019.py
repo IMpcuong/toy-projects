@@ -1,4 +1,4 @@
-# Link: https://codeforces.com/problemset/problem/2014/D
+# Link: https://codeforces.com/problemset/problem/2019/B
 
 import sys
 from math import factorial
@@ -14,34 +14,41 @@ def solve() -> list:
     n, q = input_to_map()
     segments = input_to_list()
     queries = input_to_list()
-    q_dict = {k: 0 for k in queries}
-    # ???
-    if n == 2:
-        return []
-    f_n = factorial(n)
-    f_n_2 = factorial(n - 2)
-    total_comb = f_n / (2 * f_n_2)
-    # NOTE: f_2 := factorial(2) = 2.
-    for chunk in range(n - 1):
-        l, r = chunk, chunk + 1
-        l_existed, r_existed = 0, 0
-        if l == 0:
-            f_remain = factorial(n - r)
-            f_remain_2 = factorial(n - r - 2)
-            r_existed = f_remain / (2 * f_remain_2)
+    freq = {k: 0 for k in queries}
+    # NOTE:
+    #   + nCk | k = 2 := n! / (2! * (n - 2)!) = (n * (n - 1)) / 2.
+    calc_comb_fn_once = lambda x: (x * (x - 1)) // 2
+    total_combs = calc_comb_fn_once(n)
+    for i in range(n - 1):
+        l, r = i, i + 1
+        l_combs, r_combs = 0, 0
+        occurs = 0
+        if r == 1:
+            r_points = n - r
+            r_combs = calc_comb_fn_once(r_points)
+        elif r == n - 1:
+            l_points = r
+            l_combs = calc_comb_fn_once(l_points)
         else:
-            f_r = factorial(r)
-            f_r_2 = factorial(r - 2)
-            if r == n - 1:
-                l_existed = f_r / (2 * f_r_2)
-            else:
-                f_remain = factorial(n - r)
-                f_remain_2 = factorial(n - r - 2)
-                l_existed = f_r / (2 * f_r_2)
-                r_existed = f_remain / (2 * f_remain_2)
-        k = total_comb - (l_existed + r_existed)
-        q_dict[k] += segments[r] - segments[l]
-    return list(q_dict.values())
+            l_points, r_points = r, n - r
+            l_combs, r_combs = calc_comb_fn_once(l_points), calc_comb_fn_once(r_points)
+        occurs = total_combs - (l_combs + r_combs)
+        num_ele = segments[r] - segments[l] - 1
+        if occurs not in freq:
+            freq[occurs] = num_ele
+        else:
+            freq[occurs] += num_ele
+    for i in range(n):
+        r = n - i
+        l = i
+        occurs = (l * r) + r - 1
+        if occurs not in freq:
+            freq[occurs] = 1
+        else:
+            freq[occurs] += 1
+    for i in range(q):
+        queries[i] = freq[queries[i]]
+    return queries
 
 
 for _ in range(input_to_int()):
