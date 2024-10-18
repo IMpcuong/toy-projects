@@ -1,7 +1,6 @@
 # Link: https://codeforces.com/problemset/problem/2019/B
 
 import sys
-from math import factorial
 
 
 input = lambda: sys.stdin.readline().rstrip()
