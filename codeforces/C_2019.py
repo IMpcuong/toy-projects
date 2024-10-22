@@ -14,14 +14,37 @@ def solve() -> int:
     freq = input_to_list()
     decks = max(freq)
     owned_cards = sum(freq)
-    distinct = n
-    if k == 0:
-        if 2 * decks == owned_cards:
-            return 2
-        return 1
-    while distinct * decks - owned_cards > k and distinct > 1:
-        distinct -= 1
+    distinct = 1
+    if decks == 0:
+        return min(n, k)
+    for c in range(1, n + 1):
+        total_cards = owned_cards + k
+        t_decks, m = divmod(total_cards, c)
+        if k == 0:
+            if m == 0 and t_decks >= decks:
+                distinct = c
+        else:
+            if t_decks >= decks:
+                distinct = c
     return distinct
+
+
+# def solve() -> int:
+#     n, k = input_to_map()
+#     freq = input_to_list()
+#     decks = max(freq)
+#     owned_cards = sum(freq)
+#     distinct = n
+#     if decks == 0:
+#         return min(n, k)
+#     if k == 0:
+#         while owned_cards % decks != 0 and distinct > 1:
+#             decks += 1
+#         distinct = owned_cards // decks
+#         return distinct
+#     while distinct * decks - owned_cards > k and distinct > 1:
+#         distinct -= 1
+#     return distinct
 
 
 for _ in range(input_to_int()):
