@@ -12,39 +12,31 @@ input_to_list = lambda: list(input_to_map())
 def solve() -> int:
     n, k = input_to_map()
     freq = input_to_list()
-    decks = max(freq)
+    min_decks = max(freq)
     owned_cards = sum(freq)
     distinct = 1
-    if decks == 0:
-        return min(n, k)
-    for c in range(1, n + 1):
-        total_cards = owned_cards + k
-        t_decks, m = divmod(total_cards, c)
-        if k == 0:
-            if m == 0 and t_decks >= decks:
-                distinct = c
+    for i in range(2, n + 1):
+        # remain_cards < i (1)
+        decks, remain_cards = divmod(owned_cards, i)
+        if decks < min_decks:
+            if k == 0:
+                continue
+            # k % i < i (2)
+            # (1) + (2) -> remain_cards + k % i < 2 * i
+            if remain_cards + k % i >= i:
+                decks += 1
+            needed = min_decks - decks
+            extra = k // i
+            if extra < needed:
+                continue
+            distinct = i
         else:
-            if t_decks >= decks:
-                distinct = c
+            if remain_cards == 0:
+                distinct = i
+            else:
+                if i - remain_cards <= k:
+                    distinct = i
     return distinct
-
-
-# def solve() -> int:
-#     n, k = input_to_map()
-#     freq = input_to_list()
-#     decks = max(freq)
-#     owned_cards = sum(freq)
-#     distinct = n
-#     if decks == 0:
-#         return min(n, k)
-#     if k == 0:
-#         while owned_cards % decks != 0 and distinct > 1:
-#             decks += 1
-#         distinct = owned_cards // decks
-#         return distinct
-#     while distinct * decks - owned_cards > k and distinct > 1:
-#         distinct -= 1
-#     return distinct
 
 
 for _ in range(input_to_int()):
