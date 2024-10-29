@@ -12,11 +12,12 @@ input_to_list = lambda: list(input_to_map())
 def solve() -> int:
     n = input_to_int()
     topics = input_to_list()
+    mid = n // 2
     dp = [0] * 2
-    for i in range(n // 2):
+    for i in range(mid):
         if i == 0:
-            dp[0] = 0 # cur switch
-            dp[1] = 0 # cur stay
+            dp[0] = 0  # cur switch
+            dp[1] = 0  # cur stay
         else:
             leftmost = i
             prev_leftmost = leftmost - 1
@@ -53,14 +54,14 @@ def solve() -> int:
             # print("2>>>>>", i, stay_switch, stay_stay)
             dp[1] = min(stay_switch, stay_stay)
     if n % 2 == 0:
-        if topics[n // 2 - 1] == topics[n // 2]:
+        if topics[mid - 1] == topics[mid]:
             dp[0] += 1
             dp[1] += 1
     else:
-        if topics[n // 2] == topics[n // 2 - 1] == topics[n // 2 + 1]:
+        if topics[mid] == topics[mid - 1] == topics[mid + 1]:
             dp[0] += 2
             dp[1] += 2
-        elif topics[n // 2] == topics[n // 2 - 1] or topics[n // 2] == topics[n // 2 + 1]:
+        elif topics[mid] == topics[mid - 1] or topics[mid] == topics[mid + 1]:
             dp[0] += 1
             dp[1] += 1
     return min(dp[0], dp[1])
