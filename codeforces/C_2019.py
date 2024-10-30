@@ -16,7 +16,7 @@ def solve() -> int:
     owned_cards = sum(freq)
     distinct = 1
     for i in range(2, n + 1):
-        # remain_cards < i (1)
+        # remain_cards = owned_cards % i < i (1)
         decks, remain_cards = divmod(owned_cards, i)
         if decks < min_decks:
             if k == 0:
