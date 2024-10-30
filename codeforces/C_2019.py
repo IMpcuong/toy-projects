@@ -10,32 +10,32 @@ input_to_list = lambda: list(input_to_map())
 
 
 def solve() -> int:
-    n, k = input_to_map()
+    n, extra_cards = input_to_map()
     freq = input_to_list()
     min_decks = max(freq)
     owned_cards = sum(freq)
     distinct = 1
-    for i in range(2, n + 1):
+    for deck_height in range(2, n + 1):
         # remain_cards = owned_cards % i < i (1)
-        decks, remain_cards = divmod(owned_cards, i)
+        decks, remain_cards = divmod(owned_cards, deck_height)
         if decks < min_decks:
-            if k == 0:
+            if extra_cards == 0:
                 continue
             # k % i < i (2)
             # (1) + (2) -> remain_cards + k % i < 2 * i
-            if remain_cards + k % i >= i:
+            if remain_cards + extra_cards % deck_height >= deck_height:
                 decks += 1
-            needed = min_decks - decks
-            extra = k // i
-            if extra < needed:
+            needed_decks = min_decks - decks
+            extra_decks = extra_cards // deck_height
+            if extra_decks < needed_decks:
                 continue
-            distinct = i
+            distinct = deck_height
         else:
             if remain_cards == 0:
-                distinct = i
+                distinct = deck_height
             else:
-                if i - remain_cards <= k:
-                    distinct = i
+                if deck_height - remain_cards <= extra_cards:
+                    distinct = deck_height
     return distinct
 
 
