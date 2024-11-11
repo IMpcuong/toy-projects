@@ -10,6 +10,28 @@ input_to_map = lambda: map(int, input().split())
 input_to_list = lambda: list(input_to_map())
 
 
+def binary_search_closest_upper(
+    cur_idx: int, indices: List[int], len_indices: int
+) -> int:
+    closest_upper_idx_in_indices = 0
+    prev_same_sum_idx = -len_indices
+    l, r = 0, len_indices
+    while l <= r:
+        mid_idx = (l + r) // 2
+        v = indices[mid_idx]
+        if cur_idx > v:
+            l = mid_idx
+        elif cur_idx < v:
+            r = mid_idx
+        else:
+            closest_upper_idx_in_indices = mid_idx
+            break
+    if closest_upper_idx_in_indices == 0:
+        return prev_same_sum_idx
+    prev_same_sum_idx = indices[closest_upper_idx_in_indices - 1]
+    return prev_same_sum_idx
+
+
 def solve() -> int:
     n = input_to_int()
     a = input_to_list()
@@ -38,21 +60,10 @@ def solve() -> int:
             same_sum_indices = map_remain_sum[s_dp]
             # print(same_sum_indices)
             l = len(same_sum_indices)
-            tmp_idx = -n
-            for j in range(l):
-                start_zero_sum_seq = same_sum_indices[j]
-                end_zero_sum_seq = i
-                mark_start_zero_seq = same_sum_indices[j - 1]
-                if end_zero_sum_seq <= start_zero_sum_seq:
-                    if j == 0:
-                        break
-                    tmp_idx = mark_start_zero_seq
-                    same_sum_indices = same_sum_indices[j:]
-                    map_remain_sum[s_dp] = same_sum_indices
-                    break
+            tmp_idx = binary_search_closest_upper(i, same_sum_indices, l)
             # print(tmp_idx)
             dp[i] = dp[i - 1]
-            if tmp_idx == -n:
+            if tmp_idx == -l:
                 continue
             dp_tmp = 1
             if tmp_idx == -1:
