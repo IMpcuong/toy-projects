@@ -30,14 +30,14 @@ namespace Investigator
   class Vector
   {
   private:
-    constexpr static bool verify_vector_type()
+    constexpr static bool verify_vector_type(const std::string_view kwd)
     {
       std::string vtype_as_str(GenericTypeHelper<S>::get_name());
-      return vtype_as_str.find("signed") != std::string::npos;
+      return vtype_as_str.find(kwd) != std::string::npos;
     }
 
     constexpr static std::string
-    convert_num_to_string(S num)
+    convert_num_to_string(const S &num)
     {
       // if (!std::same(S, std::size_t))
       return std::to_string(num);
@@ -47,11 +47,13 @@ namespace Investigator
     Vector() = default;
     virtual ~Vector() {};
 
+    // std::ostream &operator<<(std::ostream &os, const Vector<S> &v);
+
     template <typename T>
     static void ptr_func(const T *ptr, S size)
     {
       std::string data;
-      if (verify_vector_type())
+      if (verify_vector_type(std::string_view("signed")))
         data = "data-" + convert_num_to_string(size) + " = ";
       std::cout << data;
       for (S i = 0; i < size; ++i)
@@ -59,6 +61,12 @@ namespace Investigator
       std::cout << "\n";
     }
   };
+
+  std::ostream &operator<<(std::ostream &os, const Vector<> &v)
+  {
+    os << "Vector<" << GenericTypeHelper<std::size_t>::get_name() << ">";
+    return os;
+  }
 }
 
 int main()
@@ -92,6 +100,10 @@ int main()
   std::vector<int> vec7_(7);
   iota(vec7_.begin(), vec7_.end(), 8);
   Investigator::Vector<>::ptr_func<int>(vec7_.data(), vec7_.size()); // data-7 = 8 9 10 11 12 13 14
+
+  Investigator::Vector<unsigned long long> v;
+  v.~Vector();
+  // std::cout << v << "\n";
 
   return 0;
 }
