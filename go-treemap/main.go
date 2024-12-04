@@ -6,14 +6,14 @@ package main
 #import <Foundation/Foundation.h>
 
 long long getFileSize(const char* path) {
-  NSString *nsPath = [NSString stringWithUTF8String:path];
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  NSError *error = nil;
-  NSDictionary *attributes = [fileManager attributesOfItemAtPath:nsPath error:&error];
+	NSString *nsPath = [NSString stringWithUTF8String:path];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	NSError *error = nil;
+	NSDictionary *attributes = [fileManager attributesOfItemAtPath:nsPath error:&error];
 
-  if (error) {
-  	NSLog(@"Error getting file attributes: %@", error);
-  	return -1;
+	if (error) {
+		NSLog(@"Error getting file attributes: %@", error);
+		return -1;
 	}
 
 	return [attributes fileSize];
