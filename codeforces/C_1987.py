@@ -28,7 +28,7 @@ def solve() -> int:
                 if block_times >= diff:
                     dp[0] += 1
                 else:
-                    # NOTE: (heights[i] - blocks) - heights[i + 1]
+                    # NOTE: (heights[i] - block_times) - heights[i + 1]
                     dp[0] += diff - block_times
             else:
                 dp[0] += 1
