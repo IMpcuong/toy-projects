@@ -30,9 +30,10 @@ char ***str_separate_with_delim(char *_src_str, const char *delim, char **next_p
   size_t size = str_count_num_delim(_src_str, delim) + 1;
 
   // NOTE(@eskilsteenberg): `sizeof` is not a function (important).
-  // NOTE: With this syntax combination, type changing in `malloc` isn't a big deal anymore.
-  //    Also, our manual allocation addressing doesn't need to be typecast explicitly.
-  //    Noting that these statements only doable when our variable have a concrete type,
+  // NOTE: With this syntax combination, the aribitrary of param's type inside a `malloc` call
+  //    isn't a big deal anymore.
+  //    Also, our manual allocation/addressing doesn't need to execute the typecast-operation explicitly.
+  //    Keep in mind that we can only implement these statements if our variable(s) possess a concrete type,
   //    not `void` nor `void *`.
   char ***substr_with_idx;
   substr_with_idx = malloc(size * (sizeof *substr_with_idx));
