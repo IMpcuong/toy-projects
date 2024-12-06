@@ -46,7 +46,6 @@ def solve() -> int:
         map_remain_sum[s].append(i)
     for indices in map_remain_sum.values():
         indices.sort()
-    # print(map_remain_sum)
 
     s_dp = sum(a[1:])
     dp = [0] * n
@@ -56,12 +55,9 @@ def solve() -> int:
                 dp[0] = 1
         else:
             s_dp -= a[i]
-            # print(i, s_dp)
             same_sum_indices = map_remain_sum[s_dp]
-            # print(same_sum_indices)
             l = len(same_sum_indices)
             tmp_idx = binary_search_closest_upper(i, same_sum_indices, l)
-            # print(tmp_idx)
             dp[i] = dp[i - 1]
             if tmp_idx == -l:
                 continue
@@ -69,12 +65,10 @@ def solve() -> int:
             if tmp_idx == -1:
                 if dp_tmp > dp[i]:
                     dp[i] = dp_tmp
-                # print("1>>>>>", dp[i])
             else:
                 dp_tmp = dp[tmp_idx] + 1
                 if dp_tmp > dp[i]:
                     dp[i] = dp_tmp
-                # print("2>>>>>", dp[i])
     return dp[-1]
 
 
