@@ -18,9 +18,9 @@ def solve() -> list[int]:
     tmp_arr = [1] * (max_k + 1)
     for k in range(1, max_k + 1):
         if k == 1:
-            tmp_arr[k] = 2 # n = 2 && k = 1
+            tmp_arr[k] = 2  # n = 2 && k = 1
         else:
-            tmp_arr[k] = (2 * tmp_arr[k - 1]) % _mod_val # 2^k = 2 * 2^(k - 1)
+            tmp_arr[k] = (2 * tmp_arr[k - 1]) % _mod_val  # 2^k = 2 * 2^(k - 1)
     ans = [0] * pairs
     for i, k in enumerate(arr_k):
         ans[i] = tmp_arr[k]
