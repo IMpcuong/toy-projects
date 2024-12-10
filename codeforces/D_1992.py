@@ -15,7 +15,7 @@ _n = "NO"
 def solve() -> bool:
     n, jump_dist, total_swim_dist = input_to_map()
     route = input()
-    route = "L" + route + "L"  # NOTE: Treating shore/bank == log (equivalent/).
+    route = "L" + route + "L"  # NOTE: Treating shore/bank == log (equivalent/identical/analogous).
     n += 2
     log_indices = []
     for i in range(n):
