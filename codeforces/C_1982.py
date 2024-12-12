@@ -15,37 +15,35 @@ def solve() -> int:
     win_times = 0
     picked = 0
     for i in range(n):
-        val = cards[i]
         if picked > n:
             break
+        if i < picked:
+            continue
+        val = cards[i]
         if val > r:
             picked += 1
-            i = picked
-            print(f"1> [{i}]: p: {picked} | w: {win_times}")
-            continue
+            # print(f"1> p: {picked} | w: {win_times}")
         elif val >= l and val <= r:
             picked += 1
             win_times += 1
-            i = picked
-            print(f"2> [{i}]: p: {picked} | w: {win_times}")
-            continue
+            # print(f"2> p: {picked} | w: {win_times}")
         elif val < l:
             picked += 1
             sum = val
-            while picked < n:
+            # print(f"3> pre s: {sum} | i: {i}")
+            while picked < n and cards[picked] < l:
                 sum += cards[picked]
                 if sum > r:
                     break
                 elif sum < l:
                     picked += 1
                 elif l <= sum <= r:
-                    win_times += 1
                     picked += 1
+                    win_times += 1
                     break
-            print(f"3> [{i}]: p: {picked} | s: {sum} | w: {win_times}")
-            i = picked
-            continue
+            # print(f"3> p: {picked} | s: {sum} | w: {win_times}")
     return win_times
+
 
 for _ in range(input_to_int()):
     print(solve())
