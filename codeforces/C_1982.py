@@ -21,30 +21,29 @@ def solve() -> int:
         if val > r:
             picked += 1
             i = picked
-            # print(f"[{i}] {val}> p: {picked} | w: {win_times}")
+            print(f"1> [{i}]: p: {picked} | w: {win_times}")
             continue
         elif val >= l and val <= r:
             picked += 1
             win_times += 1
             i = picked
-            # print(f"[{i}] {val}> p: {picked} | w: {win_times}")
+            print(f"2> [{i}]: p: {picked} | w: {win_times}")
             continue
         elif val < l:
             picked += 1
-            if i < n - 1 and val + cards[i + 1] > r:
-                i = picked
-                continue
             sum = val
             while picked < n:
-                if sum + cards[picked] <= r:
-                    sum += cards[picked]
-                    picked += 1
-                else:
+                sum += cards[picked]
+                if sum > r:
                     break
-            # print(f"[{i}] {val}> p: {picked} | w: {win_times}")
-            win_times += 1
+                elif sum < l:
+                    picked += 1
+                elif l <= sum <= r:
+                    win_times += 1
+                    picked += 1
+                    break
+            print(f"3> [{i}]: p: {picked} | s: {sum} | w: {win_times}")
             i = picked
-            # print(f"[{i}] {val}> p: {picked} | w: {win_times}")
             continue
     return win_times
 
