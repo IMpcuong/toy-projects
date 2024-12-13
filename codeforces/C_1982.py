@@ -29,19 +29,40 @@ def solve() -> int:
             # print(f"2> p: {picked} | w: {win_times}")
         elif val < l:
             picked += 1
-            sum = val
-            # print(f"3> pre s: {sum} | i: {i}")
-            while picked < n and cards[picked] < l:
-                sum += cards[picked]
-                if sum > r:
+            while picked < n:
+                val += cards[picked]
+                firstPicked = picked - 1
+                lastPicked = picked
+                if val > r:
                     break
-                elif sum < l:
-                    picked += 1
-                elif l <= sum <= r:
+                elif val < l:
+                    while firstPicked <= lastPicked and lastPicked < n - 1:
+                        lastPicked += 1
+                        val += cards[lastPicked]
+                        # print("1>", firstPicked, lastPicked, val)
+                        if l <= val <= r:
+                            picked = lastPicked
+                            win_times += 1
+                            # print("2.1>", firstPicked, lastPicked, val)
+                            break
+                        elif val < l:
+                            continue
+                        while val > r:
+                            val -= cards[firstPicked]
+                            firstPicked += 1
+                            # print("2.2>", firstPicked, lastPicked, val)
+                            if l <= val <= r:
+                                picked = lastPicked
+                                win_times += 1
+                                break
+                            if firstPicked == lastPicked:
+                                picked = lastPicked
+                                break
+                elif l <= val <= r:
                     picked += 1
                     win_times += 1
                     break
-            # print(f"3> p: {picked} | s: {sum} | w: {win_times}")
+            # print(f"3> p: {picked} | s: {val} | w: {win_times}")
     return win_times
 
 
