@@ -22,46 +22,35 @@ def solve() -> int:
         val = cards[i]
         if val > r:
             picked += 1
-            # print(f"1> p: {picked} | w: {win_times}")
         elif val >= l and val <= r:
             picked += 1
             win_times += 1
-            # print(f"2> p: {picked} | w: {win_times}")
+            # print(f"0 [{i}]> p: {picked} | w: {win_times}")
         elif val < l:
             picked += 1
-            while picked < n:
-                val += cards[picked]
-                firstPicked = picked - 1
-                lastPicked = picked
-                if val > r:
-                    break
-                elif val < l:
-                    while firstPicked <= lastPicked and lastPicked < n - 1:
-                        lastPicked += 1
-                        val += cards[lastPicked]
-                        # print("1>", firstPicked, lastPicked, val)
-                        if l <= val <= r:
-                            picked = lastPicked
-                            win_times += 1
-                            # print("2.1>", firstPicked, lastPicked, val)
-                            break
-                        elif val < l:
-                            continue
-                        while val > r:
-                            val -= cards[firstPicked]
-                            firstPicked += 1
-                            # print("2.2>", firstPicked, lastPicked, val)
-                            if l <= val <= r:
-                                picked = lastPicked
-                                win_times += 1
-                                break
-                            if firstPicked == lastPicked:
-                                picked = lastPicked
-                                break
-                elif l <= val <= r:
-                    picked += 1
+            firstPicked = picked
+            lastPicked = picked
+            while firstPicked <= lastPicked and lastPicked < n:
+                val += cards[lastPicked]
+                lastPicked += 1
+                # print(f"1 [{i}]> f: {firstPicked} | l: {lastPicked} | v: {val} | w: {win_times}")
+                if l <= val <= r:
+                    picked = lastPicked
                     win_times += 1
+                    # print(f"2 [{i}]> f: {firstPicked} | l: {lastPicked} | v: {val} | w: {win_times}")
                     break
+                while val > r and firstPicked <= lastPicked:
+                    val -= cards[firstPicked - 1]
+                    firstPicked += 1
+                    if l <= val <= r:
+                        firstPicked = lastPicked + 1
+                        win_times += 1
+                        # print(f"3.1 [{i}]> f: {firstPicked} | l: {lastPicked} | v: {val} | w: {win_times}")
+                        break
+                    elif val < l:
+                        # print(f"3.2 [{i}]> f: {firstPicked} | l: {lastPicked} | v: {val} | w: {win_times}")
+                        break
+                picked = lastPicked
             # print(f"3> p: {picked} | s: {val} | w: {win_times}")
     return win_times
 
