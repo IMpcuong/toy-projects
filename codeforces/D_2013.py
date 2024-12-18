@@ -20,9 +20,11 @@ def solve() -> int:
         elif a[0] < a[1]:
             return a[1] - a[0]
         return (a[0] - a[1]) % 2
-    # NOTE: The stack only got 2 forms after any steps of balancing:
-    #   + stack = [(n + m), a]
-    #   + stack = [(n, a), (m, a + 1)]
+    # NOTE: The stack only got 2 forms after any steps of balancing (status quo):
+    #   + stack = [(n + m), a[i]]
+    #   + stack = [(n, a[i]), (m, a[i + 1])]
+    #   + n := the number of appearances of value a[i] in stack
+    #   + m := the number of appearances of value a[i + 1] in stack
     stack = []
     for i in range(n):
         cur_c, cur_v = 1, a[i]
