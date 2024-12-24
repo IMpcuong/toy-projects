@@ -9,111 +9,86 @@ input_to_map = lambda: map(int, input().split())
 input_to_list = lambda: list(input_to_map())
 
 
-_invalid_state = -1
+_invalid_val = 1e20 + 1
+_cost_swap = int(1e12)
+_cost_erase = _cost_swap + 1
 
 
-def set_current_step_cost(
-    dp_state: dict[str, int], cur_tail: str, cur_cost: int
-) -> None:
-    if dp_state[cur_tail] == _invalid_state:
-        dp_state[cur_tail] = cur_cost
-    else:
-        if dp_state[cur_tail] > cur_cost:
-            dp_state[cur_tail] = cur_cost
+def calc_optimal_cost_for_state(costs_per_state: list[int]) -> list[int]:
+    ans = []
+    length = len(costs_per_state)
+    for i in range(0, length, 3):
+        ans.append(
+            min(costs_per_state[i], costs_per_state[i + 1], costs_per_state[i + 2])
+        )
+    return ans
+
+
+def indicate_valid_min_cost(final_state_dict: dict[str, int]) -> int:
+    valid_dict = {k: v for k, v in final_state_dict.items() if v != _invalid_val}
+    return min(valid_dict.values())
 
 
 def solve() -> int:
     bin_str = input()
-    l = len(bin_str)
-    _cost = int(1e12)
-    if l == 1:
-        return 0
-    if l == 2:
-        if bin_str == "10":
-            return _cost
-        else:
-            return 0
-    get_min_cost_from = lambda dp: min([v for v in dp.values() if v != _invalid_state])
-    dp = {"00": _invalid_state, "01": _invalid_state, "11": _invalid_state}
-    first_char = bin_str[0]
-    second_char = bin_str[1]
-    third_char = bin_str[2]
-    starting_state = first_char + second_char
-    next_step = 0
-    if starting_state == "00":
-        if third_char == 0:
-            dp["00"] = 0  # 000 -> 000
-        else:
-            dp["00"] = _cost + 1  # 001 -> 00 ~ delete
-            dp["01"] = 0  # 001 -> 001
-        next_step = 3
-    elif starting_state == "01":
-        if third_char == "0":
-            dp["01"] = _cost  # 010 -> 001 ~ swap
-            dp["00"] = _cost  # 010 -> 00 ~ delete
-        else:
-            dp["11"] = 0  # 011 -> 011
-            dp["01"] = _cost  # 011 -> 01 ~ delete
-        next_step = 3
-    elif starting_state == "11":
-        if third_char == "0":
-            dp["11"] = _cost + 1  # 110 -> 11 ~ delete
-        else:
-            dp["11"] = 0  # 111 -> 111
-        next_step = 3
-    elif starting_state == "10":
-        if third_char == "0":
-            dp["00"] = _cost + 1  # 100 -> 00 ~ delete
-        else:
-            dp["11"] = _cost  # 101 -> 011 ~ swap
-            dp["01"] = _cost + 1  # 101 -> 01 ~ delete
-        next_step = 3
-    for i in range(next_step, l):
-        cur_char = bin_str[i]
-        dp_tmp = {"00": _invalid_state, "01": _invalid_state, "11": _invalid_state}
-        if cur_char == "0":
-            # prev_tail == 00
-            if dp["00"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="00", cur_cost=dp["00"]
-                )  # 000 -> 000
-            # prev_tail == 01
-            if dp["01"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="01", cur_cost=dp["01"] + _cost
-                )  # 010 -> 001 ~ swap
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="00", cur_cost=dp["01"] + _cost + 1
-                )  # 010 -> 00 ~ delete
-            # prev_tail == 11:
-            if dp["11"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="11", cur_cost=dp["11"] + _cost + 1
-                )  # 110 -> 11 ~ delete
-        elif cur_char == "1":
-            # prev_tail == 00
-            if dp["00"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="01", cur_cost=dp["00"]
-                )  # 001 -> 001
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="00", cur_cost=dp["00"] + _cost + 1
-                )  # 001 -> 00 ~ delete
-            # prev_tail == 01
-            if dp["01"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="11", cur_cost=dp["01"]
-                )  # 011 -> 011
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="01", cur_cost=dp["01"] + _cost + 1
-                )  # 011 -> 01 ~ swap
-            # prev_tail == 11:
-            if dp["11"] != _invalid_state:
-                set_current_step_cost(
-                    dp_state=dp_tmp, cur_tail="11", cur_cost=dp["11"]
-                )  # 111 -> 111
-        dp = dp_tmp
-    ans = get_min_cost_from(dp)
+    str_len = len(bin_str)
+    ans = 0
+    dp = {
+        "empty": 0,
+        "0": _invalid_val,
+        "1": _invalid_val,
+        "00": _invalid_val,
+        "01": _invalid_val,
+        "11": _invalid_val,
+    }
+    for i in range(str_len):
+        digit = bin_str[i]
+        # NOTE:
+        # + "0" ~ 0->2
+        # + "1" ~ 3->5
+        # + "00" ~ 6->8
+        # + "01" ~ 9->11
+        # + "11" ~ 12->14
+        tmp_val_list = [_invalid_val] * 15
+        if digit == "0":
+            tmp_val_list[0] = dp["empty"]
+            tmp_val_list[1] = dp["0"] + _cost_erase  # 00 -> 0
+            tmp_val_list[2] = dp["1"] + _cost_erase  # 10 -> 0
+
+            tmp_val_list[4] = dp["1"] + _cost_erase  # 10 -> 1
+
+            tmp_val_list[6] = dp["0"]
+            tmp_val_list[7] = dp["00"]  # 000 -> 00
+            tmp_val_list[8] = dp["01"] + _cost_erase  # 010 -> 00
+
+            tmp_val_list[9] = dp["1"] + _cost_swap  # 10 -> 01
+            tmp_val_list[10] = dp["01"] + _cost_swap  # 10 -> 01
+
+            tmp_val_list[12] = dp["11"] + _cost_erase  # 110 -> 11
+        elif digit == "1":
+            tmp_val_list[0] = dp["0"] + _cost_erase  # 01 -> 0
+
+            tmp_val_list[3] = dp["empty"]
+            tmp_val_list[4] = dp["0"] + _cost_erase  # 01 -> 1
+            tmp_val_list[5] = dp["1"] + _cost_erase  # 11 -> 1
+
+            tmp_val_list[6] = dp["00"] + _cost_erase  # 001 -> 00
+
+            tmp_val_list[9] = dp["0"]
+            tmp_val_list[10] = dp["00"]  # 001 -> 01
+            tmp_val_list[11] = dp["01"] + _cost_erase  # 011 -> 01
+
+            tmp_val_list[12] = dp["1"]  # 11 -> 11
+            tmp_val_list[13] = dp["11"]  # 111 -> 11
+            tmp_val_list[14] = dp["01"]  # 011 -> 11
+        optimal_vals = calc_optimal_cost_for_state(tmp_val_list)
+        dp["0"] = optimal_vals[0]
+        dp["1"] = optimal_vals[1]
+        dp["00"] = optimal_vals[2]
+        dp["01"] = optimal_vals[3]
+        dp["11"] = optimal_vals[4]
+        dp["empty"] = dp["empty"] + _cost_erase
+    ans = indicate_valid_min_cost(dp)
     return ans
 
 
