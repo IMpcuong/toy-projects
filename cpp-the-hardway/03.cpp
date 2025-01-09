@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 // clang++ -std=c++ 20 -O2 03.cpp -o out
@@ -26,36 +27,44 @@ public:
   Person(int age, std::string name) : age(age), name(std::move(name)) {};
 };
 
-class CustomFileHandler
+class FileProducer
 {
 private:
   FILE *_unchained;
 
 public:
-  CustomFileHandler(const std::string &full_path, const std::string &granted_mode)
+  FileProducer(const std::string &full_path, const std::string &granted_mode)
   {
     _unchained = fopen(full_path.c_str(), granted_mode.c_str());
     if (!_unchained)
     {
       std::ofstream _avoid_non_exist_state_file(full_path);
       _avoid_non_exist_state_file << "you're doin' great, my friendo!" << std::endl;
+      _avoid_non_exist_state_file.close();
     }
   }
 
-  ~CustomFileHandler()
+  ~FileProducer()
   {
     fclose(_unchained);
   }
 
+  /*
+   * @brief DEPRECATED.
+   */
   FILE examine_rvalue() const
   {
     FILE copied_file = *_unchained;
     return copied_file;
   }
 
-  int obtain_file_descriptor() const
+  template <typename GenericType>
+  static std::string time_to_str(const GenericType &stat_time)
   {
-    return fileno(_unchained);
+    // NOTE: https://stackoverflow.com/a/69499089/12535617
+    std::ostringstream oss;
+    oss << stat_time;
+    return oss.rdbuf()->str();
   }
 };
 
@@ -65,18 +74,18 @@ int main()
   std::cout << person.name << " is " << person.age << "\n";
 
   std::array<std::string_view, 2> filenames = {"non_existence_dude_path", "README.md"};
-  std::vector<CustomFileHandler> list_file;
+  std::vector<FileProducer> list_file;
   [&](std::string _r = "r")
   {
     for (const auto &_fname : filenames)
     {
       try
       {
-        CustomFileHandler cfh(/* file_path */ std::string(_fname.data(), _fname.size()),
-                              /* file_mode */ _r);
+        FileProducer cfh(/* file_path */ std::string(_fname.data(), _fname.size()),
+                         /* file_mode */ _r);
         list_file.push_back(cfh);
-        // if (_fname.find_first_of("non") != std::string::npos)
-        //   std::remove(_fname.data());
+        if (_fname.find_first_of("non") != std::string::npos)
+          std::cout << _fname.data() << std::endl;
       }
       catch (const std::exception &e)
       {
@@ -84,19 +93,23 @@ int main()
       }
     }
   }();
-  std::for_each(list_file.cbegin(),
-                list_file.cend(),
-                [&](const CustomFileHandler &f)
+  std::for_each(filenames.cbegin(),
+                filenames.cend(),
+                [&](const std::string_view &_file_name_view)
                 {
-                  int fd = f.obtain_file_descriptor();
+                  std::string _file_name = std::string(_file_name_view.data(), _file_name_view.size());
+                  struct stat _file_buf_stat;
+                  if (stat(/* file_path */ _file_name.c_str(),
+                           /* sys/stat buffer */ &_file_buf_stat))
+                    perror("Oops");
 
-                  // struct stat _file_stat;
-                  // if (fstat(fd, &_file_stat))
-                  //   perror("Oops");
-
-                  // long _file_pos = std::ftell(&_file_closure);
-                  // long long _file_size = _file_stat.st_size;
-                  // std::cout << _file_pos << _file_size << "\n";
-                  std::cout << fd << std::endl;
+                  FILE *_file_closure = fopen(_file_name.c_str(), "r");
+                  long _file_pos = std::ftell(_file_closure);
+                  fclose(_file_closure);
+                  long long _file_size = _file_buf_stat.st_size;
+                  std::string _file_creation_date = FileProducer::time_to_str(_file_buf_stat.st_birthtimespec.tv_sec);
+                  std::cout << _file_pos << " " << _file_size << " "
+                            << _file_buf_stat.st_mode << " " << _file_creation_date << "\n";
                 });
+  return 0;
 }
