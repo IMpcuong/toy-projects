@@ -9,6 +9,31 @@
       << k << " : " << v         \
       << "\n";
 
+struct SolarSystem
+{
+  std::string star_name;
+
+  friend bool operator==(const SolarSystem &first, const SolarSystem &second)
+  {
+    return first.star_name == second.star_name;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const SolarSystem &star)
+  {
+    os << star.star_name;
+    return os;
+  }
+};
+
+template <>
+struct std::hash<SolarSystem>
+{
+  size_t operator()(const SolarSystem &s) const noexcept
+  {
+    return std::hash<std::string>{}(s.star_name);
+  }
+};
+
 int main()
 {
   std::unordered_map<int, std::string> status_codes{
@@ -38,5 +63,20 @@ int main()
   };
   for (auto const &item : planets)
     FLUSH_STDOUT_OF(planets, item.data(), item.capacity());
+
+  std::unordered_map<SolarSystem, std::string> star_with_note;
+  std::for_each(planets.cbegin(),
+                planets.cend(),
+                [&](const std::string &label)
+                {
+                  SolarSystem s{.star_name = label};
+                  auto _m_iter = star_with_note.find(s);
+                  if (_m_iter != star_with_note.end())
+                  {
+                    star_with_note[s] = std::to_string(label.size());
+                  }
+                });
+  for (auto const &item : star_with_note)
+    FLUSH_STDOUT_OF(star_with_note, item.first, item.second);
   return 0;
 }
