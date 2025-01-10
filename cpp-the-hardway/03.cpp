@@ -95,7 +95,7 @@ int main()
   }();
   std::for_each(filenames.cbegin(),
                 filenames.cend(),
-                [&](const std::string_view &_file_name_view)
+                [=](const std::string_view &_file_name_view)
                 {
                   std::string _file_name = std::string(_file_name_view.data(), _file_name_view.size());
                   struct stat _file_buf_stat;
