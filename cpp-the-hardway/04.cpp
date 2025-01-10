@@ -1,7 +1,13 @@
+#include <math.h>
+
+#include <algorithm>
 #include <iostream>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+
+// clang++ -std=c++20 -O2 04.cpp -o out 2> out.log
 
 #define FLUSH_STDOUT_OF(m, k, v) \
   std::cout                      \
@@ -70,13 +76,25 @@ int main()
                 [&](const std::string &label)
                 {
                   SolarSystem s{.star_name = label};
-                  auto _m_iter = star_with_note.find(s);
-                  if (_m_iter != star_with_note.end())
+                  if (!star_with_note.contains(s))
                   {
                     star_with_note[s] = std::to_string(label.size());
                   }
                 });
   for (auto const &item : star_with_note)
     FLUSH_STDOUT_OF(star_with_note, item.first, item.second);
+
+  std::random_device rd;
+  std::mt19937 num_generator(rd());
+  // NOTE: std::normal_distribution<>::operator() requires a mutable std::mt19937 object
+  //  (or any other random number generator) to generate random numbers.
+  std::normal_distribution<> dist;
+  [&dist, &star_with_note](std::mt19937 &ng)
+  {
+    double num = std::clamp<double>(dist(ng), -10, 10);
+    for (const auto &[k, _] : star_with_note)
+      std::cout << k << "+" << num << "\n";
+  }(num_generator);
+
   return 0;
 }
