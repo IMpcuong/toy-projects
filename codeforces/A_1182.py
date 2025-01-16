@@ -1,7 +1,6 @@
 # Link: https://codeforces.com/problemset/problem/1182/A
 
 import sys
-from collections import deque
 
 
 input = lambda: sys.stdin.readline().rstrip()
@@ -15,5 +14,6 @@ def solve() -> int:
     if n % 2 != 0:
         return 0
     return 2 ** (n // 2)
+
 
 print(solve())
