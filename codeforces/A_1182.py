@@ -16,4 +16,5 @@ def solve() -> int:
         return 0
     return 2 ** (n // 2)
 
+
 print(solve())
