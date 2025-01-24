@@ -26,7 +26,7 @@ def solve() -> int:
         raw_steps = exact_log(num, _base)
         steps = floor(raw_steps)
         if num == l:
-              ops += steps * 2 + 2
+            ops += (steps + 1) * 2
         else:
             ops += steps + 1
     return ops
