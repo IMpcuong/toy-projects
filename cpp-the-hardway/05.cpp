@@ -1,3 +1,5 @@
+#include <cassert>
+#include <functional>
 #include <iostream>
 #include <string>
 
@@ -96,12 +98,30 @@ namespace Math_Executor
   }
 }
 
+//
+// Namespace and namespace-aliases:
+//
+
 namespace Math_Simulator
 {
   constexpr int add(int first, int second)
   {
     return first + second;
   }
+}
+
+namespace ME = Math_Executor;
+namespace MS = Math_Simulator;
+
+//
+// Ordered map.
+//
+
+template <typename Param_Type, typename Comparison = std::less<>>
+constexpr bool collate_first_char_from_str(Param_Type lhs, Param_Type rhs,
+                                           Comparison comp_func = Comparison{})
+{
+  return comp_func(lhs, rhs);
 }
 
 int main()
@@ -124,4 +144,11 @@ int main()
   // ----- //
 
   println(Math_Executor::add(1, 2) == Math_Simulator::add(1, 2));
+  println(ME::add(132, 424) == MS::add(778, 681));
+
+  // ----- //
+
+  std::string s1 = "something";
+  std::string s2 = "right";
+  assert(collate_first_char_from_str(s1.at(0), s2.at(0)) == false); // If `false` -> throws exception -> abort process.
 }
