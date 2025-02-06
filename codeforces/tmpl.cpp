@@ -1,12 +1,11 @@
 #include <bits/stdc++.h>
 
+// clang++ -isystem . -std=c++20 -O2 tmpl.cpp -o test -v
+
 using namespace std;
 
 template <typename A, typename B>
-ostream &operator<<(ostream &os, const pair<A, B> &p)
-{
-  return os << '(' << p.first << ", " << p.second << ')';
-}
+ostream &operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
 
 template <typename T_container,
           typename T = typename enable_if<!is_same<T_container, string>::value,
@@ -19,6 +18,12 @@ ostream &operator<<(ostream &os, const T_container &v)
     os << sep << x, sep = ", ";
   return os << '}';
 }
+
+template <typename... Args>
+void print(const Args &...args) { (std::cout << ... << args); }
+
+template <typename... Args>
+void println(const Args &...args) { (std::cout << ... << args) << "\n"; }
 
 void dbg_out() { cerr << endl; }
 
@@ -48,6 +53,8 @@ const ld EPS = 1e-9;
 
 void solve()
 {
+  vector v{1, 2, 3, 4, 5};
+  cout << v << " " << &v << "\n";
 }
 
 int main()
@@ -55,11 +62,12 @@ int main()
   ios_base::sync_with_stdio(0);
   cin.tie(0);
   cout.tie(0);
+
   int tc = 1;
-  // cin >> tc;
+  cin >> tc; // @Warn: Commenting before submission.
   for (int t = 1; t <= tc; t++)
   {
-    // cout << "Case #" << t << ": ";
+    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
