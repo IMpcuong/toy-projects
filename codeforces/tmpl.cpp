@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#include <iostream>
 
 using namespace std;
 
@@ -29,6 +28,7 @@ void dbg_out(Head H, Tail... T)
   cerr << ' ' << H;
   dbg_out(T...);
 }
+
 #ifdef LOCAL
 #define dbg(...) cerr << "(" << #__VA_ARGS__ << "):", dbg_out(__VA_ARGS__)
 #else

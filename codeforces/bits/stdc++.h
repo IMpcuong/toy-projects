@@ -1,5 +1,7 @@
 // https://codeforces.com/blog/entry/118427
 
+#pragma once
+
 #include <iostream>   // Input/output stream objects
 #include <fstream>    // File stream objects
 #include <sstream>    // String stream objects
