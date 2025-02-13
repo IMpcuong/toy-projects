@@ -43,6 +43,7 @@ void dbg_out(Head H, Tail... T)
 #endif
 
 #define ar array
+#define us unsigned short
 #define ll long long
 #define ld long double
 #define sza(x) ((int)x.size())
@@ -53,10 +54,51 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
-void solve()
+bool solve()
 {
-  vector v{1, 2, 3, 4, 5};
-  cout << v << " " << &v << "\n";
+  string num_str;
+  cin >> num_str;
+
+  vector<us> all_digits;
+  us counter_twos = 0;
+  us counter_threes = 0;
+  for (auto &chr : num_str)
+  {
+    // @Note: Another type conversion tactic:
+    //  us digit = static_cast<us>(atoi(chr.c_str()));
+    us digit = static_cast<us>(stoi(string(1, chr)));
+    if (digit == 2)
+      counter_twos += 1;
+    else if (digit == 3)
+      counter_threes += 1;
+    all_digits.push_back(digit);
+  }
+
+  long cur_sum = accumulate(all_digits.begin(), all_digits.end(), 0);
+  if (cur_sum % 9 == 0)
+    return true;
+
+  us max_eval_two = counter_twos >= 8 ? 8 : counter_twos;
+  us max_eval_three = counter_threes >= 8 ? 8 : counter_threes;
+
+  // @Note:
+  //  +> [cur_sum + (2x + 6y)] % 9 >= 0
+  //  +> 0 <= x, y <= 8
+  us increasable_amount = 0;
+  for (us x = 0; x <= max_eval_two; x++)
+  {
+    for (us y = 0; y <= max_eval_three; y++)
+    {
+      increasable_amount = 2 * x + 6 * y;
+      cur_sum += increasable_amount;
+      if (cur_sum % 9 == 0)
+        return true;
+      else
+        cur_sum -= increasable_amount;
+    }
+  }
+
+  return false;
 }
 
 int main()
@@ -69,7 +111,11 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    bool divisible = solve();
+    if (divisible)
+      println("YES");
+    else
+      println("NO");
   }
 }

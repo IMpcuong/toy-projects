@@ -8,6 +8,7 @@
 #include <iomanip>    // Input/output manipulators
 #include <string>     // String class and functions
 #include <vector>     // Dynamic array
+#include <valarray>   // Element-wise mathematical, subscript, slicing, indirect ops array
 #include <list>       // Doubly linked list
 #include <set>        // Set container
 #include <map>        // Map container
