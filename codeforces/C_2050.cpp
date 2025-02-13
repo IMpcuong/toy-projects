@@ -59,7 +59,11 @@ bool solve()
   string num_str;
   cin >> num_str;
 
+  // @Note: The semantics of zero-allocation include zero-copying and zero-move.
+  //  us known_size = num_str.size();
+  //  ar<us, known_size> all_digits;
   vector<us> all_digits;
+  all_digits.reserve(num_str.size());
   us counter_twos = 0;
   us counter_threes = 0;
   for (auto &chr : num_str)
@@ -71,7 +75,7 @@ bool solve()
       counter_twos += 1;
     else if (digit == 3)
       counter_threes += 1;
-    all_digits.push_back(digit);
+    all_digits.emplace_back(digit); // @Note: vector::emplace_back > vector::push_back.
   }
 
   long cur_sum = accumulate(all_digits.begin(), all_digits.end(), 0);
