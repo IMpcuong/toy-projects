@@ -20,10 +20,18 @@ ostream &operator<<(ostream &os, const T_container &v)
 }
 
 template <typename... Args>
-void print(const Args &...args) { (std::cout << ... << args); }
+void print(const Args &...args)
+{
+  bool end = true;
+  ((std::cout << (end ? (end = false, "") : " ") << args), ...);
+}
 
 template <typename... Args>
-void println(const Args &...args) { (std::cout << ... << args) << "\n"; }
+void println(const Args &...args)
+{
+  bool end = true;
+  ((std::cout << (end ? (end = false, "") : " ") << args), ...) << "\n";
+}
 
 void dbg_out() { cerr << endl; }
 
