@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-// clang++ -isystem . -std=c++20 -Wall -Wextra -O2 tmpl.cpp -o out -g
+// clang++ -isystem . -std=c++20 -g -Wall -Wextra -O2 tmpl.cpp -o out
 
 using namespace std;
 

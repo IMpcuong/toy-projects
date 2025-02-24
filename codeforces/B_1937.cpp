@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-// clang++ -isystem . -std=c++20 -Wall -Wextra -O2 tmpl.cpp -o out -g
+// clang++ -isystem . -std=c++20 -g -Wall -Wextra -O2 tmpl.cpp -o out
 
 using namespace std;
 
@@ -99,7 +99,10 @@ pair<string, int> solve()
         i = 1;
         if (j < col - 1)
         {
-          smallest_str.append(bin_str_s.substr(j + 1, col - j - 2 /* Minus one char from (1) */));
+          smallest_str.append(
+              bin_str_s.substr(j + 1,
+                               col - j - 2
+                               /* Ignores the last char (redundancy from (1)) */));
           break;
         }
       }
