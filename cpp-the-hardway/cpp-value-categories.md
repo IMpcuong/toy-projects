@@ -5,7 +5,7 @@
 ```cpp
 // Basic examples:
 int x = 5;      // x is an lvalue, 5 is an rvalue
-int y = x;      // x is an lvalue
+int y = x;      // y is an lvalue
 int z = x + y;  // (x + y) is an rvalue
 ```
 
@@ -15,13 +15,13 @@ int z = x + y;  // (x + y) is an rvalue
 - **lvalue**: Has a persistent memory address you can reference
 - **rvalue**: Temporary value, no persistent address
 ```cpp
-&x;          // Valid - can take address of lvalue
+&x;          // Valid - can take the address of lvalue
 &(x + y);    // Invalid - can't take address of rvalue
 ```
 
 ### 2. Assignment
-- **lvalue**: Can appear on left or right of assignment
-- **rvalue**: Can only appear on right side
+- **lvalue**: Can appear on the left or right of the assignment
+- **rvalue**: Can only appear on the right side
 ```cpp
 x = 10;      // Valid: lvalue on left
 10 = x;      // Invalid: rvalue can't be on left
@@ -117,9 +117,9 @@ std::unique_ptr<int> ptr2 = std::move(ptr1);  // ptr1 becomes invalid
 
 ```cpp
 // Guidelines for parameter types:
-void f1(const std::string& s);    // Good: read-only access
-void f2(std::string&& s);         // Good: can steal resources
-void f3(const std::string&& s);   // Bad: rarely useful
+void f1(const std::string &s);    // Good: read-only access
+void f2(std::string &&s);         // Good: can steal resources
+void f3(const std::string &&s);   // Bad: rarely useful
 ```
 
 ## Perfect Forwarding Benefits
