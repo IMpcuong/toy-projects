@@ -100,7 +100,7 @@ int solve()
   //  + i_th state := seq[i..len - 1] if it was already beautified.
   //
   vector<int> dp(len, INF);
-  dp[len - 1] = 1; // @Note: The rightmost one only can be deleted.
+  dp[len - 1] = 1; // @Note: The rightmost one can only be deleted.
 
   auto get_dp = [=](int last) -> int
   {
@@ -113,7 +113,7 @@ int solve()
   for (int i = len - 2; i >= 0; i--)
   {
     dp[i] = min(dp[i + 1] + 1 /* remove seq[i] */,
-                get_dp(i + seq[i] + 1) /* make seq[i + seq[i] + 1..len - 1] beautiful */);
+                get_dp(i + seq[i] + 1) /* keep seq[i] */);
     println(i, dp[i]);
   }
 
