@@ -91,8 +91,8 @@ int solve()
   for (int i = 0; i < len; i++)
     cin >> seq[i];
 
-  if (detect_beautiful_seq(seq))
-    return 0;
+  // if (detect_beautiful_seq(seq))
+  //   return 0;
 
   //
   // @Note:
@@ -102,7 +102,7 @@ int solve()
   vector<int> dp(len, INF);
   dp[len - 1] = 1; // @Note: The rightmost one can only be deleted.
 
-  auto get_dp = [=](int last) -> int
+  auto get_dp = [&](int last) -> int
   {
     if (last == len)
       return 0;
@@ -112,9 +112,11 @@ int solve()
   };
   for (int i = len - 2; i >= 0; i--)
   {
+    // int v = i + seq[i] + 1;
+    // println(dp[v], v, get_dp(v));
     dp[i] = min(dp[i + 1] + 1 /* remove seq[i] */,
                 get_dp(i + seq[i] + 1) /* keep seq[i] */);
-    println(i, dp[i]);
+    // println(i, dp[i]);
   }
 
   return dp[0];
