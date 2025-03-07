@@ -61,10 +61,29 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
-void solve()
+int solve()
 {
-  vector v{1, 2, 3, 4, 5};
-  cout << v << " " << &v << "\n";
+  int n, k, p;
+  cin >> n >> k >> p;
+
+  int cnt = 0;
+  if (k == 0)
+    return cnt;
+
+  while (n > 0)
+  {
+    if (k < 0)
+      k = -k;
+
+    k -= p;
+    cnt++;
+    if (k <= 0)
+      return cnt;
+
+    n--;
+  }
+
+  return -1;
 }
 
 int main()
@@ -77,7 +96,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
