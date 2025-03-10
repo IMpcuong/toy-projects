@@ -61,10 +61,18 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
+inline int nxt()
+{
+  int x;
+  cin >> x;
+  return x;
+}
+
 void solve()
 {
-  vector v{1, 2, 3, 4, 5};
-  cout << v << " " << &v << "\n";
+  vector<int> a(5);
+  generate(all(a), nxt);
+  cout << a << " " << &a << endl;
 }
 
 int main()
