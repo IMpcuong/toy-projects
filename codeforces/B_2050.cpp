@@ -78,25 +78,31 @@ string solve()
   vector<int> a(len);
   generate(all(a), nxt<int>);
 
-  ll sum = accumulate(all(a), 0);
-  if (sum % len != 0)
-    return _N;
+  // ll sum = accumulate(all(a), 0);
+  // if (sum % len != 0)
+  //   return _N;
 
-  int base_val = sum / len;
-  for (int i = 1; i < len - 1; i++)
+  ll sum_odd = 0;
+  ll sum_even = 0;
+  for (int i = 0; i < len; i++)
   {
-    int l = a[i - 1];
-    if (l == base_val)
-      continue;
-
-    a[i - 1] = base_val;
-    if (l < base_val)
-      a[i + 1] -= (base_val - l);
-    if (l > base_val)
-      a[i + 1] += (l - base_val);
+    if (i & 1)
+      sum_odd += a[i];
+    else
+      sum_even += a[i];
   }
 
-  return ranges::count(all(a), base_val) == len ? _Y : _N;
+  int quan_odd = len / 2;
+  int quan_even = len / 2;
+  if (len & 1)
+    quan_even++;
+
+  if (sum_odd % quan_odd != 0 || sum_even % quan_even != 0)
+    return _N;
+  if (sum_odd / quan_odd != sum_even / quan_even)
+    return _N;
+
+  return _Y;
 }
 
 int main()
