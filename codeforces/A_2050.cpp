@@ -69,11 +69,30 @@ inline T nxt()
   return x;
 }
 
-void solve()
+int solve()
 {
-  vector<int> a(5);
-  generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  auto word_cnt = nxt<int>();
+  auto strip_len = nxt<int>();
+  vector<string> words(word_cnt);
+  generate(all(words), nxt<string>);
+  // sort(all(words), [](string f, string s) { return sza(f) < sza(s); });
+
+  int cnt = 0;
+  for (const auto &w : words)
+  {
+    int w_len = sza(w);
+    if (w_len > strip_len)
+    {
+      break;
+    }
+    else
+    {
+      cnt++;
+      strip_len -= w_len;
+    }
+  }
+
+  return cnt;
 }
 
 int main()
@@ -87,7 +106,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
