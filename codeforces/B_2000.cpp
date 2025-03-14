@@ -61,6 +61,9 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
+constexpr string _Y = "YES";
+constexpr string _N = "NO";
+
 template <typename T>
 inline T nxt()
 {
@@ -69,20 +72,35 @@ inline T nxt()
   return x;
 }
 
-void solve()
+string solve()
 {
   auto quan = nxt<int>();
   vector<int> seats(quan);
   generate(all(seats), nxt<int>);
 
-  int track = 0;
+  vector<bool> occupied(quan + 2, false);
   for (int i = 0; i < quan; i++)
   {
+    int seat_no = seats[i];
     if (i == 0)
+    {
+      occupied[seat_no] = true;
       continue;
-    int p = i;
-    int seat_no = a[i] - 1;
+    }
+    if (i == quan - 1 && occupied[seat_no - 1])
+    {
+      occupied[seat_no] = true;
+      break;
+    }
+    
+    if (occupied[seat_no - 1] || occupied[seat_no + 1])
+      occupied[seat_no] = true;
+
+    // println(i + 1, seat_no, occupied[seat_no - 1], occupied[seat_no + 1]);
+    // cout << occupied << "\n";
   }
+
+  return ranges::count(all(occupied), true) == quan ? _Y : _N;
 }
 
 int main()
@@ -96,7 +114,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
