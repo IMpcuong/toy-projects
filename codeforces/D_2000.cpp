@@ -61,6 +61,9 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
+constexpr char _L = 'L';
+constexpr char _R = 'R';
+
 template <typename T>
 inline T nxt()
 {
@@ -69,11 +72,36 @@ inline T nxt()
   return x;
 }
 
-void solve()
+long solve()
 {
-  vector<int> a(5);
+  auto len = nxt<int>();
+  vector<int> a(len);
   generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  auto s = nxt<string>();
+
+  vector<long> inc_sum;
+  inc_sum.reserve(len);
+  for (const auto &v : a)
+    inc_sum.emplace_back(inc_sum.back() + v);
+
+  long ans = 0;
+  int l = 0;
+  int r = len - 1;
+  while (r > l)
+  {
+    while (l < len && s[l] == _R)
+      l++;
+    while (r >= 0 && s[r] == _L)
+      r--;
+    if (l < r)
+    {
+      ans += inc_sum[r + 1] - inc_sum[l];
+      l += 1;
+      r -= 1;
+    }
+  }
+
+  return ans;
 }
 
 int main()
@@ -87,7 +115,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
