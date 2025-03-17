@@ -72,19 +72,25 @@ inline T nxt()
   return x;
 }
 
-long solve()
+ll solve()
 {
   auto len = nxt<int>();
-  vector<int> a(len);
-  generate(all(a), nxt<int>);
+  vector<long> a(len);
+  generate(all(a), nxt<long>);
   auto s = nxt<string>();
 
-  vector<long> inc_sum;
-  inc_sum.reserve(len);
-  for (const auto &v : a)
-    inc_sum.emplace_back(inc_sum.back() + v);
+  vector<ll> inc_sum(len + 1);
+  ll s_tmp = 0;
+  for (int i = 0; i < len; i++)
+  {
+    s_tmp += a[i];
+    inc_sum[i] = s_tmp;
+  }
+  inc_sum.insert(inc_sum.begin(), 0);
 
-  long ans = 0;
+  // cout << inc_sum << "\n";
+
+  ll sum = 0;
   int l = 0;
   int r = len - 1;
   while (r > l)
@@ -95,13 +101,18 @@ long solve()
       r--;
     if (l < r)
     {
-      ans += inc_sum[r + 1] - inc_sum[l];
+      // @Note:
+      //  + l < r
+      //  + sum(a[i] | l <= i <= r)
+      //      = a[l] + a[l + 1] + ... + a[r - 1] + a[r]
+      //      = sum(a[i] | 1 <= i <= r) - sum(a[i] | 1 <= i <= l - 1)
+      sum += inc_sum[r + 1] - inc_sum[l];
       l += 1;
       r -= 1;
     }
   }
 
-  return ans;
+  return sum;
 }
 
 int main()
