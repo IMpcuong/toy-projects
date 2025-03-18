@@ -87,9 +87,7 @@ int solve()
   else
   {
     int a3_tmp = a[2] - a[1];
-    if (a3_f == a3_tmp)
-      fibos++;
-    if (a3_s == a3_tmp)
+    if (a3_f == a3_tmp || a3_s == a3_tmp)
       fibos++;
   }
 
