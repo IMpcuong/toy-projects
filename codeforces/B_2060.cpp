@@ -80,7 +80,7 @@ void solve()
     sort(all(cards), greater<int>());
     hands[i] = cards;
   }
-  
+
   vector<int> permut;
   permut.reserve(n);
   bool winnable = true;
@@ -100,7 +100,7 @@ void solve()
   for_each(all(turn_order), [&](const auto &p) { permut.emplace_back(p.first); });
 
   // cout << permut << "\n";
-  
+
   int biggest_card = -1;
   while (m && n != 1)
   {
@@ -113,7 +113,7 @@ void solve()
         biggest_card = throwed_by_order;
         continue;
       }
-      
+
       winnable = false;
       goto OUTER;
     }
