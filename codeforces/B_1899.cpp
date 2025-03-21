@@ -99,7 +99,7 @@ void solve()
   };
 
   ll max_diff = 0;
-  ll upper = static_cast<ll>(ceil(sqrt(n)));
+  auto upper = static_cast<int>(ceil(sqrt(n)));
   for (int k = 1; k <= upper; k++)
   {
     if (n % k != 0)
