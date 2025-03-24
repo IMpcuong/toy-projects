@@ -95,11 +95,8 @@ void solve()
       end = i;
     }
   }
-  if (end > start)
+  if (end >= start)
     range_pairs.emplace_back(start, end);
-  if (end == n - 1 && start == n - 1)
-    for (int i = 0; i < n; i++)
-      range_pairs.emplace_back(i, i);
   range_pairs.shrink_to_fit();
 
   // cout << range_pairs << "\n";
