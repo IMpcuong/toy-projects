@@ -15,6 +15,10 @@ type Req struct {
 // Server-side //
 
 func sum(a []int) (s int) {
+	if len(a) == 0 {
+		return s
+	}
+
 	for _, v := range a {
 		s += v
 	}
@@ -31,13 +35,20 @@ func toSlice(s iter.Seq[int]) (l []int) {
 	nxt, stop := iter.Pull(s)
 	defer stop()
 
-	for _ = range s {
+	for {
 		v, ok := nxt()
 		if !ok {
-			return l
+			break
 		}
 		l = append(l, v)
 	}
+	// for _ = range s {
+	// 	v, ok := nxt()
+	// 	if !ok {
+	// 		break
+	// 	}
+	// 	l = append(l, v)
+	// }
 
 	return l
 }
