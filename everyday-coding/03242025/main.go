@@ -42,11 +42,12 @@ func toSlice(s iter.Seq[int]) (l []int) {
 		}
 		l = append(l, v)
 	}
-	// for _ = range s {
-	// 	v, ok := nxt()
-	// 	if !ok {
-	// 		break
-	// 	}
+
+	// @Note: Second approach.
+	// if len(s) == 0 {
+	// 	return l
+	// }
+	// for v := range s {
 	// 	l = append(l, v)
 	// }
 
