@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <bits/stdc++.h>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
@@ -75,23 +74,19 @@ inline t nxt()
 
 void solve()
 {
-  auto n = nxt<long>();
-  long given_len = n - 1;
-  vector<ll> a(given_len);
+  auto n = nxt<ll>();
+  vector<ll> a(n - 1);
   generate(all(a), nxt<ll>);
 
-  vector<ll> permu(given_len);
-  for (long i = given_len; i >= 1; i--)
-  {
-    ll cur_num = a[i] - a[i - 1];
-    permu[i] = cur_num;
-  }
+  vector<ll> permu(n);
   permu[0] = a[0];
+  for (int i = 1; i < n - 1; ++i)
+    permu[i] = a[i] - a[i - 1];
 
   // cout << permu << "\n";
 
   ll max_num = *max_element(all(permu));
-  if (max_num > (n - 1) + (n - 2))
+  if (max_num >= 2 * n)
   {
     println(_N);
     return;
@@ -101,6 +96,8 @@ void solve()
   long cnt_greater = 0;
   for (const auto &num : permu)
   {
+    if (num == 0)
+      continue;
     if (num > n)
     {
       cnt_greater++;
@@ -127,6 +124,7 @@ void solve()
   }
 
   long left_nums = n - ex_nums;
+  // println(possible_sum, ex_nums, left_nums);
   if (possible_sum > n)
   {
     if (possible_sum != max_num)
@@ -137,7 +135,12 @@ void solve()
   }
   else if (possible_sum == n)
   {
-    if (left_nums > 1)
+    if (freq[possible_sum] == 0 && left_nums > 1)
+    {
+      println(_N);
+      return;
+    }
+    if (freq[possible_sum] > 0 && left_nums != 2)
     {
       println(_N);
       return;
@@ -145,7 +148,12 @@ void solve()
   }
   else
   {
-    if (left_nums < 1)
+    if (freq[possible_sum] == 0 && left_nums == 1)
+    {
+      println(_Y);
+      return;
+    }
+    if (freq[possible_sum] > 0 && left_nums != 2)
     {
       println(_N);
       return;
