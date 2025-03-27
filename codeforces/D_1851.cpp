@@ -127,22 +127,9 @@ void solve()
   // println(possible_sum, ex_nums, left_nums);
   if (possible_sum > n)
   {
-    if (possible_sum != max_num)
+    if (possible_sum == max_num && left_nums == 2)
     {
-      println(_N);
-      return;
-    }
-  }
-  else if (possible_sum == n)
-  {
-    if (freq[possible_sum] == 0 && left_nums > 1)
-    {
-      println(_N);
-      return;
-    }
-    if (freq[possible_sum] > 0 && left_nums != 2)
-    {
-      println(_N);
+      println(_Y);
       return;
     }
   }
@@ -153,14 +140,14 @@ void solve()
       println(_Y);
       return;
     }
-    if (freq[possible_sum] > 0 && left_nums != 2)
+    if (freq[possible_sum] > 0 && left_nums == 2)
     {
-      println(_N);
+      println(_Y);
       return;
     }
   }
 
-  println(_Y);
+  println(_N);
 }
 
 int main()
