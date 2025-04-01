@@ -51,15 +51,24 @@ void dbg_out(Head H, Tail... T)
 #endif
 
 #define ar array
-#define ll long long
-#define ld long double
 #define sza(x) ((int)x.size())
 #define all(a) (a).begin(), (a).end()
+#define prec(k) cout << fixed << setprecision(k);
+#define ceildiv(n, k) (((n) + (k) - 1) / (k))
+
+using ll = long long;
+using ld = long double;
+using pii = pair<int, int>;
+using pll = pair<ll, ll>;
+using point = complex<double>;
 
 const int MAX_N = 1e5 + 5;
 const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
+
+inline ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
+inline ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
 template <typename T>
 inline T nxt()
@@ -69,51 +78,41 @@ inline T nxt()
   return x;
 }
 
-void solve()
+ll solve()
 {
   auto n = nxt<long>();
-  vector<int> a(n);
-  generate(all(a), nxt<int>);
+  vector<long> a(n);
+  generate(all(a), nxt<long>);
 
-  vector<pair<int, int>> range_pairs;
-  range_pairs.reserve(n);
-  int start = 0;
-  int end = 0;
-  for (int i = 1; i < n; i++)
+  auto nCk = [](const ll &n, const int &k = 2) -> ll
   {
-    int prev = a[i - 1];
-    int cur = a[i];
-    if ((cur + prev) & 1)
-    {
-      end = i;
-    }
-    else
-    {
-      if (end >= start)
-        range_pairs.emplace_back(start, end);
-      start = i;
-      end = i;
-    }
-  }
-  if (end >= start)
-    range_pairs.emplace_back(start, end);
-  range_pairs.shrink_to_fit();
+    return n * (n - 1) / k;
+  };
 
-  // cout << range_pairs << "\n";
+  ll pairs = 0;
+  map<long, long> freq;
+  for (const auto &v : a)
+    freq[v]++;
 
-  long max_sum = -INF;
-  for (const auto &p : range_pairs)
+  auto cast_after_count = [&](const long &target) -> ll
   {
-    long cur_sum = 0;
-    for (int i = p.first; i <= p.second; i++)
-    {
-      cur_sum = max(cur_sum + long(a[i]), long(a[i]));
-      max_sum = max(max_sum, cur_sum);
-      // println(cur_sum, max_sum);
-    }
+    auto apps = ranges::count_if(a, [&](const long &num) { return num == target; });
+    return static_cast<ll>(apps);
+  };
+
+  ll ones = cast_after_count(/*target=*/ 1);
+  ll twos = cast_after_count(/*target=*/ 2);
+  pairs += ones * twos;
+
+  for (const auto &[num, f] : freq)
+  {
+    if (f < 2)
+      continue;
+
+    pairs += nCk(f); // @Note: Implicit-cast from long -> ll.
   }
 
-  println(max_sum);
+  return pairs;
 }
 
 int main()
@@ -128,6 +127,6 @@ int main()
   for (int t = 1; t <= tc; t++)
   {
     // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    println(solve());
   }
 }
