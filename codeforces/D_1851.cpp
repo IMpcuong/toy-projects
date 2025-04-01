@@ -51,103 +51,108 @@ void dbg_out(Head H, Tail... T)
 #endif
 
 #define ar array
-#define ll long long
-#define ld long double
 #define sza(x) ((int)x.size())
 #define all(a) (a).begin(), (a).end()
+#define prec(k) cout << fixed << setprecision(k);
+#define ceildiv(n, k) (((n) + (k) - 1) / (k))
 
-const int max_n = 1e5 + 5;
-const ll mod = 1e9 + 7;
-const ll inf = 1e9;
-const ld eps = 1e-9;
+using ll = long long;
+using ld = long double;
+using pii = pair<int, int>;
+using pll = pair<ll, ll>;
+using point = complex<double>;
+
+const int MAX_N = 1e5 + 5;
+const ll MOD = 1e9 + 7;
+const ll INF = 1e9;
+const ld EPS = 1e-9;
 
 const string _Y = "YES";
 const string _N = "NO";
 
-template <typename t>
-inline t nxt()
+inline ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
+inline ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
+
+template <typename T>
+inline T nxt()
 {
-  t x;
+  T x;
   cin >> x;
   return x;
 }
 
-void solve()
+bool solve()
 {
   auto n = nxt<ll>();
-  vector<ll> a(n - 1);
-  generate(all(a), nxt<ll>);
+  vector<ll> pref_sums(n - 1);
+  generate(all(pref_sums), nxt<ll>);
 
-  vector<ll> permu(n);
-  permu[0] = a[0];
+  ll last_pref_sum = (n + 1) * n / 2;
+
+  auto is_permu_n = [&](const vector<ll> &v) -> bool
+  {
+    auto v_len = v.size();
+    if (v_len != n)
+      return false;
+
+    for (size_t i = 0; i < v_len; i++)
+      if (v[i] <= 0 || v[i] > n)
+        return false;
+
+    set<ll> v_set = set(all(v));
+    return v_set.size() == v_len;
+  };
+
+  auto conv_to_permu_from = [&](const vector<ll> &psum) -> vector<ll>
+  {
+    vector<ll> permu(n);
+    permu[0] = psum[0]; // @Note: psum.size() >= 2.
+    for (int i = 1; i < n; ++i)
+      permu[i] = psum[i] - psum[i - 1];
+
+    return permu;
+  };
+
+  if (pref_sums.back() != last_pref_sum)
+  {
+    pref_sums.emplace_back(last_pref_sum);
+    // cout << pref_sums << "\n";
+    auto full_permu = conv_to_permu_from(pref_sums);
+    // cout << full_permu << "\n";
+    if (is_permu_n(full_permu))
+      return true;
+    else
+      return false;
+  }
+
+  map<ll, int> freq;
+  freq[pref_sums[0]]++;
   for (int i = 1; i < n - 1; ++i)
-    permu[i] = a[i] - a[i - 1];
+    freq[pref_sums[i] - pref_sums[i - 1]]++;
 
-  // cout << permu << "\n";
+  // cout << freq << "\n";
 
-  ll max_num = *max_element(all(permu));
-  if (max_num >= 2 * n)
+  int cnt_dup = 0;
+  for (const auto &p : freq)
   {
-    println(_N);
-    return;
+    if (p.second > 2)
+      return false;
+    if (p.second == 2)
+      cnt_dup++;
   }
+  if (cnt_dup > 1)
+    return false;
 
-  vector<long> freq(n + 1, 0);
-  long cnt_greater = 0;
-  for (const auto &num : permu)
+  int cnt_num_left = 0;
+  for (int i = 1; i <= n; i++)
   {
-    if (num == 0)
-      continue;
-    if (num > n)
-    {
-      cnt_greater++;
-      continue;
-    }
-    freq[num]++;
+    if (freq[i] == 0)
+      cnt_num_left++;
   }
-  if (cnt_greater > 1)
-  {
-    println(_N);
-    return;
-  }
+  if (cnt_num_left != 2)
+    return false;
 
-  long ex_nums = 0;
-  long possible_sum = 0;
-  for (int i = 1; i < n + 1; i++)
-  {
-    if (freq[i] > 0)
-    {
-      ex_nums++;
-      continue;
-    }
-    possible_sum += i;
-  }
-
-  long left_nums = n - ex_nums;
-  // println(possible_sum, ex_nums, left_nums);
-  if (possible_sum > n)
-  {
-    if (possible_sum == max_num && left_nums == 2)
-    {
-      println(_Y);
-      return;
-    }
-  }
-  else
-  {
-    if (freq[possible_sum] == 0 && left_nums == 1)
-    {
-      println(_Y);
-      return;
-    }
-    if (freq[possible_sum] > 0 && left_nums == 2)
-    {
-      println(_Y);
-      return;
-    }
-  }
-
-  println(_N);
+  return true;
 }
 
 int main()
@@ -161,7 +166,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    // cout << "Case #" << t << ": "; // @warn: commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    solve() ? println(_Y) : println(_N);
   }
 }
