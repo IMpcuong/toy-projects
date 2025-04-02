@@ -67,9 +67,6 @@ const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
 const ld EPS = 1e-9;
 
-const string _Y = "YES";
-const string _N = "NO";
-
 inline ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
 inline ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
@@ -81,78 +78,45 @@ inline T nxt()
   return x;
 }
 
-bool solve()
+ll solve()
 {
-  auto n = nxt<ll>();
-  vector<ll> pref_sums(n - 1);
-  generate(all(pref_sums), nxt<ll>);
+  auto n = nxt<long>();
+  auto k = nxt<long>();
+  vector<ll> a(n);
+  generate(all(a), nxt<ll>);
 
-  ll last_pref_sum = (n + 1) * n / 2;
+  ll ans = 0LL;
+  ll orig_sum = accumulate(all(a), ans) % MOD;
 
-  auto is_permu_n = [&](const vector<ll> &v) -> bool
+  ll max_segment_sum = -INF;
+  ll cur_sum = 0LL;
+  for (const auto &v : a)
   {
-    auto v_len = v.size();
-    if (v_len != static_cast<size_t>(n))
-      return false;
-
-    for (size_t i = 0; i < v_len; i++)
-      if (v[i] <= 0 || v[i] > n)
-        return false;
-
-    set<ll> v_set = set(all(v));
-    return v_set.size() == v_len;
-  };
-
-  auto conv_to_permu_from = [&](const vector<ll> &psum) -> vector<ll>
-  {
-    vector<ll> permu(n);
-    permu[0] = psum[0]; // @Note: psum.size() >= 2.
-    for (int i = 1; i < n; ++i)
-      permu[i] = psum[i] - psum[i - 1];
-
-    return permu;
-  };
-
-  if (pref_sums.back() != last_pref_sum)
-  {
-    pref_sums.emplace_back(last_pref_sum);
-    // cout << pref_sums << "\n";
-    auto full_permu = conv_to_permu_from(pref_sums);
-    // cout << full_permu << "\n";
-    if (is_permu_n(full_permu))
-      return true;
-    else
-      return false;
+    cur_sum = max(cur_sum + v, v);
+    max_segment_sum = max(max_segment_sum, cur_sum);
   }
+  max_segment_sum = max(ans, max_segment_sum) % MOD; // @Note: x % MOD
+  // println(max_segment_sum);
 
-  map<ll, int> freq;
-  freq[pref_sums[0]]++;
-  for (int i = 1; i < n - 1; ++i)
-    freq[pref_sums[i] - pref_sums[i - 1]]++;
-
-  // cout << freq << "\n";
-
-  int cnt_dup = 0;
-  for (const auto &p : freq)
+  ll extended_sum = 1LL;
+  for (int i = 0; i < k; i++)
   {
-    if (p.second > 2)
-      return false;
-    if (p.second == 2)
-      cnt_dup++;
+    extended_sum *= 2;
+    extended_sum %= MOD;
   }
-  if (cnt_dup > 1)
-    return false;
+  extended_sum -= 1; // @Note: (2^k - 1) % MOD
+  extended_sum *= max_segment_sum; // @Note: (x % MOD) * ((2^k - 1) % MOD)
+  // @Note:
+  //  + (x . y) % MOD == ((x % MOD) . (y % MOD)) % MOD
+  //  + . := {+, -, *, /}
+  extended_sum %= MOD;
 
-  int cnt_num_left = 0;
-  for (int i = 1; i <= n; i++)
-  {
-    if (freq[i] == 0)
-      cnt_num_left++;
-  }
-  if (cnt_num_left != 2)
-    return false;
-
-  return true;
+  // @Note:
+  //  + sum := (orig_sum + extended_sum) < 0.
+  //  + sum % MOD < 0 && |sum % MOD| >= 1.
+  //  -> remain > 0 <-> sum += MOD.
+  ans = (orig_sum + extended_sum + MOD) % MOD;
+  return ans;
 }
 
 int main()
@@ -167,6 +131,6 @@ int main()
   for (int t = 1; t <= tc; t++)
   {
     // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve() ? println(_Y) : println(_N);
+    println(solve());
   }
 }
