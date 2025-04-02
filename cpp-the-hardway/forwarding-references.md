@@ -1,3 +1,5 @@
+### AI-Generated:
+
 This scenario involves the rules for **forwarding references** (sometimes called universal references).
 `auto&&` works similarly to template type deduction for `T&&`.
 
