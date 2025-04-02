@@ -1,0 +1,3 @@
+clang++
+-isystem.
+-std=c++20
