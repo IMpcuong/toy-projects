@@ -13,6 +13,7 @@
 #include <set>        // Set container
 #include <map>        // Map container
 #include <queue>      // Queue container
+#include <deque>      // Double-ended queue (indexed-seq) container
 #include <stack>      // Stack container
 #include <algorithm>  // Algorithms on sequences (e.g., sort, find)
 #include <cmath>      // Mathematical functions
