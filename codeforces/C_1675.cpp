@@ -92,7 +92,23 @@ long solve()
   if (vagues == fr_quan)
     return fr_quan;
   if (vagues == 0)
-    return 2;
+  {
+    if (fr_quan > 3)
+      return ++suspect;
+    return suspect;
+  }
+
+  long l = 0;
+  long r = fr_quan - 1;
+  for (long fr = 1; fr < fr_quan - 1; fr++)
+    if (ans[fr] == '0')
+      r = min(r, fr);
+
+  for (long fr = 1; fr < r; fr++)
+    if (ans[fr] == '1')
+      l = max(l, fr);
+
+  suspect = r - l + 1;
 
   return suspect;
 }
@@ -108,7 +124,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
