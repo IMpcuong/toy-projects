@@ -94,56 +94,48 @@ void solve()
     return;
   }
 
-  int start = 1;
-  int optim_epoch = 1;
-  while (start <= x)
-  {
-    int delta = y - start;
-    int epoch_cnt = n - 1;
-    if (delta % epoch_cnt != 0)
-    {
-      start++;
-      continue;
-    }
+  int delta = y - x;
 
-    int epoch = delta / epoch_cnt;
-    if ((x - start) % epoch == 0)
-    {
-      optim_epoch = max(optim_epoch, epoch);
-      break;
-    }
-    start++;
-  }
-
-  auto find_max_divisor = [](const int &num) -> int
+  auto find_divisors = [](const int &num) -> set<int>
   {
     auto upper = static_cast<int>(ceil(sqrt(num)));
-    int max_div = 1;
+    set<int> divs;
     for (int i = 1; i <= upper; i++)
     {
       if (num % i != 0)
         continue;
 
-      max_div = max(max_div, i);
+      divs.emplace(i);
+      divs.emplace(num / i);
     }
 
-    return max_div;
+    return divs;
   };
 
-  if (optim_epoch == 1 && x != 1)
+  int epoch_cnt = n - 1;
+  int epoch = 1;
+  int start = x;
+
+  set<int> divs = find_divisors(delta);
+  for (const auto &div : divs)
   {
-    int md = find_max_divisor(y - x);
-    md = md > 1 ? md : y - x;
-    optim_epoch = md;
-    while (x > 0)
-      x -= md;
-    x = x > 0 ? x : x + md;
-    start = x;
+    for (int i = 1; i <= epoch_cnt; i++)
+    {
+      int start_tmp = y - div * i;
+      if (start_tmp > 0)
+        start = min(start, start_tmp);
+    }
+
+    if (start + epoch_cnt * div >= y)
+    {
+      epoch = max(epoch, div);
+      break;
+    }
   }
 
   ans[0] = start;
   for (int i = 1; i < n; i++)
-    ans[i] = ans[i - 1] + optim_epoch;
+    ans[i] = ans[i - 1] + epoch;
 
   cout << ans << "\n";
 }
