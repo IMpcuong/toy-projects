@@ -139,7 +139,15 @@ ull solve()
     new_n = upper;
   else
     for (int k = 0; k < mark_pos; k++)
-      new_n += ull(digits[k]) * pow(10ULL, sza(digits) - (k + 1));
+    {
+      int exp = sza(digits) - (k + 1);
+      // print(digits[k], " ", exp, " ");
+      new_n += ull(digits[k]) * pow(ld(10), ld(exp)); // @Note: `pow` was born to serve the floating point number.
+      // println(new_n);
+    }
+
+  // for_each(digits.begin(), digits.begin() + mark_pos, [](const int &num) { print(num, " "); });
+  // println(new_n);
 
   return new_n - n_copy;
 }
