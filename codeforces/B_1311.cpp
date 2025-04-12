@@ -1,4 +1,6 @@
 #include <bits/stdc++.h>
+#include <cmath>
+#include <utility>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
 
@@ -94,7 +96,29 @@ string solve()
   generate(all(p), nxt<int>);
   for_each(all(p), [](int &num) { return --num; });
   ranges::sort(p);
-  cout << p << "\n";
+
+  vector<int> reachable(params[0], 0);
+  for (const auto &i : p)
+    reachable[i] = 1;
+
+  for (int i = 0; i < params[0]; i++)
+  {
+    if (reachable[i] == 0)
+      continue;
+
+    int j = i;
+    while (j < params[0] && reachable[j] == 1)
+      j++;
+    sort(a.begin() + i, a.begin() + j + 1);
+    i = j;
+  }
+
+  bool is_asc = true;
+  for (int i = 0; i < params[0] - 1; i++)
+    is_asc &= (a[i] <= a[i + 1]);
+
+  if (is_asc)
+    return _Y;
 
   return _N;
 }
@@ -110,7 +134,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-    solve();
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    println(solve());
   }
 }
