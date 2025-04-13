@@ -80,9 +80,49 @@ inline T nxt()
 
 void solve()
 {
-  vector<int> a(5);
+  auto n = nxt<int>();
+  vector<int> a(n);
   generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  for_each(all(a), [](int &num) { return --num; });
+
+  vector<vector<int>> childs(n);
+  for (int i = 0; i < n; i++)
+    childs[a[i]].emplace_back(i);
+
+  int root = -1;
+  int max_sz = -1;
+  for (int i = 0; i < n; i++)
+  {
+    int sz = sza(childs[i]);
+    if (sz > max_sz)
+    {
+      max_sz = sz;
+      root = i;
+    }
+  }
+  cout << childs << "\n";
+
+  vector<vector<int>> paths(n);
+  vector<bool> visited(n, false);
+  stack<int> st;
+  st.push(root);
+  visited[root] = true;
+  while (!st.empty())
+  {
+    int cur_node = st.top();
+    st.pop();
+
+    for (const auto &c : childs[cur_node])
+    {
+      if (!visited[c])
+      {
+        visited[c] = true;
+        st.push(c);
+        paths[cur_node].emplace_back(c);
+      }
+    }
+  }
+  cout << paths << "\n";
 }
 
 int main()
