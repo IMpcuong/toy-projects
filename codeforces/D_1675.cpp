@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -81,48 +80,57 @@ inline T nxt()
 void solve()
 {
   auto n = nxt<int>();
-  vector<int> a(n);
-  generate(all(a), nxt<int>);
-  for_each(all(a), [](int &num) { return --num; });
+  vector<int> parent(n);
+  generate(all(parent), nxt<int>);
+  for_each(all(parent), [](int &num) { return --num; });
 
-  vector<vector<int>> childs(n);
-  for (int i = 0; i < n; i++)
-    childs[a[i]].emplace_back(i);
-
-  int root = -1;
-  int max_sz = -1;
-  for (int i = 0; i < n; i++)
+  if (n == 1)
   {
-    int sz = sza(childs[i]);
-    if (sz > max_sz)
-    {
-      max_sz = sz;
-      root = i;
-    }
+    cout << "1\n1\n1\n" << "\n";
+    return;
   }
-  cout << childs << "\n";
+
+  vector<bool> leafs(n, true);
+  for (const auto &pos : parent)
+    leafs[pos] = false;
 
   vector<vector<int>> paths(n);
-  vector<bool> visited(n, false);
-  stack<int> st;
-  st.push(root);
-  visited[root] = true;
-  while (!st.empty())
-  {
-    int cur_node = st.top();
-    st.pop();
+  int pidx = 0;
 
-    for (const auto &c : childs[cur_node])
+  vector<bool> visited(n, false);
+  for (int i = 0; i < n; i++)
+  {
+    if (!leafs[i])
+      continue;
+
+    visited[i] = true;
+    paths[pidx].emplace_back(i + 1);
+
+    int leaf = i;
+    while (leaf != parent[leaf] && !visited[parent[leaf]])
     {
-      if (!visited[c])
-      {
-        visited[c] = true;
-        st.push(c);
-        paths[cur_node].emplace_back(c);
-      }
+      leaf = parent[leaf];
+      visited[leaf] = true;
+      paths[pidx].emplace_back(leaf + 1);
     }
+
+    pidx++;
   }
-  cout << paths << "\n";
+
+  int cnt = ranges::count_if(paths, [](const auto &path) { return sza(path) > 0; });
+  println(cnt);
+
+  for (auto &path : paths)
+  {
+    if (sza(path) == 0)
+      continue;
+
+    println(sza(path));
+    ranges::reverse(path);
+    cout << path << "\n";
+  }
+
+  println("");
 }
 
 int main()
@@ -136,7 +144,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
