@@ -94,19 +94,20 @@ void solve()
     if (d < mapped)
     {
       start = min(start, i);
-
-      end = start;
-      for (int j = start; j < digits; j++)
-      {
-        int d_j = n[j] - '0';
-        int mapped_j = func[d_j];
-        if (d_j > mapped_j)
-          goto OUT;
-
-        if (end < digits)
-          end++;
-      }
+      break;
     }
+  }
+
+  end = start;
+  for (int j = start; j < digits; j++)
+  {
+    int d_j = n[j] - '0';
+    int mapped_j = func[d_j];
+    if (d_j > mapped_j)
+      goto OUT;
+
+    if (end < digits)
+      end++;
   }
 
 OUT:
