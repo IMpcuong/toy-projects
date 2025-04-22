@@ -29,6 +29,7 @@
 #include <locale>     // Localization and internationalization
 #include <numeric>    // Numeric operations (e.g., accumulate)
 #include <random>     // Random number generators
+#include <ranges>     // Range-based for-loop to permit differently typed begin and end iterators.
 #include <stdexcept>  // Standard exception classes
 #include <typeinfo>   // Runtime type information
 #include <utility>    // Utility components (e.g., std::pair)
