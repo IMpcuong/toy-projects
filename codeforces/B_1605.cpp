@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -86,13 +85,58 @@ void solve()
   int ops = 0;
   vector<int> indices;
   indices.reserve(n);
+  int first_idx_of_ones = n;
   for (int i = 0; i < n - 1; i++)
   {
-    char cur = s[i];
-    char nxt = s[i + 1];
+    int cur = s[i] - '0';
+    int nxt = s[i + 1] - '0';
+    if (cur <= nxt)
+    {
+      if (cur == 0)
+        continue;
+      first_idx_of_ones = min(first_idx_of_ones, i);
+    }
+    else
+    {
+      if (sza(indices) > 0 && indices.back() == first_idx_of_ones)
+        continue;
+      if (first_idx_of_ones < n)
+        indices.emplace_back(first_idx_of_ones);
+      else
+        indices.emplace_back(i);
+    }
+  }
+
+  int indices_cnt = sza(indices);
+  if (indices_cnt == 0)
+  {
+    println(ops);
+    return;
+  }
+  ops++;
+
+  stack<int> st;
+  for (int j = n - 1; j >= 0 && indices_cnt > 0; j--)
+  {
+    if (s[j] == '0')
+    {
+      st.push(j);
+      indices_cnt--;
+    }
+  }
+
+  while (!st.empty())
+  {
+    indices.emplace_back(st.top());
+    st.pop();
   }
   indices.shrink_to_fit();
-}
+
+  for_each(all(indices), [](int &idx) { return ++idx; });
+  ranges::sort(indices);
+  indices.insert(indices.begin(), sza(indices));
+  println(ops);
+  cout << indices << "\n"; }
 
 int main()
 {
@@ -105,8 +149,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
-
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
