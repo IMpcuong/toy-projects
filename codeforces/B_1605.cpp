@@ -82,33 +82,22 @@ void solve()
   auto n = nxt<int>();
   auto s = nxt<string>();
 
+  int zeros = ranges::count_if(s, [](char &chr) { return chr == '0'; });
+  int ones = n - zeros;
+
   int ops = 0;
   vector<int> indices;
   indices.reserve(n);
-  int first_idx_of_ones = n;
-  for (int i = 0; i < n - 1; i++)
+  for (int i = 0; i < zeros; i++)
   {
-    int cur = s[i] - '0';
-    int nxt = s[i + 1] - '0';
-    if (cur <= nxt)
-    {
-      if (cur == 0)
-        continue;
-      first_idx_of_ones = min(first_idx_of_ones, i);
-    }
-    else
-    {
-      if (sza(indices) > 0 && indices.back() == first_idx_of_ones)
-        continue;
-      if (first_idx_of_ones < n)
-        indices.emplace_back(first_idx_of_ones);
-      else
-        indices.emplace_back(i);
-    }
+    if (s[i] == '0')
+      continue;
+
+    indices.emplace_back(i);
   }
 
-  int indices_cnt = sza(indices);
-  if (indices_cnt == 0)
+  int half_sz = sza(indices);
+  if (half_sz == 0)
   {
     println(ops);
     return;
@@ -116,13 +105,13 @@ void solve()
   ops++;
 
   stack<int> st;
-  for (int j = n - 1; j >= 0 && indices_cnt > 0; j--)
+  for (int j = n - 1; j >= 0 && half_sz > 0; j--)
   {
-    if (s[j] == '0')
-    {
-      st.push(j);
-      indices_cnt--;
-    }
+    if (s[j] == '1')
+      continue;
+
+    st.push(j);
+    half_sz--;
   }
 
   while (!st.empty())
@@ -131,12 +120,14 @@ void solve()
     st.pop();
   }
   indices.shrink_to_fit();
-
-  for_each(all(indices), [](int &idx) { return ++idx; });
-  ranges::sort(indices);
+  ranges::for_each(indices, [](int &idx) { return ++idx; });
   indices.insert(indices.begin(), sza(indices));
-  println(ops);
-  cout << indices << "\n"; }
+
+  {
+    println(ops);
+    cout << indices << "\n";
+  }
+}
 
 int main()
 {
