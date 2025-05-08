@@ -81,7 +81,11 @@ inline T nxt()
 void solve()
 {
   auto n = nxt<ll>();
-  ll ans = 4 * n + (3 * 1 + 2 * ((2 + (n - 2)) * (n - 2 - 2 + 1) / 2) + n - 1);
+  ll outer_square = 4 * n;
+  ll inner_edge_dup3 = 3 * 1; // len(edge) = 1 (x3).
+  ll inner_edge_dup2 = 2 * ((2 + (n - 2)) * ((n - 2) - 2 + 1)) / 2; // len(edge) = [2; n - 2] (x2).
+  ll inner_edge_dup1 = n - 1; // len(edge) = n - 1 (x1).
+  ll ans = outer_square + inner_edge_dup3 + inner_edge_dup2 + inner_edge_dup1;
   println(ans);
 }
 
