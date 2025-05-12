@@ -101,9 +101,12 @@ void solve()
     while (heats[j] <= q && j < n)
       j++;
 
-    int l = j - i;
+    ll l = j - i;
     if (j - i >= k)
       vaca_days += (l - k + 1) * (l - k + 2) / 2;
+
+    if (j == n)
+      break;
   }
 
   println(vaca_days);
