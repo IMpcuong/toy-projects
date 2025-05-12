@@ -80,8 +80,12 @@ inline T nxt()
 
 void solve()
 {
-  auto n = nxt<ll>();
-  auto k = nxt<ll>();
+  auto n = nxt<int>();
+  auto k = nxt<int>();
+
+  k = min(k, 30);
+  ll ans = min(n, (1 << k) - 1) + 1;
+  println(ans);
 }
 
 int main()
@@ -95,7 +99,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
