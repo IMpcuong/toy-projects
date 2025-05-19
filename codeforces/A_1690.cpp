@@ -81,11 +81,16 @@ inline T nxt()
 void solve()
 {
   auto n = nxt<int>();
-  vector<ll> a(n);
-  generate(all(a), nxt<ll>);
-  ranges::sort(a);
 
+  // @Note:
+  // + n = {h3 + h2 + h1 | 0 < h3 < h2 < h1}
+  // + n >= 6
 
+  int h3 = (n - 3) / 3;
+  int h2 = (n - h3 * 3 - 1) / 2 + h3;
+  int h1 = n - (h2 + h3);
+  assert(h1 + h2 + h3 == n);
+  println(h2, h1, h3);
 }
 
 int main()
@@ -99,7 +104,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
