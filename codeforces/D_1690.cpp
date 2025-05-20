@@ -84,28 +84,23 @@ void solve()
   auto k = nxt<int>();
   auto s = nxt<string>();
 
-  int black_cnt = 0;
+  // @Note: Dynamic-in-box technique.
+  //  + Summarize the exquisite props from the init-chunk := O(k).
+  //  + On each slicing-window, pays attention/tends to operate only one computation := O(1) * n.
+  //  -> Time complexity := O(n + k) = max(O(n), O(k)) = O(n).
+
   int white_cnt = k;
   for (int i = 0; i < k; i++)
-  {
     if (s[i] == 'B')
-    {
-      black_cnt++;
       white_cnt--;
-    }
-  }
 
   int flip = white_cnt;
   for (int i = 1; i < n - k + 1; i++)
   {
-    if (s[i - 1] == 'B')
-      black_cnt--;
-    else
+    if (s[i - 1] == 'W')
       white_cnt--;
 
-    if (s[i + k - 1] == 'B')
-      black_cnt++;
-    else
+    if (s[i + k - 1] == 'W')
       white_cnt++;
 
     flip = min(flip, white_cnt);
