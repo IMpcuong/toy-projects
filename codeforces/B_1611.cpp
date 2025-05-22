@@ -102,11 +102,20 @@ void solve()
   ll lt = min(a, b);
   if (gt / lt == 1 || gt / lt == 2)
   {
-    ll ans = (gt + lt) / 4;
+    // @Note:
+    //  + teams = {x + y | quan(form_1) = x && quan(form_2) = y}
+    //  + form(team) := <3+1> = form_1 (1)
+    //  + form(team) := <2+2> = form_2 (2)
+    //  (1) + (2) -> |- 3x + 2y <= gt
+    //               |-  x + 2y <= lt
+    //  max(teams) = max(x + y) happens <=> (3x + 2y) + (x + 2y) = lt + gt
+    //                                  <=> x + y = (lt + gt) / 4
+    ll ans = (lt + gt) / 4;
     println(ans);
   }
   else
   {
+    // @Note: gt / lt >= 3 -> teams = {lt | form(team) := <3+1>}
     println(lt);
   }
 }
