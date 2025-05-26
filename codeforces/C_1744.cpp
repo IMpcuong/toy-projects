@@ -104,7 +104,8 @@ void solve()
   for (int j = 0; j < cur_color_cnt; j++)
   {
     int cur = cur_color_locs[j];
-    j1 = cur;
+    if (j1 < cur)
+      j1 = cur;
 
     while (j1 < n + cur)
     {
