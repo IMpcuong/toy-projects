@@ -104,6 +104,15 @@ void solve()
   for (int j = 0; j < cur_color_cnt; j++)
   {
     int cur = cur_color_locs[j];
+
+    //
+    // @Hack:
+    //  + traffic_lights[j1] = 'g'
+    //  + j1 - leftmost(cur_color_locs) := max_dist
+    //
+
+    if (j1 > cur)
+      continue;
     if (j1 < cur)
       j1 = cur;
 
