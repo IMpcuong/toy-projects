@@ -85,7 +85,18 @@ void solve()
   vector<int> permu(n);
   generate(all(permu), nxt<int>);
 
-  map<int, int> node_prio;
+  // map<int, int> node_prio;
+  // for (int i = 0; i < n; i++)
+  //   node_prio[permu[i]] = i;
+
+  //
+  // @Hack:
+  //  + array/vector -> op(get) := O(1)
+  //  + map          -> op(get) := O(log(n)) (binary-tree)
+  //  + array <-usable-> permutation <-> adjacent
+  //
+
+  vector<int> node_prio(n + 1);
   for (int i = 0; i < n; i++)
     node_prio[permu[i]] = i;
 
