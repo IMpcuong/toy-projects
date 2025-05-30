@@ -78,7 +78,7 @@ inline T nxt()
   return x;
 }
 
-int cal_max_expo_of_two_divisible_by(auto num)
+int cal_max_expo_of_two_divisible_by(int num)
 {
   int expo = 0;
   if (num & 1)
@@ -86,8 +86,8 @@ int cal_max_expo_of_two_divisible_by(auto num)
 
   while (num % 2 == 0)
   {
-    num /= 2;
     expo++;
+    num /= 2;
   }
 
   return expo;
@@ -96,52 +96,46 @@ int cal_max_expo_of_two_divisible_by(auto num)
 void solve()
 {
   auto n = nxt<int>();
-  vector<ll> a(n);
-  generate(all(a), nxt<ll>);
-
-  ranges::sort(a, [](ll f, ll s) { return f >= s; });
-
-
-  int n_tmp = n;
-  int ops = 0;
+  vector<int> a(n);
+  generate(all(a), nxt<int>);
   for (int i = 0; i < n; i++)
-  {
-    if (a[i] & 1)
-      continue;
+    a[i] = cal_max_expo_of_two_divisible_by(a[i]);
 
-    ll dec_val = cal_max_expo_of_two_divisible_by(a[i]);
-    n_tmp -= dec_val;
-  }
-
-  if (n_tmp <= 0)
-  {
-    println(ops);
-    return;
-  }
-
-  int inc = 1;
-  vector<int> expo_list(n);
-  generate(all(expo_list), [&]() { return cal_max_expo_of_two_divisible_by(inc++); });
-  ranges::sort(expo_list, [](int f, int s) { return f >= s; });
-
-  // cout << expo_list << "\n";
-
-  for (auto expo : expo_list)
+  int cnt = 0;
+  int ops = 0;
+  for (const auto &expo : a)
   {
     if (expo == 0)
       continue;
 
-    n_tmp -= expo;
-    ops++;
-    if (n_tmp <= 0)
+    cnt += expo;
+    if (cnt >= n)
     {
       println(ops);
       return;
     }
   }
 
-  if (n_tmp > 0)
-    println(-1);
+  vector<int> expo_list(n);
+  for (int j = 0; j < n; j++)
+    expo_list[j] = cal_max_expo_of_two_divisible_by(j + 1);
+  ranges::sort(expo_list, greater<int>());
+
+  for (const auto &expo : expo_list)
+  {
+    if (expo == 0)
+      continue;
+
+    ops++;
+    cnt += expo;
+    if (cnt >= n)
+    {
+      println(ops);
+      return;
+    }
+  }
+
+  println(-1);
 }
 
 int main()
