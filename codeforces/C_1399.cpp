@@ -80,9 +80,61 @@ inline T nxt()
 
 void solve()
 {
-  vector<int> a(5);
+  auto n = nxt<int>(); // @Note: n <= 50.
+  vector<int> a(n);
   generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  ranges::sort(a);
+
+  if (n == 1)
+  {
+    println(0);
+    return;
+  }
+
+  if (n <= 3)
+  {
+    println(1);
+    return;
+  }
+
+  int avg_sum = a[n - 1] + a[n - 2];
+  int pair_cnt = 1;
+  while (avg_sum > 1)
+  {
+    int cur_pair_cnt = 0;
+    vector<bool> visited(n, false);
+    for (int i = 0; i < n; i++)
+    {
+      if (visited[i])
+        continue;
+
+      int remain = avg_sum - a[i];
+      if (remain <= 0 || remain > n)
+        continue;
+
+      for (int j = 0; j < n; j++)
+      {
+        if (i == j)
+          continue;
+
+        if (a[j] != remain)
+          continue;
+
+        if (visited[j])
+          continue;
+
+        visited[i] = true;
+        visited[j] = true;
+        cur_pair_cnt++;
+        break;
+      }
+    }
+    pair_cnt = max(pair_cnt, cur_pair_cnt);
+
+    avg_sum--;
+  }
+
+  println(pair_cnt);
 }
 
 int main()
@@ -96,7 +148,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
