@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bits/stdc++.h>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
@@ -78,11 +79,102 @@ inline T nxt()
   return x;
 }
 
+template <typename T>
+struct nxt_t
+{
+  T hold;
+
+  inline T operator()()
+  {
+    cin >> hold;
+    return hold;
+  }
+};
+
+struct prev_node
+{
+  int idx;
+  ll weight_to_cur;
+};
+
 void solve()
 {
-  vector<int> a(5);
-  generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  auto n = nxt<int>();
+  auto m = nxt<int>();
+
+  vector<ll> checkpoints(n);
+  generate(all(checkpoints), nxt_t<ll>());
+
+  vector<ar<ll, 3>> entries(m);
+  for (int i = 0; i < m; i++)
+    generate(all(entries[i]), nxt_t<ll>());
+
+  vector<vector<prev_node>> prev_neighbors_of(n);
+  for (int i = 0; i < m; i++)
+  {
+    int from = entries[i][0] - 1;
+    int to = entries[i][1] - 1;
+    ll w = entries[i][2];
+    prev_neighbors_of[to].emplace_back(prev_node{from, w});
+  }
+
+  auto can_robot_travel_with_fixed_batteries = [&](const ll &expected_batt) -> ll
+  {
+    //
+    // @Note:
+    //  + i     := index of the current node.
+    //  + dp[i] := total and maximum-possible batteries which is held by this robot.
+    //
+    vector<ll> dp(n, -1);
+    dp[0] = min(checkpoints[0], expected_batt);
+
+    for (int i = 1; i < n; i++)
+    {
+      ll max_total_prev_batt = dp[i];
+      for (const auto &prev_node : prev_neighbors_of[i])
+      {
+        // @Note: node[prev_node.idx] can be reachable from node[0].
+        if (dp[prev_node.idx] == -1)
+          continue;
+
+        if (dp[prev_node.idx] < prev_node.weight_to_cur)
+          continue;
+
+        max_total_prev_batt = max(max_total_prev_batt, dp[prev_node.idx] + checkpoints[i]);
+      }
+
+      dp[i] = min(max_total_prev_batt, expected_batt);
+    }
+
+    if (dp[n - 1] == -1)
+      return false;
+
+    return true;
+  };
+
+  ll min_batt = 0LL;
+  ll max_batt = INF + 5;
+
+  // bool tmp = can_robot_travel_with_fixed_batteries(0);
+  // println(tmp);
+
+  ll ans = -1;
+  while (min_batt <= max_batt)
+  {
+    ll med_batt = (min_batt + max_batt) / 2;
+    // println(min_batt, max_batt, med_batt);
+    if (can_robot_travel_with_fixed_batteries(med_batt))
+    {
+      max_batt = med_batt - 1;
+      ans = med_batt;
+    }
+    else
+    {
+      min_batt = med_batt + 1;
+    }
+  }
+
+  println(ans);
 }
 
 int main()
@@ -96,7 +188,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
