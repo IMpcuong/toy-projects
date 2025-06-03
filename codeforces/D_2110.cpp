@@ -123,7 +123,8 @@ void solve()
     //
     // @Note:
     //  + i     := index of the current node.
-    //  + dp[i] := total and maximum-possible batteries which is held by this robot.
+    //  + dp[i] := total and maximum-possible batteries which is held by this robot
+    //             before reaching node[i].
     //
     vector<ll> dp(n, -1);
     dp[0] = min(checkpoints[0], expected_batt);
@@ -133,14 +134,19 @@ void solve()
       ll max_total_prev_batt = dp[i];
       for (const auto &prev_node : prev_neighbors_of[i])
       {
-        // @Note: node[prev_node.idx] can be reachable from node[0].
+        // @Note: node[prev_node.idx] is not reachable from node[0] (root).
         if (dp[prev_node.idx] == -1)
           continue;
 
+        // @Note: node[prev_node.idx] is the current checkpoint where our robot
+        //  is standing, which its bag is not reserving enough batterries to
+        //  pass through the next/adjacent checkpoint := the route is dead-end/cul-de-sac here.
         if (dp[prev_node.idx] < prev_node.weight_to_cur)
           continue;
 
-        max_total_prev_batt = max(max_total_prev_batt, dp[prev_node.idx] + checkpoints[i]);
+        ll max_total_batt_after_pass_cur_checkpoint = dp[prev_node.idx] + checkpoints[i];
+        max_total_prev_batt = max(max_total_prev_batt,
+            max_total_batt_after_pass_cur_checkpoint);
       }
 
       dp[i] = min(max_total_prev_batt, expected_batt);
