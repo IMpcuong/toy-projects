@@ -93,7 +93,7 @@ void solve()
     return (n - k) * (n - k - 1) / k;
   };
 
-  int tuple_cnt = 0;
+  ll tuple_cnt = 0;
   int j = 0;
   for (int i = 0; i < n - k; i++)
   {
@@ -102,14 +102,11 @@ void solve()
     if (max_v - min_v > 2)
       continue;
 
-    j = i + m;
-    while (j < n)
-    {
-      if (a[j] - min_v > 2)
-        break;
+    if (j < i + m)
+      j = i + m;
 
+    while (j < n && a[j] - a[i] <= k)
       j++;
-    }
 
     tuple_cnt += nCk(j - i + 1);
   }
