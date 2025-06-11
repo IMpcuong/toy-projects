@@ -97,45 +97,65 @@ void solve()
 
   for (int j = 1; j < n + 1; j++)
   {
-    int delta = d[j - 1] != 0 ? 1 : 0;
+    int min_delta = d[j - 1];
+    int max_delta = d[j - 1];
+    if (d[j - 1] == -1)
+    {
+      min_delta = 0;
+      max_delta = 1;
+    }
+
     int l = bound[j - 1][0];
     int r = bound[j - 1][1];
-    if (l > dp[j - 1][1] + delta || r < dp[j - 1][0] + delta)
+    if (l > dp[j - 1][1] + max_delta || r < dp[j - 1][0])
     {
       println(-1);
       return;
     }
 
-    if (l > dp[j - 1][0])
-      dp[j][0] = l;
-    else
-      dp[j][0] = dp[j - 1][0];
-
-    if (r < dp[j - 1][1] + delta)
-      dp[j][1] = r;
-    else
-      dp[j][1] = dp[j - 1][1] + delta;
+    dp[j][0] = max(l, dp[j - 1][0] + min_delta);
+    dp[j][1] = min(r, dp[j - 1][1] + max_delta);
+    // println(j, dp[j]);
 
     if (dp[j][0] > dp[j][1])
     {
       println(-1);
       return;
     }
-
-    cout << dp[j] << "\n";
   }
 
-  for (int k = n; k >= 1; k--)
+  int final_h = min(dp[n][0], dp[n][1]);
+  for (int i = n - 1; i >= 0; i--)
   {
-    if (d[k - 1] != -1)
+    if (final_h == 0)
+      break;
+
+    if (d[i] == 0)
       continue;
 
-    int delta_r = abs(dp[k][1] - dp[k - 1][1]);
-    if (delta_r == 1)
-      d[k - 1] = 1;
+    if (d[i] == 1)
+    {
+      final_h--;
+      continue;
+    }
+
+    int l = dp[i][0];
+    int r = dp[i][1];
+    int cur_h = max(l, r);
+    if (final_h - cur_h == 1)
+    {
+      d[i] = 1;
+      final_h--;
+    }
     else
-      d[k - 1] = 0;
+    {
+      d[i] = 0;
+    }
   }
+
+  for (int i = 0; i < n; i++)
+    if (d[i] == -1)
+      d[i] = 0;
 
   // cout << dp << "\n";
   cout << d << "\n";
