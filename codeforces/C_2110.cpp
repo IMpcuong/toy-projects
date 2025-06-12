@@ -124,7 +124,8 @@ void solve()
     }
   }
 
-  int final_h = min(dp[n][0], dp[n][1]);
+  // int final_h = min(dp[n][0], dp[n][1]);
+  int final_h = (dp[n][0] + dp[n][1]) / 2;
   for (int i = n - 1; i >= 0; i--)
   {
     if (final_h == 0)
