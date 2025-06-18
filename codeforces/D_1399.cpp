@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bits/stdc++.h>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
@@ -78,49 +79,126 @@ inline T nxt()
   return x;
 }
 
+struct chunk_t
+{
+  char type;
+  int quan;
+  vector<int> indices;
+};
+
 void solve()
 {
   auto n = nxt<int>();
   auto s = nxt<string>();
 
-  deque<pair<int, int>> range_pairs;
+  vector<chunk_t> chunks;
+  chunks.reserve(n);
   int start = 0;
   int end   = 0;
   for (int i = 1; i < n; i++)
   {
-    int prev = s[i - 1];
-    int cur  = s[i];
-    if (prev != cur)
-    {
-      end = i;
-    }
-    else
-    {
-      if (end == start)
-        range_pairs.emplace_back(start, end);
-      if (end > start)
-        range_pairs.emplace_front(start, end);
+    char cur  = s[i];
+    char prev = s[i - 1];
 
-      start = i;
+    if (prev == cur)
+    {
       end = i;
+      continue;
     }
+
+    if (start <= end)
+    {
+      int quan = end - start + 1;
+      vector<int> chunk_indices(quan);
+      iota(all(chunk_indices), start);
+      chunks.emplace_back(chunk_t{s[start], quan, chunk_indices});
+    }
+    start = i;
+    end   = i;
   }
-  if (start == end)
-    range_pairs.emplace_back(start, end);
-  if (start < end)
-    range_pairs.emplace_front(start, end);
-  range_pairs.shrink_to_fit();
-
-  while (!range_pairs.empty())
+  if (start <= end)
   {
-    auto cur_range = range_pairs.front();
-    int l = cur_range.first;
-    int r = cur_range.second;
-
-    range_pairs.pop_front();
+    int quan = end - start + 1;
+    vector<int> chunk_indices(quan);
+    iota(all(chunk_indices), start);
+    chunks.emplace_back(chunk_t{s[start], quan, chunk_indices});
   }
+  chunks.shrink_to_fit();
 
-  cout << range_pairs << "\n";
+  // for (int i = 0; i < sza(chunks); i++)
+  // {
+  //   println(chunks[i].type, chunks[i].quan);
+  //   cout << chunks[i].indices << "\n";
+  // }
+
+  vector<vector<int>> seqs_indices;
+  seqs_indices.reserve(n);
+
+  int chunk_sz = sza(chunks);
+  while (chunk_sz)
+  {
+    vector<int> cur_seq_indices;
+    int fusion_quan = 0;
+
+    int min_chunk_quan = n;
+    for (int i = 0; i < chunk_sz; i++)
+      if (chunks[i].quan != 0)
+        min_chunk_quan = min(min_chunk_quan, chunks[i].quan);
+
+    for (int i = 0; i < chunk_sz; i++)
+    {
+      if (chunks[i].quan >= min_chunk_quan)
+      {
+        chunks[i].quan -= min_chunk_quan;
+        cur_seq_indices.insert(cur_seq_indices.end(),
+            chunks[i].indices.begin(),
+            chunks[i].indices.begin() + min_chunk_quan);
+      }
+    }
+    seqs_indices.emplace_back(cur_seq_indices);
+
+    stack<chunk_t> merged_chunks;
+    for (int i = 0; i < chunk_sz; i++)
+    {
+      if (chunks[i].quan == 0)
+      {
+        fusion_quan++;
+        continue;
+      }
+
+      if (merged_chunks.empty())
+      {
+        merged_chunks.push(chunks[i]);
+      }
+      else
+      {
+        auto chunk_tail = merged_chunks.top();
+        merged_chunks.pop();
+        if (chunk_tail.type == chunks[i].type)
+        {
+          chunk_tail.indices.insert(chunk_tail.indices.end(), all(chunks[i].indices));
+          merged_chunks.push(chunk_tail);
+          fusion_quan++;
+          continue;
+        }
+
+        merged_chunks.push(chunks[i]);
+      }
+    }
+
+    chunks = {};
+    chunks.reserve(sza(merged_chunks));
+    while (!merged_chunks.empty())
+    {
+      chunks.emplace_back(merged_chunks.top());
+      merged_chunks.pop();
+    }
+
+    chunk_sz -= fusion_quan;
+  }
+  seqs_indices.shrink_to_fit();
+
+  cout << seqs_indices << "\n";
 }
 
 int main()
