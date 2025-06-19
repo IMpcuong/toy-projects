@@ -143,35 +143,24 @@ void solve()
       if (chunks[i].quan != 0)
         min_chunk_quan = min(min_chunk_quan, chunks[i].quan);
 
-    for (int i = 0; i < chunk_sz; i++)
+    for (auto &chunk : chunks)
     {
-      if (chunks[i].quan >= min_chunk_quan)
+      if (chunk.quan >= min_chunk_quan)
       {
         for (int j = 0; j < min_chunk_quan; j++)
         {
-          int idx = chunks[i].indices[j];
+          int idx = chunk.indices[j];
           colored_ans[idx] = merge_or_remove_quan_after_each_epoch + j + 1;
         }
 
-        // cout << colored_ans << "\n";
-
-        chunks[i].quan -= min_chunk_quan;
-        if (chunks[i].quan == 0)
-        {
-          chunks[i].indices.clear();
-        }
+        chunk.quan -= min_chunk_quan;
+        if (chunk.quan == 0)
+          chunk.indices.clear();
         else
-        {
-          auto cur_chunk_indices = chunks[i].indices;
-          cur_chunk_indices.erase(cur_chunk_indices.begin(),
-              cur_chunk_indices.begin() + min_chunk_quan);
-          chunks[i].indices = cur_chunk_indices;
-        }
+          chunk.indices.erase(chunk.indices.begin(),
+              chunk.indices.begin() + min_chunk_quan);
       }
     }
-
-    // print_chunks(chunks);
-    // cout << colored_ans << "\n";
 
     int tmp_chunk_sz = sza(chunks);
     vector<chunk_t> epoch_chunks;
@@ -184,18 +173,16 @@ void solve()
       if (epoch_chunks.empty())
       {
         epoch_chunks.emplace_back(chunk);
-        // chunks.erase(chunks.begin() + i);
         continue;
       }
 
       if (epoch_chunks.back().type != chunk.type)
       {
         epoch_chunks.emplace_back(chunk);
-        // chunks.erase(chunks.begin() + i);
       }
       else
       {
-        auto top_chunk_indices = epoch_chunks.back().indices;
+        auto &top_chunk_indices = epoch_chunks.back().indices;
         top_chunk_indices.insert(top_chunk_indices.end(), all(chunk.indices));
 
         epoch_chunks.back().indices = top_chunk_indices;
@@ -208,7 +195,7 @@ void solve()
 
     int new_chunk_sz = sza(epoch_chunks);
     merge_or_remove_quan_after_each_epoch += min_chunk_quan;
-    chunks = epoch_chunks;
+    chunks.assign(all(epoch_chunks));
     chunk_sz = new_chunk_sz;
   }
 
