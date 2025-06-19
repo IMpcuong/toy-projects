@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <bits/stdc++.h>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
@@ -13,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -86,6 +84,15 @@ struct chunk_t
   vector<int> indices;
 };
 
+void print_chunks(const vector<chunk_t> &chunks)
+{
+  for (int i = 0; i < sza(chunks); i++)
+  {
+    println(chunks[i].type, chunks[i].quan);
+    cout << chunks[i].indices << "\n";
+  }
+}
+
 void solve()
 {
   auto n = nxt<int>();
@@ -125,21 +132,12 @@ void solve()
   }
   chunks.shrink_to_fit();
 
-  // for (int i = 0; i < sza(chunks); i++)
-  // {
-  //   println(chunks[i].type, chunks[i].quan);
-  //   cout << chunks[i].indices << "\n";
-  // }
-
-  vector<vector<int>> seqs_indices;
-  seqs_indices.reserve(n);
+  vector<int> colored_ans(n);
+  int merge_or_remove_quan_after_each_epoch = 0;
 
   int chunk_sz = sza(chunks);
-  while (chunk_sz)
+  while (chunk_sz > 0)
   {
-    vector<int> cur_seq_indices;
-    int fusion_quan = 0;
-
     int min_chunk_quan = n;
     for (int i = 0; i < chunk_sz; i++)
       if (chunks[i].quan != 0)
@@ -149,56 +147,74 @@ void solve()
     {
       if (chunks[i].quan >= min_chunk_quan)
       {
+        for (int j = 0; j < min_chunk_quan; j++)
+        {
+          int idx = chunks[i].indices[j];
+          colored_ans[idx] = merge_or_remove_quan_after_each_epoch + j + 1;
+        }
+
+        // cout << colored_ans << "\n";
+
         chunks[i].quan -= min_chunk_quan;
-        cur_seq_indices.insert(cur_seq_indices.end(),
-            chunks[i].indices.begin(),
-            chunks[i].indices.begin() + min_chunk_quan);
+        if (chunks[i].quan == 0)
+        {
+          chunks[i].indices.clear();
+        }
+        else
+        {
+          auto cur_chunk_indices = chunks[i].indices;
+          cur_chunk_indices.erase(cur_chunk_indices.begin(),
+              cur_chunk_indices.begin() + min_chunk_quan);
+          chunks[i].indices = cur_chunk_indices;
+        }
       }
     }
-    seqs_indices.emplace_back(cur_seq_indices);
 
-    stack<chunk_t> merged_chunks;
-    for (int i = 0; i < chunk_sz; i++)
+    // print_chunks(chunks);
+    // cout << colored_ans << "\n";
+
+    int tmp_chunk_sz = sza(chunks);
+    vector<chunk_t> epoch_chunks;
+    epoch_chunks.reserve(tmp_chunk_sz);
+    for (auto &chunk : chunks)
     {
-      if (chunks[i].quan == 0)
+      if (sza(chunk.indices) == 0)
+        continue;
+
+      if (epoch_chunks.empty())
       {
-        fusion_quan++;
+        epoch_chunks.emplace_back(chunk);
+        // chunks.erase(chunks.begin() + i);
         continue;
       }
 
-      if (merged_chunks.empty())
+      if (epoch_chunks.back().type != chunk.type)
       {
-        merged_chunks.push(chunks[i]);
+        epoch_chunks.emplace_back(chunk);
+        // chunks.erase(chunks.begin() + i);
       }
       else
       {
-        auto chunk_tail = merged_chunks.top();
-        merged_chunks.pop();
-        if (chunk_tail.type == chunks[i].type)
-        {
-          chunk_tail.indices.insert(chunk_tail.indices.end(), all(chunks[i].indices));
-          merged_chunks.push(chunk_tail);
-          fusion_quan++;
-          continue;
-        }
+        auto top_chunk_indices = epoch_chunks.back().indices;
+        top_chunk_indices.insert(top_chunk_indices.end(), all(chunk.indices));
 
-        merged_chunks.push(chunks[i]);
+        epoch_chunks.back().indices = top_chunk_indices;
+        epoch_chunks.back().quan = sza(top_chunk_indices);
       }
     }
+    epoch_chunks.shrink_to_fit();
 
-    chunks = {};
-    chunks.reserve(sza(merged_chunks));
-    while (!merged_chunks.empty())
-    {
-      chunks.emplace_back(merged_chunks.top());
-      merged_chunks.pop();
-    }
+    // print_chunks(epoch_chunks);
 
-    chunk_sz -= fusion_quan;
+    int new_chunk_sz = sza(epoch_chunks);
+    merge_or_remove_quan_after_each_epoch += min_chunk_quan;
+    chunks = epoch_chunks;
+    chunk_sz = new_chunk_sz;
   }
-  seqs_indices.shrink_to_fit();
 
-  cout << seqs_indices << "\n";
+  set<int> seq_cnt = set(all(colored_ans));
+  println(sza(seq_cnt));
+  cout << colored_ans << "\n";
 }
 
 int main()
@@ -212,7 +228,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
