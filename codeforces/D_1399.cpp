@@ -182,16 +182,14 @@ void solve()
       }
       else
       {
-        auto &top_chunk_indices = epoch_chunks.back().indices;
-        top_chunk_indices.insert(top_chunk_indices.end(), all(chunk.indices));
+        auto *top_chunk_indices = &epoch_chunks.back().indices;
+        top_chunk_indices->insert(top_chunk_indices->end(), all(chunk.indices));
 
-        epoch_chunks.back().indices = top_chunk_indices;
-        epoch_chunks.back().quan = sza(top_chunk_indices);
+        epoch_chunks.back().indices = *top_chunk_indices;
+        epoch_chunks.back().quan = (int)top_chunk_indices->size();
       }
     }
     epoch_chunks.shrink_to_fit();
-
-    // print_chunks(epoch_chunks);
 
     int new_chunk_sz = sza(epoch_chunks);
     merge_or_remove_quan_after_each_epoch += min_chunk_quan;
