@@ -80,9 +80,20 @@ inline T nxt()
 
 void solve()
 {
-  vector<int> a(5);
-  generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  ar<ll, 3> params;
+  ranges::generate(params, nxt<ll>);
+
+  auto &[rows, cols, objs] = params;
+  ll max_objs_per_row = ceildiv(objs, rows);
+  ll left_cols = cols - max_objs_per_row;
+  if (left_cols <= 0)
+  {
+    println(cols);
+    return;
+  }
+
+  ll longest_bench = ceildiv(max_objs_per_row, left_cols + 1);
+  println(longest_bench);
 }
 
 int main()
@@ -96,7 +107,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
