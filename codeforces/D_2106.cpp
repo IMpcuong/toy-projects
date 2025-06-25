@@ -87,9 +87,6 @@ void solve()
   vector<ll> minimums(m);
   ranges::generate(minimums, nxt<ll>);
 
-  auto reverse_minimums = minimums;
-  ranges::reverse(reverse_minimums);
-
   vector<pair<ll, int>> minimums_with_idx(m);
   for (int i = 0; i < m; i++)
     minimums_with_idx[i] = make_pair(minimums[i], i);
@@ -102,35 +99,35 @@ void solve()
         return p1.first < p2.first;
       });
 
-  auto can_pass_the_rest_lower_bounds = [&](const int &ignore_idx) -> bool
+  auto can_pass_the_rest_lower_bounds = [&](const int &ignore_idx = -1) -> bool
   {
-    auto reverse_minimums_cp = reverse_minimums;
     bool first_match = true;
+    int j = 0;
     for (int i = 0; i < n; i++)
     {
-      if (reverse_minimums_cp.empty())
+      if (j == m)
         return true;
 
-      if (ignore_idx != -1 &&
-          first_match &&
-          minimums[ignore_idx] == reverse_minimums_cp.back())
+      if (ignore_idx != -1 && ignore_idx == j && first_match)
       {
         first_match = false;
         --i;
-        reverse_minimums_cp.pop_back();
+        if (j < m)
+          j++;
         continue;
       }
 
-      if (flowers[i] < reverse_minimums_cp.back())
+      if (flowers[i] < minimums[j])
         continue;
 
-      reverse_minimums_cp.pop_back();
+      if (j < m)
+        j++;
     }
 
-    return reverse_minimums_cp.empty();
+    return j == m;
   };
 
-  if (can_pass_the_rest_lower_bounds(-1))
+  if (can_pass_the_rest_lower_bounds())
   {
     println(0);
     return;
@@ -142,10 +139,10 @@ void solve()
   vector<bool> picked(m, false);
   while (l <= r)
   {
-    int m = (l + r) / 2;
-    ll removable_by_wand = minimums_with_idx[m].first;
+    int mid = (l + r) / 2;
+    ll removable_by_wand = minimums_with_idx[mid].first;
 
-    int removable_idx = minimums_with_idx[m].second;
+    int removable_idx = minimums_with_idx[mid].second;
     for (int i = 0; i < m; i++)
     {
       if (minimums[i] == removable_by_wand && !picked[i])
@@ -157,12 +154,12 @@ void solve()
 
     if (can_pass_the_rest_lower_bounds(removable_idx))
     {
-      ans = removable_by_wand;
-      r = m - 1;
+      ans = ans == -1 ? removable_by_wand : min(ans, removable_by_wand);
+      r = mid - 1;
     }
     else
     {
-      l = m + 1;
+      l = mid + 1;
     }
   }
 
