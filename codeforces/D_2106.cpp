@@ -87,19 +87,7 @@ void solve()
   vector<ll> minimums(m);
   ranges::generate(minimums, nxt<ll>);
 
-  vector<pair<ll, int>> minimums_with_idx(m);
-  for (int i = 0; i < m; i++)
-    minimums_with_idx[i] = make_pair(minimums[i], i);
-  ranges::sort(minimums_with_idx,
-      [](const auto &p1, const auto &p2) -> bool
-      {
-        if (p1.first == p2.first)
-          return p1.second < p2.second;
-
-        return p1.first < p2.first;
-      });
-
-  auto can_pass_the_rest_lower_bounds = [&](const int &ignore_idx = -1) -> bool
+  auto can_pass_the_rest_lower_bounds = [=](const int &ignore_idx = -1) -> bool
   {
     bool first_match = true;
     int j = 0;
@@ -133,37 +121,38 @@ void solve()
     return;
   }
 
-  int l = 0;
-  int r = m - 1;
-  ll ans = -1;
-  vector<bool> picked(m, false);
-  while (l <= r)
+  vector<int> prefix(m);
+  int j = 0;
+  for (int i = 0; i < m; i++)
   {
-    int mid = (l + r) / 2;
-    ll removable_by_wand = minimums_with_idx[mid].first;
-
-    int removable_idx = minimums_with_idx[mid].second;
-    for (int i = 0; i < m; i++)
-    {
-      if (minimums[i] == removable_by_wand && !picked[i])
-      {
-        removable_idx = min(removable_idx, i);
-        picked[i] = true;
-      }
-    }
-
-    if (can_pass_the_rest_lower_bounds(removable_idx))
-    {
-      ans = ans == -1 ? removable_by_wand : min(ans, removable_by_wand);
-      r = mid - 1;
-    }
-    else
-    {
-      l = mid + 1;
-    }
+    while (j < n && flowers[j] < minimums[i])
+      j++;
+    prefix[i] = j++;
   }
 
-  println(ans);
+  vector<int> suffix(m);
+  j = n - 1;
+  for (int i = m - 1; i >= 0; i--)
+  {
+    while (j >= 0 && flowers[j] < minimums[i])
+      j--;
+    suffix[i] = j--;
+  }
+
+  // cout << prefix << "\n";
+  // cout << suffix << "\n";
+
+  ll max_v = *ranges::max_element(minimums) + 1;
+  ll ans = max_v;
+  for (int i = 0; i < m; i++)
+  {
+    int last_idx_prefix  = i == 0     ? -1 : prefix[i - 1];
+    int first_idx_suffix = i == m - 1 ?  n : suffix[i + 1];
+    if (last_idx_prefix < first_idx_suffix)
+      ans = min(ans, minimums[i]);
+  }
+
+  println(ans == max_v ? -1 : ans);
 }
 
 int main()
