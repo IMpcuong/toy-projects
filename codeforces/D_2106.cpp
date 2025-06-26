@@ -87,7 +87,7 @@ void solve()
   vector<ll> minimums(m);
   ranges::generate(minimums, nxt<ll>);
 
-  auto can_pass_the_rest_lower_bounds = [=](const int &ignore_idx = -1) -> bool
+  auto can_pass_the_rest_lower_bounds = [&](const int &ignore_idx = -1) -> bool
   {
     bool first_match = true;
     int j = 0;
@@ -127,7 +127,8 @@ void solve()
   {
     while (j < n && flowers[j] < minimums[i])
       j++;
-    prefix[i] = j++;
+    prefix[i] = j;
+    j++;
   }
 
   vector<int> suffix(m);
@@ -136,7 +137,8 @@ void solve()
   {
     while (j >= 0 && flowers[j] < minimums[i])
       j--;
-    suffix[i] = j--;
+    suffix[i] = j;
+    j--;
   }
 
   // cout << prefix << "\n";
