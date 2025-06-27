@@ -80,11 +80,14 @@ inline T nxt()
 void solve()
 {
   auto n = nxt<int>();
+
+  //
   // @Hack:
   //  We can predict the final form of the vector b after performing
   //  any amount of computations by evaluating 2 school of thoughts:
   //    + Ascending sequentially := [0, 1, 2, 3, 4, 5, 6] --> FAILED.
-  //    + Alternately increase and decrease := [0, 5, 1, 4, 3, 3] --> PASSED.
+  //    + Alternately increase and decrease := [0, 5, 1, 4, 2, 3] --> PASSED.
+  //
   vector<int> transformed(n); // transformed = {0, 5, 1, 4, 2, 3 | n = 6}.
   for (int i = 0; i < n; i++)
   {
@@ -96,7 +99,7 @@ void solve()
     transformed[i] = i / 2;
   }
 
-  vector<int> ans(n);
+  //
   // @Note:
   //  + Exp:
   //    + n = 6
@@ -108,6 +111,8 @@ void solve()
   //    <=> pref_sum + x = transformed[i] + n
   //    <=> x = transformed[i] + n - pref_sum
   //  + Wanted: x < n <=> x = x % n
+  //
+  vector<int> ans(n);
   ans[0] = n;
   int pref_sum = ans[0];
   for (int i = 1; i < n; i++)
