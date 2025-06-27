@@ -148,9 +148,9 @@ void solve()
   ll ans = max_v;
   for (int i = 0; i < m; i++)
   {
-    int last_idx_prefix  = i == 0     ? -1 : prefix[i - 1];
-    int first_idx_suffix = i == m - 1 ?  n : suffix[i + 1];
-    if (last_idx_prefix < first_idx_suffix)
+    int shortest_idx_prefix = i == 0     ? -1 : prefix[i - 1];
+    int furthest_idx_suffix = i == m - 1 ?  n : suffix[i + 1];
+    if (shortest_idx_prefix < furthest_idx_suffix)
       ans = min(ans, minimums[i]);
   }
 
