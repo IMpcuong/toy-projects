@@ -119,11 +119,10 @@ void solve()
 
     if (l & 1)
     {
-      ll upper = ceildiv(l, 2);
-      for (int i = 2; i < upper; i++)
+      ll upper = static_cast<ll>(ceil(sqrt((double)l)));
+      for (int i = 3; i <= upper; i += 2)
       {
-        ll left = l - i;
-        if (left % i == 0 && left / i > 1)
+        if (l % i == 0)
         {
           a = i;
           b = l - i;
