@@ -90,30 +90,13 @@ void solve()
     return;
   }
 
-  vector<ll> pref_sums = {0LL};
-  pref_sums.reserve(n + 1);
-  ll inc = 1;
-  while (inc <= n)
-  {
-    pref_sums.emplace_back(pref_sums.back() + inc);
-    inc++;
-  }
-
   ll lcm_xy = lcm(x, y);
-  ll cnt_x_owned = 0LL;
-  ll cnt_y_owned = 0LL;
-  for (int idx = 1; idx < n + 1; idx++)
-  {
-    if (idx % lcm_xy == 0)
-      continue;
+  ll cnt_x_owned = n / x - n / lcm_xy;
+  ll cnt_y_owned = n / y - n / lcm_xy;
 
-    if (idx % x == 0)
-      cnt_x_owned++;
-    else if (idx % y == 0)
-      cnt_y_owned++;
-  }
-
-  ll ans = (pref_sums[n] - pref_sums[n - cnt_x_owned]) - pref_sums[cnt_y_owned];
+  ll reduce = (1 + cnt_y_owned) * cnt_y_owned / 2;
+  ll extend = ((n - cnt_x_owned + 1) + n) * cnt_x_owned / 2;
+  ll ans = extend - reduce;
   println(ans);
 }
 
