@@ -87,39 +87,42 @@ void solve()
   auto s = nxt<string>();
 
   const string _catto = "meow";
-  const int _sz = sza(_catto);
 
 #define custom_lower(ch) static_cast<char>(tolower(static_cast<unsigned char>(ch)))
 
   stack<char> st;
   int j = 0;
+  int pos = 0;
   for (int i = 0; i < n; i++)
   {
-    if (st.size() == _sz)
+    char cur = custom_lower(s[i]);
+    if (st.empty())
     {
-      if (i < n - 1)
+      if (cur == _catto[j])
       {
-        println(_N);
-        return;
+        st.push(cur);
+        pos++;
+        j++;
       }
 
-      println(_Y);
-      return;
+      continue;
     }
 
-    char cur_char_lower = custom_lower(s[i]);
-
-    if (_catto.find(cur_char_lower) == string::npos)
-      continue;
-
-    if (st.size() == j && cur_char_lower == _catto[j])
+    if (st.top() == cur)
     {
-      st.push(s[i]);
+      pos++;
+      continue;
+    }
+
+    if (cur == _catto[j])
+    {
+      st.push(cur);
+      pos++;
       j++;
     }
   }
 
-  println(_N);
+  pos == n ? println(_Y) : println(_N);
 }
 
 int main()
