@@ -55,4 +55,6 @@ int main()
 
   char sth = static_cast<char>(std::toupper(static_cast<unsigned char>('a')));
   std::cout << sth << "\n";
+
+  std::cout << 'a' - 'A' << "\n";
 }

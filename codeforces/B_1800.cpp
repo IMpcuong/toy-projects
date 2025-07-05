@@ -103,14 +103,15 @@ void solve()
   for (int i = 0; i < _alphabet; i++)
   {
     int cur_char_quan = sza(cases_by_char[i]);
+    int left_with_same_type_quan = cur_char_quan;
     vector<bool> visited(cur_char_quan, false);
+    int k = 0;
     for (int j = 0; j < cur_char_quan - 1; j++)
     {
       if (visited[j])
         continue;
 
       char curr_case = cases_by_char[i][j];
-      int k = j + 1;
       while (k < cur_char_quan)
       {
         if (curr_case != cases_by_char[i][k] && !visited[k])
@@ -118,6 +119,7 @@ void solve()
           ans++;
           visited[j] = true;
           visited[k] = true;
+          left_with_same_type_quan -= 2;
           break;
         }
         k++;
@@ -126,7 +128,6 @@ void solve()
     if (!ops)
       continue;
 
-    int left_with_same_type_quan = ranges::count_if(visited, [](const auto &cond) { return !cond; });
     int extra_pair_cnt = min(ops, left_with_same_type_quan / 2);
     ans += extra_pair_cnt;
     ops -= extra_pair_cnt;
