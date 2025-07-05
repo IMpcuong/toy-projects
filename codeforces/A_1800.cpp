@@ -91,18 +91,18 @@ void solve()
 #define custom_lower(ch) static_cast<char>(tolower(static_cast<unsigned char>(ch)))
 
   stack<char> st;
-  int j = 0;
-  int pos = 0;
+  int segment = 0;
+  int dist = 0;
   for (int i = 0; i < n; i++)
   {
     char cur = custom_lower(s[i]);
     if (st.empty())
     {
-      if (cur == _catto[j])
+      if (cur == _catto[segment])
       {
         st.push(cur);
-        pos++;
-        j++;
+        dist++;
+        segment++;
       }
 
       continue;
@@ -110,19 +110,19 @@ void solve()
 
     if (st.top() == cur)
     {
-      pos++;
+      dist++;
       continue;
     }
 
-    if (cur == _catto[j])
+    if (cur == _catto[segment])
     {
       st.push(cur);
-      pos++;
-      j++;
+      dist++;
+      segment++;
     }
   }
 
-  pos == n ? println(_Y) : println(_N);
+  dist == n && segment == sza(_catto) ? println(_Y) : println(_N);
 }
 
 int main()
