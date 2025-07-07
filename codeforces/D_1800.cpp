@@ -83,22 +83,19 @@ void solve()
   auto n = nxt<int>();
   auto s = nxt<string>();
 
-  set<string> distinct;
-  string head = "";
   string tail = s.substr(2, n);
-  distinct.emplace(tail);
-
+  int ans = 1;
   for (int i = 0; i < n - 2; i++)
   {
-    head += s[i];
     char remove_by_tail = tail[0];
     tail.erase(0, 1);
     if (s[i] == remove_by_tail)
       continue;
-    distinct.emplace(head + tail);
+
+    ans++;
   }
 
-  println(sza(distinct));
+  println(ans);
 }
 
 int main()
