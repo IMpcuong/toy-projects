@@ -88,14 +88,17 @@ void solve()
   string tail = s.substr(2, n);
   distinct.emplace(tail);
 
-  for (int i = 0; i < n - 1; i++)
+  for (int i = 0; i < n - 2; i++)
   {
     head += s[i];
+    char remove_by_tail = tail[0];
     tail.erase(0, 1);
+    if (s[i] == remove_by_tail)
+      continue;
     distinct.emplace(head + tail);
   }
 
-  println(sza(distinct) - 1);
+  println(sza(distinct));
 }
 
 int main()

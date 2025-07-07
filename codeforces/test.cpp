@@ -57,4 +57,7 @@ int main()
   std::cout << sth << "\n";
 
   std::cout << 'a' - 'A' << "\n";
+
+  std::string s = "in the name of love";
+  std::cout << s.substr(2) << "\n";
 }
