@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <map>
 #include <vector>
 
 std::string STH = "evaporate";
@@ -60,4 +61,9 @@ int main()
 
   std::string s = "in the name of love";
   std::cout << s.substr(2) << "\n";
+
+  std::map<int, int> freq;
+  freq[2] = 1000;
+  freq[31] = 12012;
+  std::cout << freq.size() << "\n";
 }
