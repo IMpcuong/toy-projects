@@ -95,11 +95,15 @@ void solve()
     int node = i;
     while (node < n)
     {
-      tmp_ans += a[node];
-      ans = max(ans, tmp_ans);
+      if (visited[node])
+        break;
+
       visited[node] = true;
+      tmp_ans += a[node];
       node += a[node];
     }
+
+    ans = max(ans, tmp_ans);
   }
 
   println(ans);
