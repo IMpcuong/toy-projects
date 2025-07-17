@@ -119,10 +119,10 @@ void solve()
       continue;
     }
 
-    int from_firstt_stop = 0;
+    int from_first_stop = 0;
     int to_last_stop    = sza(station_locs[to]) - 1;
 
-    if (station_locs[from][from_firstt_stop] < station_locs[to][to_last_stop])
+    if (station_locs[from][from_first_stop] < station_locs[to][to_last_stop])
       println(_Y);
     else
       println(_N);
