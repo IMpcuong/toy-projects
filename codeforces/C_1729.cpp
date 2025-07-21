@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -83,15 +82,37 @@ void solve()
   auto s = nxt<string>();
   int n = sza(s);
 
-  const int _alphabet_sz = 26;
-  vector<char> alphabet(_alphabet_sz);
-  for (int i = 0; i < _alphabet_sz; i++)
-    alphabet[i] = i;
+  const int _alphabet = 26;
 
-  int min_step = 1;
-  int first_tile_idx = s[0] - '0' - 1;
-  int last_tile_idx  = s[n - 1] - '0' - 1;
-  int min_cost = abs(alphabet[last_tile_idx] - alphabet[first_tile_idx]);
+  int first_tile_idx = s[0] - 'a';
+  int last_tile_idx  = s[n - 1] - 'a';
+  int min_cost = abs(last_tile_idx - first_tile_idx);
+
+  int lower_bound = min(first_tile_idx, last_tile_idx);
+  int upper_bound = max(first_tile_idx, last_tile_idx);
+  vector<int> interval_freq(_alphabet, 0);
+  vector<vector<int>> interval_chr_locs(_alphabet);
+  for (int i = 0; i < n; i++)
+  {
+    int chr_idx = s[i] - 'a';
+    if (lower_bound <= chr_idx && chr_idx <= upper_bound)
+    {
+      interval_freq[chr_idx]++;
+      interval_chr_locs[chr_idx].emplace_back(i + 1);
+    }
+  }
+
+  int moves = accumulate(all(interval_freq), 0);
+  println(min_cost, moves);
+
+  if (first_tile_idx == upper_bound)
+    ranges::reverse(interval_chr_locs);
+
+  for (const auto &locs : interval_chr_locs)
+    if (sza(locs))
+      cout << locs << " ";
+
+  println("");
 }
 
 int main()
@@ -105,7 +126,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
