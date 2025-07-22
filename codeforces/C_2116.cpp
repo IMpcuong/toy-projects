@@ -100,13 +100,11 @@ void solve()
 
       int take_nxt_num = min(dp[i][cur_gcd], dp[i - 1][last_gcd] + 1);
       int drop_nxt_num = dp[i - 1][cur_gcd];
-      dp[i][cur_gcd] = min(drop_nxt_num, take_nxt_num);
+      dp[i][cur_gcd]   = min(drop_nxt_num, take_nxt_num);
     }
   }
 
-  // cout << dp[n] << "\n";
-
-  int ans_op = MAX_N;
+  int ans_ops = MAX_N;
   int ans_gcd = MAX_N;
   for (int each_gcd = 1; each_gcd <= max_v; each_gcd++)
   {
@@ -124,15 +122,15 @@ void solve()
       continue;
 
     int min_merge_ops = dp[n][each_gcd];
-    ans_gcd = min_merge_ops < ans_op ? each_gcd : ans_gcd;
-    ans_op  = min(ans_op, min_merge_ops);
+    ans_gcd = min_merge_ops < ans_ops ? each_gcd : ans_gcd;
+    ans_ops = min(ans_ops, min_merge_ops);
   }
 
-  int ans_gcd_cnt = ranges::count_if(a, [&](const int &num) { return num == ans_gcd; });
+  int ans_gcd_cnt = ranges::count(a, ans_gcd);
   if (ans_gcd_cnt)
     println(n - ans_gcd_cnt);
   else
-    println((ans_op - 1) + (n - 1));
+    println((ans_ops - 1) + (n - 1));
 }
 
 int main()
