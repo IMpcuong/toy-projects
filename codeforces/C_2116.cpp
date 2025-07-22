@@ -91,7 +91,7 @@ void solve()
   {
     int nxt_num = a[i - 1];
     dp[i] = dp[i - 1];
-    dp[i][nxt_num] = 1;
+    dp[i][nxt_num] = 1; // @Note: gcd(nxt_num, nxt_num) = 1 := true
     for (int last_gcd = 1; last_gcd <= max_v; last_gcd++)
     {
       int cur_gcd = gcd(nxt_num, last_gcd);
