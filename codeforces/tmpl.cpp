@@ -81,7 +81,7 @@ inline T nxt()
 void solve()
 {
   vector<int> a(5);
-  generate(all(a), nxt<int>);
+  ranges::generate(a, nxt<int>);
   cout << a << " " << &a << endl;
 }
 
