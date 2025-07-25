@@ -84,7 +84,6 @@ void solve()
   vector<ll> a(n);
   ranges::generate(a, nxt<ll>);
 
-  ll min_segment_v = *ranges::min_element(a);
   ll max_segment_v = accumulate(all(a), 0LL);
   ll sqrt_max = static_cast<ll>(sqrt(double(max_segment_v)));
 
@@ -99,7 +98,7 @@ void solve()
   }
 
   int thickness = n;
-  for (const auto &div_sum : divisors)
+  for (const auto &div_as_sum : divisors)
   {
     int cur_thickness = 0;
     int j = 0;
@@ -107,21 +106,25 @@ void solve()
     ll divisible_to_equal_chunks = true;
     for (int i = 0; i < n; i++)
     {
-      while (segment_sum < div_sum)
+      while (segment_sum < div_as_sum && j < n)
       {
         segment_sum += a[j];
+        if (segment_sum == div_as_sum)
+        {
+          cur_thickness = max(cur_thickness, j - i + 1);
+          segment_sum = 0;
+          i = j++;
+          break;
+        }
+
         j++;
       }
 
-      if (segment_sum > div_sum)
+      if (segment_sum > div_as_sum)
       {
         divisible_to_equal_chunks = false;
         break;
       }
-
-      cur_thickness = j - i + 1;
-      segment_sum = 0;
-      i = j;
     }
 
     if (divisible_to_equal_chunks)
