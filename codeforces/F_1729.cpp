@@ -119,7 +119,8 @@ void solve()
   {
     int left_border1 = -1;
     int left_border2 = -1;
-    int after_all_left_border2 = left_border2;
+    vector<int> left_border2_locs;
+    left_border2_locs.reserve(n);
 
     int static_mod = (pref_sums[q.to] - pref_sums[q.from - 1]) % _mod;
     for (int f_try = 0; f_try < _mod; f_try++)
@@ -147,21 +148,43 @@ void solve()
             ? maybe_left1
             : min(left_border1, maybe_left1);
 
-          int tmp_left_border2 = left_border2 == -1
-            ? maybe_left2
-            : min(left_border2, maybe_left2);
-          if (tmp_left_border2 > left_border1)
-            left_border2 = tmp_left_border2;
+          left_border2_locs.emplace_back(maybe_left2);
+        }
+      }
+    }
+    left_border2_locs.shrink_to_fit();
+    ranges::sort(left_border2_locs);
 
-          after_all_left_border2 = after_all_left_border2 == -1
-            ? maybe_left2
-            : min(after_all_left_border2, tmp_left_border2);
+    if (left_border1 != -1 && !left_border2_locs.empty())
+    {
+      int l = 0;
+      int r = sza(left_border2_locs) - 1;
+      while (l <= r)
+      {
+        int m = l + (r - l) / 2;
+        if (left_border1 >= left_border2_locs[m])
+        {
+          l = m + 1;
+        }
+        else
+        {
+          left_border2 = left_border2_locs[m];
+          break;
         }
       }
     }
 
     if (left_border2 == -1)
-      left_border2 = after_all_left_border2;
+    {
+      for (const auto &loc : left_border2_locs)
+      {
+        if (loc != left_border1)
+        {
+          left_border2 = loc;
+          break;
+        }
+      }
+    }
     println(left_border1, left_border2);
   }
 }
