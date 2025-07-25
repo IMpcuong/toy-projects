@@ -119,12 +119,9 @@ void solve()
   {
     int left_border1 = -1;
     int left_border2 = -1;
+    int after_all_left_border2 = left_border2;
 
     int static_mod = (pref_sums[q.to] - pref_sums[q.from - 1]) % _mod;
-    if (q.to == q.from)
-      static_mod = (digit_str[q.to - 1] - '0') % _mod;
-
-    int after_all_left_border2 = left_border2;
     for (int f_try = 0; f_try < _mod; f_try++)
     {
       for (int s_try = 0; s_try < _mod; s_try++)
