@@ -106,21 +106,17 @@ void solve()
   for (const auto &digit_chr : digit_str)
     pref_sums.emplace_back(pref_sums.back() + (digit_chr - '0'));
 
-  vector<vector<int>> mod_locs(_mod);
+  vector<vector<int>> same_mod_locs(_mod);
   for (int i = 0; i <= n - sub_width; i++)
   {
     int mod_v = (pref_sums[i + sub_width] - pref_sums[i]) % _mod;
-    mod_locs[mod_v].emplace_back(i);
+    same_mod_locs[mod_v].emplace_back(i);
   }
-
-  // cout << mod_locs << "\n";
 
   for (const auto &q : queries)
   {
     int left_border1 = -1;
     int left_border2 = -1;
-    vector<int> left_border2_locs;
-    left_border2_locs.reserve(n);
 
     int static_mod = (pref_sums[q.to] - pref_sums[q.from - 1]) % _mod;
     for (int f_try = 0; f_try < _mod; f_try++)
@@ -129,62 +125,37 @@ void solve()
       {
         if (((f_try * static_mod) % _mod + s_try) % _mod == q.target)
         {
-          if (mod_locs[f_try].empty() || mod_locs[s_try].empty())
+          if (same_mod_locs[f_try].empty() || same_mod_locs[s_try].empty())
             continue;
 
           int diff_loc = 0;
           if (f_try == s_try)
           {
-            if (sza(mod_locs[f_try]) < 2)
+            if (sza(same_mod_locs[f_try]) < 2)
               continue;
 
             diff_loc = 1;
           }
 
-          int maybe_left1 = mod_locs[f_try][0] + 1;
-          int maybe_left2 = mod_locs[s_try][diff_loc] + 1;
+          int maybe_left1 = same_mod_locs[f_try][0] + 1;
+          int maybe_left2 = same_mod_locs[s_try][diff_loc] + 1;
 
-          left_border1 = left_border1 == -1
-            ? maybe_left1
-            : min(left_border1, maybe_left1);
+          if (maybe_left1 > left_border1 && left_border1 != -1)
+            continue;
 
-          left_border2_locs.emplace_back(maybe_left2);
-        }
-      }
-    }
-    left_border2_locs.shrink_to_fit();
-    ranges::sort(left_border2_locs);
-
-    if (left_border1 != -1 && !left_border2_locs.empty())
-    {
-      int l = 0;
-      int r = sza(left_border2_locs) - 1;
-      while (l <= r)
-      {
-        int m = l + (r - l) / 2;
-        if (left_border1 >= left_border2_locs[m])
-        {
-          l = m + 1;
-        }
-        else
-        {
-          left_border2 = left_border2_locs[m];
-          break;
+          if (maybe_left1 < left_border1 || left_border1 == -1)
+          {
+            left_border1 = maybe_left1;
+            left_border2 = maybe_left2;
+          }
+          else if (maybe_left1 == left_border1)
+          {
+            left_border2 = maybe_left2;
+          }
         }
       }
     }
 
-    if (left_border2 == -1)
-    {
-      for (const auto &loc : left_border2_locs)
-      {
-        if (loc != left_border1)
-        {
-          left_border2 = loc;
-          break;
-        }
-      }
-    }
     println(left_border1, left_border2);
   }
 }
