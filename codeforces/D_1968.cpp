@@ -158,7 +158,7 @@ void solve()
   else if (final_B_score > final_S_score)
     println(_B);
   else
-    println(_S);;
+    println(_S);
 }
 
 int main()
