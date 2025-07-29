@@ -88,11 +88,13 @@ void solve()
   auto orig = nxt<string>();
   auto goal = nxt<string>();
 
-  map<char, int> freq;
+  const char _alphabet = 26;
+
+  vector<int> freq(_alphabet, 0);
   for (int i = 0; i < n; i++)
   {
-    freq[goal[i]]++;
-    freq[orig[i]]--;
+    freq[goal[i] - 'a']++;
+    freq[orig[i] - 'a']--;
   }
 
   if (n < dist)
@@ -112,32 +114,25 @@ void solve()
 
   if (n < 2 * dist)
   {
+    bool identical = true;
+
     int immutable_range = 2 * dist - n;
     int immutable_pos   = n - dist;
     for (int i = immutable_pos; i < immutable_pos + immutable_range; i++)
-    {
-      if (orig[i] != goal[i])
-      {
-        println(_N);
-        return;
-      }
-    }
+      identical &= (orig[i] == goal[i]);
 
-    println(_Y);
+    if (!identical)
+    {
+      println(_N);
+      return;
+    }
   }
+
+  bool is_permu_str = ranges::count(freq, 0) == _alphabet;
+  if (is_permu_str)
+    println(_Y);
   else
-  {
-    for (const auto &[_, f] : freq)
-    {
-      if (f > 0)
-      {
-        println(_N);
-        return;
-      }
-    }
-
-    println(_Y);
-  }
+    println(_N);
 }
 
 int main()
