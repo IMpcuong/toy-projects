@@ -57,7 +57,6 @@ void dbg_out(Head H, Tail... T)
 #define ceildiv(n, k) (((n) + (k) - 1) / (k))
 
 using ll = long long;
-using ull = unsigned long long;
 using ld = long double;
 using pii = pair<int, int>;
 using pll = pair<ll, ll>;
@@ -79,64 +78,50 @@ inline T nxt()
   return x;
 }
 
+const char *_A = "Anna";
+const char *_S = "Sasha";
+
 void solve()
 {
-  auto n = nxt<int>(); // n >= 2
-  vector<ull> a(n);
-  ranges::generate(a, nxt<ull>);
+  auto n = nxt<int>();
+  auto expo = nxt<long>();
 
-  auto indicate_gcd_of_whole_seq = [&](vector<ull> sub_seq) -> ull
+  vector<string> gifts(n);
+  ranges::generate(gifts, nxt<string>);
+
+  long max_digits = 0;
+  for (const auto &num_as_str : gifts)
+    max_digits += sza(num_as_str);
+
+  vector<string> zero_end_gifts;
+  zero_end_gifts.reserve(n);
+  for (const auto &num_as_str : gifts)
+    if (num_as_str.back() == '0')
+      zero_end_gifts.emplace_back(num_as_str);
+  zero_end_gifts.shrink_to_fit();
+
+  int zeg_quan = sza(zero_end_gifts);
+  vector<int> zeroes_end_cnt(zeg_quan, 0);
+  for (int i = 0; i < zeg_quan; i++)
   {
-    int sub_seq_sz = sza(sub_seq);
-    if (sub_seq_sz == 1)
-      return sub_seq[0];
-
-    for (int i = 0; i < sub_seq_sz - 1; i++)
+    string zeg = zero_end_gifts[i];
+    int zeg_sz = sza(zeg);
+    for (int j = zeg_sz - 1; j >= 0; j--)
     {
-      ull envoy = std::gcd(sub_seq[i], sub_seq[i + 1]);
-      sub_seq[i + 1] = envoy;
+      if (zeg[j] != '0')
+        break;
+      zeroes_end_cnt[i]++;
     }
-
-    return sub_seq[sub_seq_sz - 1];
-  };
-
-  vector<ull> odd_idx_seq;
-  odd_idx_seq.reserve(n / 2 + 1);
-  vector<ull> even_idx_seq;
-  even_idx_seq.reserve(n / 2 + 1);
-  for (int i = 0; i < n; i++)
-  {
-    if (i & 1)
-    {
-      odd_idx_seq.emplace_back(a[i]);
-      continue;
-    }
-    even_idx_seq.emplace_back(a[i]);
   }
+  ranges::sort(zeroes_end_cnt, [](const auto &f, const auto &s) { return f > s; });
 
-  ull maybe_odd_seq_gcd  = indicate_gcd_of_whole_seq(odd_idx_seq);
-  ull maybe_even_seq_gcd = indicate_gcd_of_whole_seq(even_idx_seq);
+  for (int i = 0; i < zeg_quan; i += 2)
+    max_digits -= zeroes_end_cnt[i];
 
-  bool can_choose_odd = maybe_odd_seq_gcd != 1;
-  bool can_choose_even = maybe_even_seq_gcd != 1;
-  for (int i = 0; i < n; i++)
-  {
-    if (i & 1)
-    {
-      can_choose_even &= (a[i] % maybe_even_seq_gcd || a[i] < maybe_even_seq_gcd);
-      continue;
-    }
-    can_choose_odd &= (a[i] % maybe_odd_seq_gcd || a[i] < maybe_odd_seq_gcd);
-  }
-
-  if (can_choose_odd && can_choose_even)
-    println(max(maybe_odd_seq_gcd, maybe_even_seq_gcd));
-  else if (can_choose_odd)
-    println(maybe_odd_seq_gcd);
-  else if (can_choose_even)
-    println(maybe_even_seq_gcd);
+  if (max_digits - 1 >= expo)
+    println(_S);
   else
-    println(0);
+    println(_A);;
 }
 
 int main()
