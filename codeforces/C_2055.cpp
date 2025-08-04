@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -78,6 +77,8 @@ inline T nxt()
   return x;
 }
 
+enum dir { down = 'D', right = 'R' };
+
 void solve()
 {
   auto rows = nxt<int>();
@@ -91,43 +92,50 @@ void solve()
   //
   auto tampered_path = nxt<string>();
 
-  ll cur_sum_height = 0;
-  vector<vector<long>> terrains(rows);
+  vector<vector<ll>> terrains(rows);
   for (int r = 0; r < rows; r++)
   {
-    vector<long> cur_row(cols);
-    ranges::generate(cur_row, nxt<long>);
+    vector<ll> cur_row(cols);
+    ranges::generate(cur_row, nxt<ll>);
 
     terrains[r].reserve(cols);
     terrains[r] = cur_row;
-
-    cur_sum_height += accumulate(all(terrains[r]), 0LL);
   }
-
-  // ranges::for_each(terrains, [](const auto &t) { cout << t << "\n"; });
 
   int tampered_path_len = sza(tampered_path);
   assert(tampered_path_len == rows + cols - 2);
-  map<char, ar<int, 2>> dir = {
-    {'D', {1, 0}},
-    {'R', {0, 1}}
-  };
-  vector<vector<int>> tampered_coords(rows);
-  tampered_coords[0] = {0};
-  ar<int, 2> cur_tampered_cell = {0, 0};
+
+  const ll only_dim_sum_choice = 0L;
+  int x = 0;
+  int y = 0;
   for (const auto &hint : tampered_path)
   {
-    cur_tampered_cell[0] += dir[hint][0];
-    cur_tampered_cell[1] += dir[hint][1];
-    tampered_coords[cur_tampered_cell[0]].emplace_back(cur_tampered_cell[1]);
+    if (hint == dir::down)
+    {
+      ll row_sum = 0;
+      for (int j = 0; j < cols; j++)
+        row_sum += terrains[x][j];
+
+      terrains[x][y] = -row_sum;
+      x++; // @Note: Visited row x_th once.
+    }
+    else if (hint == dir::right)
+    {
+      ll col_sum = 0;
+      for (int i = 0; i < rows; i++)
+        col_sum += terrains[i][y];
+
+      terrains[x][y] = -col_sum;
+      y++; // @Note: Visited col y_th once.
+    }
   }
 
-  long lcm_rc = lcm(rows, cols);
-  long coeff = ceildiv(abs(cur_sum_height), lcm_rc);
-  long x_choice = coeff * lcm_rc;
+  ll final_row_sum = 0L;
+  for (int j = 0; j < cols; j++)
+    final_row_sum += terrains[rows - 1][j];
+  terrains[rows - 1][cols - 1] = -final_row_sum;
 
-  cout << tampered_coords << "\n";
-  println(x_choice);
+  ranges::for_each(terrains, [](const auto &t) { cout << t << "\n"; });
 }
 
 int main()
@@ -141,7 +149,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
