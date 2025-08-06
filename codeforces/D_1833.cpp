@@ -116,7 +116,7 @@ void solve()
     r--;
   }
 
-  for (int i = r - 1; i >= 0; --i)
+  for (int i = r - 1; i >= 0; i--)
   {
     if (permu[i] > permu[0])
     {
@@ -124,7 +124,7 @@ void solve()
       continue;
     }
 
-    for (int j = 0; j <= i; ++j)
+    for (int j = 0; j <= i; j++)
       ans.emplace_back(permu[j]);
 
     break;
