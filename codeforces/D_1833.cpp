@@ -90,95 +90,47 @@ void solve()
     return;
   }
 
-  if (n == permu[n - 1])
+  int biggest_num = n;
+  int second_biggest_num = n - 1;
+  int r = -1;
+  int r_backup = -1;
+  bool use_backup = false;
+  for (int i = 0; i < n; i++)
   {
-    int mark_pos = n - 1;
-    for (int i = mark_pos - 1; i >= 0; i--)
+    if (permu[i] == second_biggest_num)
+      r_backup = i;
+    else if (permu[i] == biggest_num)
+      r = i;
+  }
+  if (r == 0)
+  {
+    r = r_backup;
+    use_backup = true;
+  }
+
+  vector<int> ans = vector(permu.begin() + r, permu.end());
+  ans.reserve(n);
+  if (r != n - 1)
+  {
+    ans.emplace_back(permu[r - 1]);
+    r--;
+  }
+
+  for (int i = r - 1; i >= 0; --i)
+  {
+    if (permu[i] > permu[0])
     {
-      int cur = permu[i];
-      if (cur > permu[0])
-        continue;
-
-      mark_pos = i;
-      break;
-    }
-
-    vector<int> ans = vector(permu.begin() + mark_pos + 1, permu.end());
-    ranges::reverse(ans);
-    ans.reserve(n);
-    for (int i = 0; i <= mark_pos; i++)
       ans.emplace_back(permu[i]);
-
-    permu = ans;
-  }
-  else if (n == permu[0])
-  {
-    int mark_value = n - 1;
-    int mark_pos = 0;
-    for (int i = 1; i < n; i++)
-    {
-      if (permu[i] == mark_value)
-      {
-        mark_pos = i;
-        break;
-      }
+      continue;
     }
 
-    vector<int> ans = vector(permu.begin() + mark_pos, permu.end());
-    ans.reserve(n);
-    if (mark_pos < n - 1)
-    {
-      ans.emplace_back(permu[mark_pos - 1]);
-      mark_pos--;
-    }
-    for (int i = 0; i < mark_pos; i++)
-      ans.emplace_back(permu[i]);
+    for (int j = 0; j <= i; ++j)
+      ans.emplace_back(permu[j]);
 
-    permu = ans;
-  }
-  else
-  {
-    int mark_value = n;
-    int mark_pos = 0;
-    for (int i = 1; i < n - 1; i++)
-    {
-      if (permu[i] == mark_value)
-      {
-        mark_pos = i;
-        break;
-      }
-    }
-
-    int reverse_range = 0;
-    for (int i = mark_pos - 1; i >= 0; i--)
-    {
-      int cur = permu[i];
-      if (cur > permu[0])
-      {
-        reverse_range++;
-        continue;
-      }
-
-      break;
-    }
-
-    vector<int> ans = vector(permu.begin() + mark_pos, permu.end());
-    ans.reserve(n);
-    if (reverse_range == 0)
-    {
-      ranges::reverse(permu.begin(), permu.begin() + mark_pos);
-    }
-    else
-    {
-      for (int i = mark_pos - 1; i > mark_pos - 1 - reverse_range; i--)
-        ans.emplace_back(permu[i]);
-    }
-    ans.insert(ans.end(), permu.begin(), permu.begin() + mark_pos - reverse_range);
-
-    permu = ans;
+    break;
   }
 
-  cout << permu << "\n";
+  cout << ans << "\n";
 }
 
 int main()
