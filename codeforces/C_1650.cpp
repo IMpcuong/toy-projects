@@ -80,9 +80,36 @@ inline T nxt()
 
 void solve()
 {
-  vector<int> a(5);
-  generate(all(a), nxt<int>);
-  cout << a << " " << &a << endl;
+  auto segments = nxt<int>();
+  auto point_quan = nxt<int>();
+  struct point
+  {
+    int order;
+    int weight;
+    long coord;
+  };
+  vector<point> points(point_quan);
+  for (int i = 0; i < point_quan; i++)
+  {
+    points[i].coord  = nxt<long>();
+    points[i].weight = nxt<int>();
+    points[i].order  = i + 1;
+  }
+  ranges::sort(points, [](const auto &p1, const auto &p2) { return p1.weight < p2.weight; });
+
+  int end_idx = 2 * segments - 1;
+  long minimal_sum_weight = 0;
+  for (int i = 0; i <= end_idx; i++)
+    minimal_sum_weight += points[i].weight;
+
+  points = vector(points.begin(), points.begin() + end_idx + 1);
+  ranges::sort(points, [](const auto &p1, const auto &p2) { return p1.coord < p2.coord; });
+  vector<pair<int, int>> segment_range(segments);
+  for (int i = 0, j = end_idx; i < j; i++, j--)
+    segment_range[i] = make_pair(points[i].order, points[j].order);
+
+  println(minimal_sum_weight);
+  ranges::for_each(segment_range, [](const auto &seg) { println(seg.first, seg.second); });
 }
 
 int main()
@@ -96,7 +123,8 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    cin.ignore(1, '\n');
     solve();
   }
 }
