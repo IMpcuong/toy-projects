@@ -48,11 +48,15 @@ int main()
   std::cout << 1 / 6 << "\n";
   std::cout << 2 % 6 << "\n";
 
-  std::vector<int> a = {1, 2, 3, 4, 5};
-  std::vector<int> b = std::vector(a.begin(), a.begin() + 2);
-
   namespace ranges = std::ranges;
+  std::vector<int> a = {1, 2, 3, 4, 5};
+  std::swap(a[0], a[1]);
+  ranges::for_each(a, [](const auto &n) -> void { std::cout << n << " "; });
+  std::cout << "\n";
+
+  std::vector<int> b = std::vector(a.begin(), a.begin() + 2);
   ranges::for_each(b, [](const auto &n) -> void { std::cout << n << " "; });
+  std::cout << "\n";
 
   char sth = static_cast<char>(std::toupper(static_cast<unsigned char>('a')));
   std::cout << sth << "\n";
