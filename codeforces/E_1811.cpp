@@ -79,63 +79,24 @@ inline T nxt()
 }
 
 const int _ignored = 4;
+const int _max_expo = 12;
 
 void solve()
 {
   auto query_idx = nxt<ll>();
 
-  const int _upper_expo = 12;
-  array<ll, _upper_expo + 1> ignorable_quan_by_expo;
-  ignorable_quan_by_expo[1] = 1;
-  for (int i = 2; i <= _upper_expo; i++)
-    ignorable_quan_by_expo[i] = 8 * ignorable_quan_by_expo[i - 1];
-
-  auto convert_to_idx_from = [&](ll num) -> ll
+  vector<int> digits;
+  digits.reserve(_max_expo);
+  while (query_idx)
   {
-    ll idx = num;
-    int expo = 1;
-    while (num)
-    {
-      int digit = num % 10;
-      if (digit < _ignored && expo > 1)
-        idx -= digit * ignorable_quan_by_expo[expo - 1];
-      if (digit >= _ignored || digit == 0)
-      {
-        if (expo == 1)
-        {
-          idx -= ignorable_quan_by_expo[expo];
-        }
-        else
-        {
-          ll removable_start_with_ignored_digit_quan = static_cast<ll>(pow(10, double(expo - 1)));
-          idx -= (digit - 1) * ignorable_quan_by_expo[expo - 1] + removable_start_with_ignored_digit_quan;
-        }
-      }
-
-      expo++;
-      num /= 10;
-    }
-
-    return idx;
-  };
-
-  ll ans = -1;
-  ll l = 1;
-  ll r = 1e12;
-  while (l <= r)
-  {
-    ll mid_num = l + (r - l) / 2;
-    ll idx = convert_to_idx_from(mid_num);
-    if (idx > query_idx)
-      r = mid_num - 1;
-    else if (idx < query_idx)
-      l = mid_num + 1;
-    if (idx == query_idx)
-    {
-      ans = idx;
-      break;
-    }
+    digits.emplace_back(query_idx % 9);
+    query_idx /= 9;
   }
+  ranges::reverse(digits);
+
+  string ans = "";
+  for (int i = 0; i < sza(digits); i++)
+    ans += digits[i] >= _ignored ? digits[i] + '1' : digits[i] + '0';
 
   println(ans);
 }
@@ -151,7 +112,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
