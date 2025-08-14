@@ -87,7 +87,9 @@ void solve()
   digits.reserve(digit_quan);
   for (const auto &digit : str_num)
     digits.emplace_back(digit - '0');
-  digits.insert(digits.end(), 0);
+
+  digits.resize(digit_quan + 1);
+  digits[digit_quan] = 0;
 
   int mark = -1;
   int stock = 0;
@@ -99,11 +101,14 @@ void solve()
     {
       if (cur < 9)
       {
-        cur += stock;
+        cur++;
         stock = 0;
       }
       if (cur == 9)
+      {
         cur = 0;
+        stock = 1;
+      }
 
       mark = max(mark, k);
     }
