@@ -110,9 +110,18 @@ void solve()
 
   vector<int> ans;
   ans.reserve(n);
+  for (int i = 0; i < n; i++)
+  {
+    vector<bool> visited(sza(adjusts[i]));
+    for (const auto &neigh : adjusts[i])
+    {
+      visited[neigh] = true;
+    }
+  }
   ans.shrink_to_fit();
 
   println(sza(ans));
+  ranges::for_each(ans, [](auto &idx) { idx++; });
   ranges::sort(ans);
   cout << ans << "\n";
 }
