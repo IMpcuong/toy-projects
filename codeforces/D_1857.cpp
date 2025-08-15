@@ -96,7 +96,25 @@ void solve()
     vertices[i] = {i, abs(weight_a[i] - weight_b[i])};
   ranges::sort(vertices, [](const auto &f, const auto &s) { return f.weight > s.weight; });
 
-  vector<vector<int>> adjusts(n);
+  deque<int> sorted_indices;
+  for (const auto &v : vertices)
+    sorted_indices.emplace_back(v.idx);
+
+  vector<deque<int>> adjusts(n); // directed graph
+  while (!sorted_indices.empty())
+  {
+    int idx = sorted_indices.front();
+    sorted_indices.pop_front();
+    adjusts[idx] = sorted_indices;
+  }
+
+  vector<int> ans;
+  ans.reserve(n);
+  ans.shrink_to_fit();
+
+  println(sza(ans));
+  ranges::sort(ans);
+  cout << ans << "\n";
 }
 
 int main()
