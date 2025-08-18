@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -90,33 +89,26 @@ void solve()
   {
     int idx;
     long weight;
+
+    bool operator>(const vertex &other) const
+    {
+      return this->weight > other.weight;
+    }
   };
   vector<vertex> vertices(n);
   for (int i = 0; i < n; i++)
-    vertices[i] = {i, abs(weight_a[i] - weight_b[i])};
-  ranges::sort(vertices, [](const auto &f, const auto &s) { return f.weight > s.weight; });
+    vertices[i] = {i, weight_a[i] - weight_b[i]};
+  ranges::sort(vertices, [](const auto &f, const auto &s) { return f > s; });
 
-  deque<int> sorted_indices;
-  for (const auto &v : vertices)
-    sorted_indices.emplace_back(v.idx);
-
-  vector<deque<int>> adjusts(n); // directed graph
-  while (!sorted_indices.empty())
-  {
-    int idx = sorted_indices.front();
-    sorted_indices.pop_front();
-    adjusts[idx] = sorted_indices;
-  }
-
+  long max_w = vertices[0].weight;
   vector<int> ans;
   ans.reserve(n);
-  for (int i = 0; i < n; i++)
+  for (const auto &vert : vertices)
   {
-    vector<bool> visited(sza(adjusts[i]));
-    for (const auto &neigh : adjusts[i])
-    {
-      visited[neigh] = true;
-    }
+    if (vert.weight < max_w)
+      break;
+
+    ans.emplace_back(vert.idx);
   }
   ans.shrink_to_fit();
 
@@ -137,7 +129,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
