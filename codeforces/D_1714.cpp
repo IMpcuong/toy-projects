@@ -127,78 +127,53 @@ void solve()
       furthest_rights_from[cur_l].second = closure.r;
     }
   }
-  // cout << furthest_rights_from << "\n";
 
-  vector<pair<int, int>> ans;
+  int l = 0;
+  vector<pair<int, int>> ans = {pair{furthest_rights_from[l].first, l}};
   ans.reserve(target_len);
-  int l_nxt = 0;
-  for (int l = 0; l < target_len; l++)
+  int furthest_r = furthest_rights_from[l].second;
+  l++;
+  for (;;)
   {
-    int seq_idx = furthest_rights_from[l].first;
-    int seq_r   = furthest_rights_from[l].second;
-    if (seq_r == -1)
-      continue;
-    if (!ans.empty())
+    int nxt_l = ans.back().second;
+    int nxt_seq_idx = ans.back().first;
+    int hold_furthest_r = furthest_r;
+    while (l <= hold_furthest_r + 1 && l < target_len)
     {
-      int reachable_r = ans.back().second + sza(sub_seqs[ans.back().first]);
-      if (seq_r - sza(sub_seqs[seq_idx]) > reachable_r)
+      int r = furthest_rights_from[l].second;
+      if (r == -1)
       {
-        println(-1);
-        return;
-      }
-    }
-    if (seq_r == target_len - 1)
-    {
-      ans.emplace_back(make_pair(seq_idx, l));
-      break;
-    }
-
-    int optim_l = l;
-    int optim_r = seq_r;
-    int optim_seq_idx = seq_idx;
-    while (l_nxt <= seq_r + 1)
-    {
-      int nxt_seq_idx = furthest_rights_from[l_nxt].first;
-      int nxt_seq_r   = furthest_rights_from[l_nxt].second;
-      if (nxt_seq_r <= seq_r)
-      {
-        l_nxt++;
+        l++;
         continue;
       }
+      int seq_idx = furthest_rights_from[l].first;
 
-      if (nxt_seq_r > optim_r)
+      if (r > furthest_r)
       {
-        optim_l = l_nxt;
-        optim_r = nxt_seq_r;
-        optim_seq_idx = nxt_seq_idx;
+        furthest_r = r;
+        nxt_l = l;
+        nxt_seq_idx = seq_idx;
       }
-      l_nxt++;
+
+      // println(hold_furthest_r);
+      // println(nxt_seq_idx, nxt_l, furthest_r);
+      l++;
     }
-    if (optim_r != seq_r && optim_seq_idx != seq_idx)
+    if (nxt_l == ans.back().second && furthest_r < target_len - 1)
     {
-      ans.emplace_back(make_pair(seq_idx, l));
-      ans.emplace_back(make_pair(optim_seq_idx, optim_l));
+      println(-1);
+      return;
     }
 
-    l = seq_r + 1;
-  }
-  ans.shrink_to_fit();
-
-  if (ans.empty())
-  {
-    println(-1);
-    return;
-  }
-  int reachable_r = ans.back().second + sza(sub_seqs[ans.back().first]);
-  if (reachable_r < target_len - 1)
-  {
-    println(-1);
-    return;
+    if (furthest_r > hold_furthest_r)
+      ans.emplace_back(pair{nxt_seq_idx, nxt_l});
+    if (furthest_r >= target_len - 1)
+      break;
   }
 
   println(sza(ans));
-  for (const auto &[seq_idx, l] : ans)
-    println(seq_idx + 1, l + 1);
+  for (const auto &selected : ans)
+    println(selected.first + 1, selected.second + 1);
 }
 
 int main()
