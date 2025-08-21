@@ -137,8 +137,8 @@ void solve()
   {
     int nxt_l = ans.back().second;
     int nxt_seq_idx = ans.back().first;
-    int hold_furthest_r = furthest_r;
-    while (l <= hold_furthest_r + 1 && l < target_len)
+    int last_furthest_r = furthest_r;
+    while (l <= last_furthest_r + 1 && l < target_len)
     {
       int r = furthest_rights_from[l].second;
       if (r == -1)
@@ -155,7 +155,7 @@ void solve()
         nxt_seq_idx = seq_idx;
       }
 
-      // println(hold_furthest_r);
+      // println(last_furthest_r);
       // println(nxt_seq_idx, nxt_l, furthest_r);
       l++;
     }
@@ -165,7 +165,7 @@ void solve()
       return;
     }
 
-    if (furthest_r > hold_furthest_r)
+    if (furthest_r > last_furthest_r)
       ans.emplace_back(pair{nxt_seq_idx, nxt_l});
     if (furthest_r >= target_len - 1)
       break;
