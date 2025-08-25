@@ -84,15 +84,16 @@ void solve()
   vector<int> permu(n);
   ranges::generate(permu, nxt<int>);
 
-  int j = 0;
-  for (int i = 0; i < n - 1; i++)
-  {
-    if (permu[i] < permu[i + 1])
-      continue;
+  vector<pair<int, int>> sorted_with_idx(n);
+  for (int i = 0; i < n; i++)
+    sorted_with_idx[i] = pair{permu[i], i};
+  ranges::sort(sorted_with_idx, [](const auto &f, const auto &s ) { return f.first < s.first; });
 
-    j = i;
-    while (j < n && permu[j] > permu[i])
-      j++;
+  for (const auto &p : sorted_with_idx)
+  {
+    int cur_idx = p.second;
+    int reduce = cur_idx; // left-side inversions
+    int extent = (n - 1) - cur_idx; // right-side inversions
   }
 }
 
