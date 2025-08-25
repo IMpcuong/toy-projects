@@ -84,17 +84,23 @@ void solve()
   vector<int> permu(n);
   ranges::generate(permu, nxt<int>);
 
-  vector<pair<int, int>> sorted_with_idx(n);
-  for (int i = 0; i < n; i++)
-    sorted_with_idx[i] = pair{permu[i], i};
-  ranges::sort(sorted_with_idx, [](const auto &f, const auto &s ) { return f.first < s.first; });
-
-  for (const auto &p : sorted_with_idx)
+  int ops = 0;
+  while (!permu.empty())
   {
-    int cur_idx = p.second;
-    int reduce = cur_idx; // left-side inversions
-    int extent = (n - 1) - cur_idx; // right-side inversions
+    int cur_min = *ranges::min_element(permu);
+    auto cur_idx = static_cast<int>(ranges::find(permu, cur_min) - permu.begin());
+
+    int reduce = cur_idx;
+    int extent = (sza(permu) - 1) - cur_idx;
+    if (reduce > extent)
+      ops += extent;
+    else
+      ops += reduce;
+
+    erase(permu, cur_min);
   }
+
+  println(ops);
 }
 
 int main()
@@ -108,7 +114,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }

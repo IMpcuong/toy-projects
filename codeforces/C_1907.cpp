@@ -80,9 +80,15 @@ inline T nxt()
 
 void solve()
 {
-  vector<int> a(5);
-  ranges::generate(a, nxt<int>);
-  cout << a << " " << &a << endl;
+  auto n = nxt<int>();
+  auto s = nxt<string>();
+
+  map<string, int> pair_freq;
+  for (int i = 0; i < n - 1; i++)
+    if (s[i] != s[i + 1])
+      pair_freq[s.substr(i, 2)]++;
+
+  cout << pair_freq << "\n";
 }
 
 int main()
