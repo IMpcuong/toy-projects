@@ -83,12 +83,39 @@ void solve()
   auto n = nxt<int>();
   auto s = nxt<string>();
 
-  map<string, int> pair_freq;
-  for (int i = 0; i < n - 1; i++)
-    if (s[i] != s[i + 1])
-      pair_freq[s.substr(i, 2)]++;
+  if (n == 1)
+  {
+    println(n);
+    return;
+  }
 
-  cout << pair_freq << "\n";
+  vector<bool> removable(n, false);
+  stack<pair<int, char>> st;
+  st.push(pair{0, s[0]});
+  for (int i = 1; i < n; i++)
+  {
+    char cur = s[i];
+    if (st.empty())
+    {
+      st.push(pair{i, cur});
+      continue;
+    }
+
+    auto check = st.top();
+    if (cur == check.second)
+    {
+      st.push(pair{i, cur});
+      continue;
+    }
+    removable[i] = true;
+    removable[check.first] = true;
+    st.pop();
+  }
+
+  // cout << removable << "\n";
+
+  int ans = ranges::count(removable, false);
+  println(ans);
 }
 
 int main()
