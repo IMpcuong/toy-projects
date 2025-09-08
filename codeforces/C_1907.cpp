@@ -89,32 +89,15 @@ void solve()
     return;
   }
 
-  vector<bool> removable(n, false);
-  stack<pair<int, char>> st;
-  st.push(pair{0, s[0]});
-  for (int i = 1; i < n; i++)
-  {
-    char cur = s[i];
-    if (st.empty())
-    {
-      st.push(pair{i, cur});
-      continue;
-    }
+  const int _alphabet = 26;
+  vector<int> freq(_alphabet);
+  for (const char &chr : s)
+    freq[chr - 'a']++;
 
-    auto check = st.top();
-    if (cur == check.second)
-    {
-      st.push(pair{i, cur});
-      continue;
-    }
-    removable[i] = true;
-    removable[check.first] = true;
-    st.pop();
-  }
-
-  // cout << removable << "\n";
-
-  int ans = ranges::count(removable, false);
+  int chr_max_quan = *ranges::max_element(freq);
+  int ans = 2 * chr_max_quan > n
+    ? 2 * chr_max_quan - n
+    : n % 2;
   println(ans);
 }
 
@@ -129,7 +112,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
