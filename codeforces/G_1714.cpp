@@ -12,11 +12,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -86,24 +85,41 @@ struct node
 };
 
 void traverse_tree_from(const int &parent, vector<vector<node>> &adjacents,
-    vector<int> &optim_edge_quans, vector<bool> &visited)
+    vector<int> &optim_edge_quans, ll &wa_sum, vector<ll> &wb_pref_sums)
 {
+  if (adjacents[parent].empty())
+    return;
+
   int adj_quan = sza(adjacents[parent]);
   for (int i = 0; i < adj_quan; i++)
   {
     int node_idx = adjacents[parent][i].idx;
-    // ll node_wa   = adjacents[parent][i].weight_a;
-    // ll node_wb   = adjacents[parent][i].weight_b;
+    ll node_wa   = adjacents[parent][i].weight_a;
+    ll node_wb   = adjacents[parent][i].weight_b;
 
-    if (visited[node_idx])
-      continue;
-    visited[node_idx] = true;
+    wa_sum += node_wa;
+    wb_pref_sums.emplace_back(wb_pref_sums.back() + node_wb);
 
-    optim_edge_quans[node_idx] = optim_edge_quans[parent] + 1;
-    if (adjacents[node_idx].empty())
-      traverse_tree_from(parent, adjacents, optim_edge_quans, visited);
-    else
-      traverse_tree_from(node_idx, adjacents, optim_edge_quans, visited);
+    int l = 0;
+    int r = sza(wb_pref_sums) - 1;
+    while (l <= r)
+    {
+      int m = l + (r - l) / 2;
+      if (wb_pref_sums[m] <= wa_sum)
+      {
+        optim_edge_quans[node_idx] = m;
+        l = m + 1;
+      }
+      else
+      {
+        r = m - 1;
+      }
+    }
+
+    traverse_tree_from(node_idx, adjacents,
+        optim_edge_quans, wa_sum, wb_pref_sums);
+    wb_pref_sums.pop_back();
+    wa_sum -= node_wa;
   }
 }
 
@@ -119,7 +135,7 @@ void solve()
     adjacents[parent].emplace_back(node{child, weight_a, weight_b});
   }
 
-// #define LOCAL 1
+// #define LOCAL
 #ifdef LOCAL
   auto debug_node_childs_of = [&](const auto &idx) -> void
   {
@@ -133,11 +149,13 @@ void solve()
   debug_node_childs_of(4 /*idx=*/);
 #endif
 
-  vector<bool> visited(vertices, false);
-  vector<int> optim_edge_quans(vertices, 0);
+  ll wa_sum = 0LL;
+  vector<ll> wb_pref_sums = {0};
+  vector<int> optim_edge_quans(vertices, -1);
   int root = 0;
-  traverse_tree_from(root, adjacents, optim_edge_quans, visited);
+  traverse_tree_from(root, adjacents, optim_edge_quans, wa_sum, wb_pref_sums);
 
+  optim_edge_quans.erase(optim_edge_quans.begin());
   cout << optim_edge_quans << "\n";
 }
 
@@ -152,7 +170,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
