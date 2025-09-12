@@ -155,8 +155,6 @@ void solve()
         nxt_seq_idx = seq_idx;
       }
 
-      // println(last_furthest_r);
-      // println(nxt_seq_idx, nxt_l, furthest_r);
       l++;
     }
     if (nxt_l == ans.back().second && furthest_r < target_len - 1)
