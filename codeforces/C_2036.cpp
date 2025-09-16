@@ -97,81 +97,47 @@ void solve()
   const int target_len = sza(_TARGET);
 
   int str_sz = sza(bin_str);
-  ar<int, 2> cache_interval;
   vector<int> intervals(str_sz - target_len + 1, -1);
   for (int l = 0; l < str_sz - target_len + 1; l++)
-  {
     if (bin_str.substr(l, target_len) == _TARGET)
-    {
       intervals[l] = l + target_len - 1;
-      cache_interval = ar{l, l + target_len - 1};
-    }
-  }
-  int interval_cnt = ranges::count_if(intervals, [](const auto &r) { return r > 0; });
+  int valid_interval_cnt = ranges::count_if(intervals, [](const auto &r) { return r > -1; });
 
-  if (interval_cnt > 1)
+  for (const auto &q : queries)
   {
-    int q_quan_rep = q_quan;
-    while (q_quan_rep)
+    int pos = q.first;
+    char alt = q.second;
+    bin_str[pos] = alt;
+
+    bool contain_in_place_target = false;
+    int lower = max(0, pos - target_len + 1);
+    for (int l = lower; l <= pos; l++)
+    {
+      if (l + target_len > str_sz)
+        break;
+
+      bool cond = (bin_str.substr(l, target_len) == _TARGET);
+      contain_in_place_target |= cond;
+      if (!cond && intervals[l] != -1)
+      {
+        valid_interval_cnt--;
+        intervals[l] = -1;
+      }
+      if (cond && intervals[l] == -1)
+      {
+        valid_interval_cnt++;
+        intervals[l] = l + target_len - 1;
+      }
+    }
+    if (contain_in_place_target)
     {
       println(_Y);
-      q_quan_rep--;
+      continue;
     }
-
-    return;
-  }
-
-  if (interval_cnt == 0)
-  {
-    bool contain_target = false;
-    for (const auto &q : queries)
-    {
-      int pos = q.first;
-      char alt = q.second;
-      char hold = bin_str[pos];
-      if (hold == alt)
-      {
-        println(_N);
-        continue;
-      }
-
-      int lower = max(0, pos - target_len + 1);
-      bin_str[pos] = alt;
-      {
-        for (int l = lower; l <= pos; l++)
-        {
-          if (l + target_len >= str_sz)
-            break;
-          contain_target |= (bin_str.substr(l, target_len) == _TARGET);
-        }
-        if (contain_target)
-          println(_Y);
-        else
-          println(_N);
-      }
-      bin_str[pos] = hold;
-    }
-  }
-
-  if (interval_cnt == 1)
-  {
-    for (const auto &q : queries)
-    {
-      int pos = q.first;
-      char alt = q.second;
-      int l = cache_interval[0];
-      int r = cache_interval[1];
-      // cout << pos << " " << cache_interval << "\n";
-      if (pos < l || pos > r)
-      {
-        println(_Y);
-        continue;
-      }
-      if (bin_str[pos] == alt)
-        println(_Y);
-      else
-        println(_N);
-    }
+    if (valid_interval_cnt)
+      println(_Y);
+    else
+      println(_N);
   }
 }
 
