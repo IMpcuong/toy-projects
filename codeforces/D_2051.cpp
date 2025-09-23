@@ -85,11 +85,52 @@ void solve()
   auto upper = nxt<ll>();
   vector<ll> a(n);
   ranges::generate(a, nxt<ll>);
+  ranges::sort(a);
 
-  vector<ll> pref_sums = {0};
-  pref_sums.reserve(n + 1);
-  for (const auto &v : a)
-    pref_sums.emplace_back(pref_sums.back() + v);
+  ll sum_a = accumulate(all(a), 0LL);
+  ll couple_quan = 0;
+  for (int i = n - 1; i >= 1; i--)
+  {
+    int l_choose = -1;
+    int r_choose = -1;
+
+    int l = 0;
+    int r = i - 1;
+    while (l <= r)
+    {
+      int m = l + (r - l) / 2;
+      ll sum_remain = sum_a - (a[i] + a[m]);
+      if (sum_remain >= lower)
+      {
+        if (sum_remain <= upper)
+          r_choose = m;
+        l = m + 1;
+      }
+      else
+        r = m - 1;
+    }
+
+    l = 0;
+    r = i - 1;
+    while (l <= r)
+    {
+      int m = l + (r - l) / 2;
+      ll sum_remain = sum_a - (a[i] + a[m]);
+      if (sum_remain <= upper)
+      {
+        if (sum_remain >= lower)
+          l_choose = m;
+        r = m - 1;
+      }
+      else
+        l = m + 1;
+    }
+
+    if (l_choose <= r_choose && (l_choose != -1 && r_choose != -1))
+      couple_quan += r_choose - l_choose + 1;
+  }
+
+  println(couple_quan);
 }
 
 int main()
@@ -103,7 +144,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
