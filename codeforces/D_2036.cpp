@@ -90,25 +90,21 @@ void solve()
     mat[i] = nxt<string>();
 
   int l_quan = min(rows, cols) >> 1;
-  vector<deque<char>> layers(l_quan);
-  for (int i = 0; i < rows - 1; i++)
+  vector<vector<char>> layers(l_quan); // @Note: Even-matrix de-layered.
+  for (int l_id = 0; l_id < l_quan; l_id++)
   {
-    for (int f = 0; f < i && f < l_quan; f++)
-      layers[f].emplace_front(mat[i][f]);
+    for (int j = l_id; j < cols - l_id - 1; j++)
+      layers[l_id].emplace_back(mat[l_id][j]);
 
-    if (i < l_quan)
-      for (int j = i; j < cols - i; j++)
-        layers[i].emplace_back(mat[i][j]);
+    for (int i = l_id; i < rows - l_id - 1; i++)
+      layers[l_id].emplace_back(mat[i][cols - l_id - 1]);
 
-    for (int b = cols - i; b < cols; b++)
-    {
-      int lid = cols - b - 1;
-      if (0 <= lid && lid < l_quan)
-        layers[lid].emplace_back(mat[i][b]);
-    }
+    for (int j = cols - l_id - 1; j > l_id; j--)
+      layers[l_id].emplace_back(mat[rows - l_id - 1][j]);
+
+    for (int i = rows - l_id - 1; i > l_id; i--)
+      layers[l_id].emplace_back(mat[i][l_id]);
   }
-  for (int j = 0; j < cols; j++)
-    layers[0].emplace_front(mat[rows - 1][j]);
 
   // ranges::for_each(layers, [](const auto &r) { cout << r << "\n"; });
 
@@ -125,6 +121,7 @@ void solve()
         for (int j = 1; j < _TARGET_SZ; j++)
           maybe_match += layer[(i + j) % layer_len];
 
+        // app_cnt += maybe_match.compare(_TARGET) == 0;
         app_cnt += strncmp(maybe_match.c_str(), _TARGET.c_str(), _TARGET_SZ) == 0;
       }
     }

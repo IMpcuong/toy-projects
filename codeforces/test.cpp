@@ -64,7 +64,7 @@ int main()
   std::cout << 'a' - 'A' << "\n";
 
   std::string s = "in the name of love";
-  std::cout << s.substr(2) << "\n";
+  std::cout << s.substr(0, 2) << "\n";
 
   std::map<int, int> freq;
   freq[2] = 1000;
