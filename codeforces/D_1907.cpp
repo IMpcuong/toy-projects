@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-// clang++ -isystem . -std=c++20 -g -Wall -Wextra -O3 tmpl.cpp -o out
+// clang++ -isystem . -std=c++20 -g -Wall -Wextra -fsanitize=address -O3 tmpl.cpp -o out
 
 using namespace std;
 
@@ -78,46 +78,44 @@ inline T nxt()
   return x;
 }
 
-const char *_Y = "YES";
-const char *_N = "NO";
-
 void solve()
 {
-  auto s = nxt<string>();
-  int n = sza(s);
-  if (n == 1 || n == 2)
+  auto seg_quan = nxt<int>();
+  vector<ll> ls(seg_quan);
+  vector<ll> rs(seg_quan);
+  for (int i = 0; i < seg_quan; i++)
   {
-    println(_N);
-    return;
+    ls[i] = nxt<ll>();
+    rs[i] = nxt<ll>();
   }
 
-  string prefix = "";
-  string suffix = "";
-  map<string, bool> exist;
-  size_t mid = size_t(ceildiv(n, 2)) - 1;
-  map<pair<size_t, size_t>, string> strip_strings;
-  for (size_t l = mid - 1, r = mid + 1; l >= 0 && r < n; l--, r++)
+  auto check_inbound = [&](const ll &k) -> bool
   {
-  }
-  for (size_t i = 0, j = n - 1; i < mid && j > mid; i++, j--)
-  {
-    prefix += s[i];
-    suffix = s[j] + suffix;
-
-    string merged = string{string_view{s.data() + i + 1, j - i - 1}};
-    string f_msg = prefix + merged;
-    exist[f_msg] = true;
-    string s_msg = merged + suffix;
-    if (exist.count(s_msg))
+    ll l = 0;
+    ll r = 0;
+    for (int i = 0; i < seg_quan; i++)
     {
-      println(_Y);
-      println(f_msg);
-      return;
+      l = max(l - k, ls[i]);
+      r = min(r + k, rs[i]);
+      if (l > r)
+        return false;
     }
-    exist.clear();
+
+    return true;
+  };
+
+  ll lower = -1;
+  ll upper = INF;
+  while (upper > lower + 1)
+  {
+    ll mid_as_k = lower + (upper - lower) / 2;
+    if (check_inbound(mid_as_k))
+      upper = mid_as_k;
+    else
+      lower = mid_as_k;
   }
 
-  println(_N);
+  println(upper); // upper = lower + 1
 }
 
 int main()
@@ -128,7 +126,7 @@ int main()
   cout.tie(0);
 
   int tc = 1;
-  // cin >> tc;
+  cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
     // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.

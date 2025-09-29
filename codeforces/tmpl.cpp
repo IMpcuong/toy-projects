@@ -7,6 +7,15 @@ using namespace std;
 template <typename A, typename B>
 ostream &operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
 
+template <typename ...Args>
+ostream &operator<<(ostream &os, const tuple<Args...> &t)
+{
+  os << '{';
+  string sep;
+  apply([&](auto &&...args) { ((os << sep << args, sep = ", "), ...); }, t);
+  return os << '}';
+}
+
 template <typename T_container,
           typename T = typename enable_if<!is_same<T_container, string>::value,
                                           typename T_container::value_type>::type>
