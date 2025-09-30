@@ -114,9 +114,8 @@ void solve()
       nxt_pos = (j + 2) % _tri;
       good_ps[j][nxt_pos] = cur_p[nxt_pos];
 
-      tup good_p = good_ps[j];
-      apps[good_p]++;
-      cnt += apps[good_p] - apps[cur_p];
+      apps[good_ps[j]]++;
+      cnt += apps[good_ps[j]] - apps[cur_p];
     }
   }
 
