@@ -92,64 +92,55 @@ void solve()
   auto n = nxt<int>(); // n >= 2
   auto digit_str = nxt<string>();
 
-  const char _z = '0';
-  int zeros = ranges::count(digit_str, _z);
+  vector<int> digits;
+  digits.reserve(n);
+  for (const auto &d : digit_str)
+    digits.emplace_back(d - '0');
+
   if (n == 2)
   {
-    if (zeros && digit_str[0] == _z)
-    {
-      println(digit_str[n - 1]);
-      return;
-    }
-    println(digit_str);
+    println(10 * digits.front() + digits.back());
     return;
   }
 
+  int zeros = ranges::count(digits, 0);
   if (zeros)
   {
     if (n == 3)
     {
-      char first = digit_str[0];
-      char last  = digit_str[n - 1];
-      if (first == _z || last == _z)
+      if (digits.front() == 0 || digits.back() == 0)
         println(0);
       else
-        println(first);
+        println(min(digits.front() + digits.back(),
+              digits.front() * digits.back()));
+      return;
+    }
 
-      return;
-    }
-    if (n > 3)
-    {
-      println(0);
-      return;
-    }
+    println(0);
+    return;
   }
 
-  vector<int> digits;
-  digits.reserve(n + 1);
-  digits.emplace_back(0);
-  for (const auto &d : digit_str)
-    digits.emplace_back(d - '0');
-
-  //
-  // @Note:
-  //  + state(dp[i].first)  := mergeless && min
-  //  + state(dp[i].second) := merged && min
-  //  + 0 <= i <= n - 1
-  //
-  vector<pair<int, int>> dp(n + 1, {0 , 0});
-  for (int i = 1; i < n + 1; i++)
+  int sum_gt_one = [&]() -> int
   {
-    dp[i].first = dp[i - 1].first + digits[i];
+    int sum = 0;
+    for (const auto &num : digits)
+      if (num > 1)
+        sum += num;
+    return sum;
+  }();
+  int ans = MAX_N;
+  for (int i = 0; i < n - 1; i++)
+  {
+    int tmp_sum = sum_gt_one;
+    if (digits[i] > 1)
+      tmp_sum -= digits[i];
+    if (digits[i + 1] > 1)
+      tmp_sum -= digits[i + 1];
 
-    dp[i].second = (dp[i - 1].first - digits[i - 1])
-      + (10 * digits[i - 1] + digits[i]);
-    if (i > 2)
-      dp[i].second = min(dp[i].second, dp[i - 1].second + digits[i]);
+    int cur_sum = tmp_sum + (10 * digits[i] + digits[i + 1]);
+    ans = min(ans, cur_sum);
   }
 
-  cout << dp << "\n";
-  int ans = dp[n].second;
   println(ans);
 }
 
@@ -164,7 +155,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
