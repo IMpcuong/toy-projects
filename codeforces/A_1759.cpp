@@ -18,7 +18,7 @@ ostream &operator<<(ostream &os, const tuple<Args...> &t)
 
 template <typename T_container,
           typename T = typename enable_if<!is_same<T_container, string>::value,
-                                                   typename T_container::value_type>::type>
+                                          typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
   os << '{';
@@ -87,11 +87,49 @@ inline T nxt()
   return x;
 }
 
+const char *_Y = "YES";
+const char *_N = "NO";
+
 void solve()
 {
-  vector<int> a(5);
-  ranges::generate(a, nxt<int>);
-  cout << a << " " << &a << endl;
+  auto s = nxt<string>();
+
+  const char *_sub_str = "Yes";
+  const int _sz = strlen(_sub_str);
+  int cur = -1;
+  bool first_match = true;
+  for (const auto &chr : s)
+  {
+    if (first_match)
+    {
+      for (int i = 0; i < _sz; i++)
+      {
+        if (_sub_str[i] == chr)
+        {
+          cur = (i + 1) % _sz;
+          first_match = false;
+          break;
+        }
+      }
+
+      if (cur == -1)
+      {
+        println(_N);
+        return;
+      }
+      continue;
+    }
+
+    if (_sub_str[cur] != chr)
+    {
+      println(_N);
+      return;
+    }
+    cur++;
+    cur %= _sz;
+  }
+
+  println(_Y);
 }
 
 int main()
@@ -105,7 +143,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
