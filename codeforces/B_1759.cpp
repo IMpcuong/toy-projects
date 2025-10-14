@@ -97,13 +97,17 @@ void solve()
   vector<int> incomplete_permu(m);
   ranges::generate(incomplete_permu, nxt<int>);
 
+  int max_num = *ranges::max_element(incomplete_permu);
   int cur_sum = accumulate(all(incomplete_permu), 0);
   int maybe_permu_sum = cur_sum + remain_sum;
   int lower = static_cast<int>(floor(sqrt(maybe_permu_sum)));
   int permu_sum = (lower + 1) * lower / 2;
   if (permu_sum == maybe_permu_sum)
   {
-    println(_Y);
+    if (lower < max_num)
+      println(_N);
+    else
+      println(_Y);
     return;
   }
   while (permu_sum < maybe_permu_sum)
@@ -112,7 +116,10 @@ void solve()
     permu_sum = (lower + 1) * lower / 2;
     if (permu_sum == maybe_permu_sum)
     {
-      println(_Y);
+      if (lower < max_num)
+        println(_N);
+      else
+        println(_Y);
       return;
     }
   }
