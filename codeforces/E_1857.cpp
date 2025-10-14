@@ -21,11 +21,10 @@ template <typename T_container,
                                           typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
-  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = ", ";
-  return os << '}';
+    os << sep << x, sep = " ";
+  return os;
 }
 
 template <typename... Args>
@@ -92,23 +91,33 @@ void solve()
   auto n = nxt<int>();
   vector<ll> points(n);
   ranges::generate(points, nxt<ll>);
-  ranges::sort(points);
+  auto points_cp = points;
+  ranges::sort(points_cp);
 
-  map<ll, int> ans;
-  set<ll> unq = set(all(points));
-  int unq_sz = sza(unq);
-  int i = 1;
-  auto iter = unq.begin();
-  while (iter != unq.cend())
+  //
+  // @Note:
+  //  + f_point([l_1; r_1]) + ... + f_point([l_n; r_n]) = len([l_1; r_1]) + ... + len([l_n; r_n])
+  //  + len([a; b]) = b - a + 1
+  //  + 1 <= i, j <= n
+  //  + p_i := a fixed point
+  //  + f_point(p_i) = sum({p_i - p_j + 1 | j < i}) + sum({p_j - p_i + 1 | j >= i})
+  //      = (1 * n) + (p_i * i) - [p_i * (n - i)] + sum({p_j | j >= i}) - sum({p_j | j < i})
+  //      = n + p_i * (2 * i - n) + sufffix_sum - prefix_sum
+  //
+  ll prefix_sum = 0;
+  ll suffix_sum = accumulate(all(points_cp), 0LL);
+  map<ll, ll> f_point;
+  for (int i = 0; i < n; i++)
   {
-    ll point = *iter;
-    if (ans.count(point) == 0)
-      ans[point] = unq_sz - i;
-    i++;
-    iter++;
+    ll cur_p = points_cp[i];
+    prefix_sum += cur_p;
+    suffix_sum -= cur_p;
+    f_point[cur_p] = n + cur_p * (2 * (i + 1) - n) + suffix_sum - prefix_sum;
   }
 
-  cout << ans << "\n";
+  for (auto &p : points)
+    p = f_point[p];
+  cout << points << "\n";
 }
 
 int main()
@@ -122,7 +131,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
