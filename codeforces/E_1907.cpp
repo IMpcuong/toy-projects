@@ -18,13 +18,14 @@ ostream &operator<<(ostream &os, const tuple<Args...> &t)
 
 template <typename T_container,
           typename T = typename enable_if<!is_same<T_container, string>::value,
-                                          typename T_container::value_type>::type>
+                                                   typename T_container::value_type>::type>
 ostream &operator<<(ostream &os, const T_container &v)
 {
+  os << '{';
   string sep;
   for (const T &x : v)
-    os << sep << x, sep = " ";
-  return os;
+    os << sep << x, sep = ", ";
+  return os << '}';
 }
 
 template <typename... Args>
@@ -88,36 +89,38 @@ inline T nxt()
 
 void solve()
 {
-  auto n = nxt<int>();
-  vector<ll> points(n);
-  ranges::generate(points, nxt<ll>);
-  auto points_cp = points;
-  ranges::sort(points_cp);
+  auto n = nxt<long>();
 
-  //
-  // @Note:
-  //  + f_point([l_1; r_1], ..., [l_n; r_n]) = len([l_1; r_1]) + ... + len([l_n; r_n])
-  //  + len([a; b]) = b - a + 1
-  //  + 1 <= i, j <= n
-  //  + p_i := a fixed point
-  //  + f_point(p_i) = sum({p_i - p_j + 1 | j < i}) + sum({p_j - p_i + 1 | j >= i})
-  //      = (1 * n) + (p_i * i) - [p_i * (n - i)] + sum({p_j | j >= i}) - sum({p_j | j < i})
-  //      = n + p_i * (2 * i - n) + sufffix_sum - prefix_sum
-  //
-  ll prefix_sum = 0;
-  ll suffix_sum = accumulate(all(points_cp), 0LL);
-  map<ll, ll> f_point;
-  for (int i = 0; i < n; i++)
+  const int _max_digit_quan = 10; // 8, actually
+  vector<int> digits;
+  digits.reserve(_max_digit_quan);
+  while (n)
   {
-    ll cur_p = points_cp[i];
-    prefix_sum += cur_p;
-    suffix_sum -= cur_p;
-    f_point[cur_p] = n + cur_p * (2 * (i + 1) - n) + suffix_sum - prefix_sum;
+    int digit = n % 10;
+    digits.emplace_back(digit);
+    n /= 10;
   }
 
-  for (auto &p : points)
-    p = f_point[p];
-  cout << points << "\n";
+  // @Docs: https://en.wikipedia.org/wiki/Stars_and_bars_(combinatorics)
+  auto nCk_stars_bars = [](const int &n, const int &k = 3) -> int
+  {
+    int total = n + k - 1;
+    return total * (total - 1) / (k - 1);
+  };
+
+  vector<int> combs(_max_digit_quan, 1);
+  for (int i = 1; i < _max_digit_quan; i++)
+    combs[i] = nCk_stars_bars(i);
+
+  ll ans = 1LL;
+  int real_quan = sza(digits);
+  for (int i = real_quan - 1; i >= 0; i--)
+  {
+    int d = digits[i];
+    ans *= combs[d];
+  }
+
+  println(ans);
 }
 
 int main()
