@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bits/stdc++.h>
 
 // clang++ -isystem . -std=c++20 -g -Wall -Wextra -fsanitize=address -O3 tmpl.cpp -o out
@@ -93,27 +94,23 @@ void solve()
   vector<ll> a(n);
   ranges::generate(a, nxt<ll>);
 
-  auto is_inc_vec = [](const vector<ll> target, const int sz) -> bool
+  ll lower_minus = INF;
+  ll upper_minus = 0;
+  for (int i = 0; i < n - 1; i++)
   {
-    for (int i = 0; i < sz - 1; i++)
-      if (target[i + 1] - target[i] < 0)
-        return false;
-
-    return true;
-  };
-
-  ll found = -1;
-  ll l = 0LL;
-  ll r = 1e9;
-  while (l <= r)
-  {
-    ll x = l + (r - l) / 2;
-    auto a_cp = a;
-    for (auto &v : a_cp)
-      v = abs(v - x);
-
-    // if (is_inc_vec(a_cp, sza(a_cp)))
+    ll cur_v = a[i];
+    ll nxt_v = a[i + 1];
+    ll lower_half = (cur_v + nxt_v) / 2;
+    ll upper_half = ceildiv(cur_v + nxt_v, 2);
+    if (cur_v > nxt_v)
+      upper_minus = max(upper_minus, upper_half);
+    if (cur_v < nxt_v)
+      lower_minus = min(lower_minus, lower_half);
   }
+  if (lower_minus >= upper_minus)
+    println(upper_minus);
+  else
+    println(-1);
 }
 
 int main()
@@ -127,7 +124,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
