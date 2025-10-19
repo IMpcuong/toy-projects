@@ -94,44 +94,40 @@ void solve()
 {
   auto bin_dec = nxt<long>();
 
+  // @Note: 2^i + 2^(i - 1) = 2^(i + 1) - 2^(i - 1)
+
   const int _max_sz = 31;
   vector<int> bits(_max_sz, 0);
-  auto max_pos = static_cast<int>(ceil(log2(bin_dec)));
-  auto min_pos = static_cast<int>(floor(log2(bin_dec)));
-  auto upper_pow = static_cast<long>(pow(2, max_pos));
-  auto lower_pow = static_cast<long>(pow(2, min_pos));
-  int furthest_pos = min_pos;
-  if (upper_pow - bin_dec < bin_dec - lower_pow)
-    furthest_pos = max_pos;
-  bits[furthest_pos] = 1;
-
-  bin_dec = static_cast<long>(pow(2, furthest_pos)) - bin_dec;
-  if (bin_dec & 1)
+  for (int i = 0; i < _max_sz - 1; i++)
   {
-    bits[0] = -1;
-    bin_dec--;
-  }
-  int i = 1;
-  while (bin_dec != 0 && i < furthest_pos)
-  {
-    auto adjust = static_cast<long>(pow(2, i));
-    if (bits[i - 1] != 0)
-      continue;
-    if (bin_dec < 0)
+    if ((bin_dec >> i) & 1)
     {
-      bits[i] = 1;
-      bin_dec += adjust;
-    }
-    else
-    {
-      bits[i] = -1;
-      bin_dec -= adjust;
-    }
-    i++;
-  }
-  bits.shrink_to_fit();
+      if (bits[i] == 1)
+      {
+        bits[i] = 0;
+        bits[i + 1] = 1;
+        continue;
+      }
+      if (bits[i] == 0)
+      {
+        if (i == 0)
+        {
+          bits[i] = 1;
+          continue;
+        }
 
-  println(sza(bits));
+        if (bits[i - 1] == 1)
+        {
+          bits[i - 1] = -1;
+          bits[i + 1] = 1;
+        }
+        if (bits[i - 1] == 0)
+          bits[i] = 1;
+      }
+    }
+  }
+
+  println(_max_sz);
   cout << bits << "\n";
 }
 
