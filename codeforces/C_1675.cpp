@@ -92,11 +92,7 @@ long solve()
   if (vagues == fr_quan)
     return fr_quan;
   if (vagues == 0)
-  {
-    if (fr_quan > 3)
-      return ++suspect;
-    return suspect;
-  }
+    return ++suspect;
 
   long l = 0;
   long r = fr_quan - 1;
@@ -109,7 +105,6 @@ long solve()
       l = max(l, fr);
 
   suspect = r - l + 1;
-
   return suspect;
 }
 
