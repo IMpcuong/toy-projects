@@ -80,9 +80,15 @@ inline ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
 inline ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
 template <typename T>
-inline T nxt()
+concept Input_Streamable_Type = requires(T stdin_data)
 {
-  T x;
+  cin >> stdin_data;
+};
+
+template <Input_Streamable_Type IST>
+inline IST nxt()
+{
+  IST x;
   cin >> x;
   return x;
 }
@@ -90,26 +96,38 @@ inline T nxt()
 void solve()
 {
   auto n = nxt<int>();
-  vector<int> a(n); // 1 <= a[i] <= n
+  auto upper = nxt<int>();
+  vector<int> a(n);
   ranges::generate(a, nxt<int>);
 
-  //
-  // @Note:
-  //  + 1 <= i <= n
-  //  + dp[i] := the minimum number of remaining points in [1; i]
-  //
-  vector<int> dp(n + 1, INF);
-  dp[0] = 0;
-  vector<int> min_remain_of(n + 1, INF);
-  for (int i = 1; i < n + 1; i++)
+  vector<vector<int>> dp(n, vector<int>(upper + 1, 0));
+  if (a[0] == 0)
+    ranges::fill(dp[0], 1);
+  else
+    dp[0][a[0]] = 1;
+
+  for (int i = 1; i < n; i++)
   {
     int cur = a[i - 1];
-    dp[i] = min(dp[i - 1] + 1 /* keeps a[i] */,
-        min_remain_of[cur] /* removes a[i] */);
-    min_remain_of[cur] = min(min_remain_of[cur], dp[i - 1]);
+    if (cur == 0)
+    {
+      for (int maybe = 1; maybe <= upper; maybe++)
+        for (const int &adj : {maybe - 1, maybe, maybe + 1})
+          if (1 <= adj && adj <= upper)
+            (dp[i][maybe] += dp[i - 1][adj]) %= MOD;
+    }
+    else
+    {
+      for (const int &adj : {cur - 1, cur, cur + 1})
+        if (1 <= adj && adj <= upper)
+          (dp[i][cur] += dp[i - 1][adj]) %= MOD;
+    }
   }
 
-  println(n - dp[n]);
+  int total_choice = 0;
+  for (auto choice = dp[n - 1].begin() + 1; choice != dp[n - 1].end(); choice++)
+    (total_choice += *choice) %= MOD;
+  println(total_choice);
 }
 
 int main()
@@ -120,7 +138,7 @@ int main()
   cout.tie(0);
 
   int tc = 1;
-  cin >> tc;
+  // cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
     // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
