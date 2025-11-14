@@ -125,8 +125,8 @@ void solve()
   }
 
   ll total_choice = 0;
-  for (int num = 1; num <= upper; num++)
-    (total_choice += dp[n - 1][num]) %= MOD;
+  for (auto choice = dp[n - 1].begin() + 1; choice != dp[n - 1].end(); choice++)
+    (total_choice += *choice) %= MOD;
   println(total_choice);
 }
 

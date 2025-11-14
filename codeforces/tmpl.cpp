@@ -80,9 +80,15 @@ inline ll gcd(ll a, ll b) { return b == 0 ? a : gcd(b, a % b); }
 inline ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
 template <typename T>
-inline T nxt()
+concept Input_Streamable_Type = requires(T stdin_data)
 {
-  T x;
+  cin >> stdin_data;
+};
+
+template <Input_Streamable_Type IST>
+inline IST nxt()
+{
+  IST x;
   cin >> x;
   return x;
 }
