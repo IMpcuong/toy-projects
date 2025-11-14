@@ -100,7 +100,7 @@ void solve()
   vector<int> a(n);
   ranges::generate(a, nxt<int>);
 
-  vector<vector<int>> dp(n, vector<int>(upper + 1, 0));
+  vector<vector<ll>> dp(n, vector<ll>(upper + 1, 0));
   if (a[0] == 0)
     ranges::fill(dp[0], 1);
   else
@@ -108,7 +108,7 @@ void solve()
 
   for (int i = 1; i < n; i++)
   {
-    int cur = a[i - 1];
+    int cur = a[i];
     if (cur == 0)
     {
       for (int maybe = 1; maybe <= upper; maybe++)
@@ -124,9 +124,9 @@ void solve()
     }
   }
 
-  int total_choice = 0;
-  for (auto choice = dp[n - 1].begin() + 1; choice != dp[n - 1].end(); choice++)
-    (total_choice += *choice) %= MOD;
+  ll total_choice = 0;
+  for (int num = 1; num <= upper; num++)
+    (total_choice += dp[n - 1][num]) %= MOD;
   println(total_choice);
 }
 
