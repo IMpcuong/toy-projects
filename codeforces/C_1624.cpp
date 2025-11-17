@@ -101,9 +101,25 @@ void solve()
   auto n = nxt<int>();
   vector<ll> a(n);
   ranges::generate(a, nxt<ll>);
-  ranges::sort(a);
+  ranges::sort(a, [](const ll &f, const ll &s) { return f > s; });
 
-  vector<bool> permu(n + 1, false);
+  vector<bool> filled(n + 1, false);
+  for (auto &from : a)
+  {
+    while (from > n || filled[from])
+      from /= 2;
+    if (from == 0)
+    {
+      println(_N);
+      return;
+    }
+    filled[from] = true;
+  }
+
+  if (ranges::count(filled, true) == n) // Excessive!
+    println(_Y);
+  else
+    println(_N);
 }
 
 int main()
@@ -117,7 +133,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    // coft << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // // coft << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
