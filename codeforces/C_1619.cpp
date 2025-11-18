@@ -112,8 +112,9 @@ void solve()
   }
 
   vector<int> s_num;
+  int i = 0;
   int j = 0;
-  for (int i = 0; i < sum_len; i++)
+  for (i = 0; i < sum_len; i++)
   {
     if (i == sum_len - 1 && j < f_len - 1)
     {
@@ -137,7 +138,7 @@ void solve()
       i++;
       sum_digit += 10 * (sum[i] - '0');
       int s_digit = sum_digit - f_digit;
-      if (s_digit > 9)
+      if (s_digit > 9 || s_digit < 0)
       {
         println(-1);
         return;
@@ -146,6 +147,11 @@ void solve()
       if (j < sum_len)
         j++;
     }
+  }
+  if (i >= sum_len - 1 && j < f_len - 1)
+  {
+    println(-1);
+    return;
   }
 
   ranges::reverse(s_num);
