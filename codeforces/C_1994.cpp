@@ -97,11 +97,11 @@ void solve()
   vector<ll> pref_sums(n + 1);
   partial_sum(all(levels), pref_sums.begin() + 1);
   vector<int> dp(n + 2, 0);
-  dp[0] = 0;
   for (int l = n - 1; l >= 0; l--)
   {
+    // @Note: max(r_pass_limit) = n + 1
     int r_pass_limit = upper_bound(all(pref_sums), pref_sums[l] + limit) - pref_sums.begin();
-    if (r_pass_limit >= l)
+    if (r_pass_limit >= l) // The condition is always true.
       dp[l] = dp[r_pass_limit] + (r_pass_limit - l - 1);
   }
 
