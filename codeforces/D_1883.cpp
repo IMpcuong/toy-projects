@@ -103,12 +103,11 @@ void solve()
   multiset<ll> lefts;
   multiset<ll> rights;
   map<pair<ll, ll>, int> freq;
-
   while (n--)
   {
     auto op = nxt<char>();
-    auto l  = nxt<int>();
-    auto r  = nxt<int>();
+    auto l  = nxt<ll>();
+    auto r  = nxt<ll>();
 
     auto interval = pair{l, r};
     if (op == '+')
@@ -131,7 +130,8 @@ void solve()
       println(_N);
       continue;
     }
-    if (*lefts.cend() > *rights.cbegin())
+    // if (*prev(lefts.cend()) > *rights.cbegin())
+    if (*lefts.crbegin() > *rights.cbegin())
       println(_Y);
     else
       println(_N);
