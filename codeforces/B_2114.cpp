@@ -102,39 +102,14 @@ void solve()
   auto limit = nxt<int>();
   auto bin_s = nxt<string>();
 
-  int diff_cnt = 0;
-  ar<int, 2> pair_cnt = {0, 0};
-  for (int i = 0; i < len / 2; i++)
-  {
-    int palindrome = (len - 1) - i;
-    if (bin_s[i] != bin_s[palindrome])
-    {
-      diff_cnt++;
-      if (diff_cnt == 2 && limit >= 2)
-      {
-        limit -= 2;
-        diff_cnt = 0;
-      }
-      continue;
-    }
+  ar<int, 2> cnt = {0, 0};
+  for (const auto &digit : bin_s)
+    cnt[digit - '0']++;
 
-    if (limit > 0)
-      limit--;
-    else if (limit == 0)
-      pair_cnt[bin_s[i] - '0']++;
-  }
-
-  if (limit == 0)
-  {
-    if (pair_cnt[0] == pair_cnt[1])
-      println(_Y);
-    else
-      println(_N);
-    return;
-  }
-
-  int remain_pair = abs(pair_cnt[0] - pair_cnt[1]);
-  if (limit == remain_pair)
+  int max_pair = cnt[0] / 2 + cnt[1] / 2;
+  int min_pair = max(cnt[0], cnt[1]) - len / 2;
+  if (min_pair <= limit && limit <= max_pair &&
+      (limit - min_pair) % 2 == 0)
     println(_Y);
   else
     println(_N);
