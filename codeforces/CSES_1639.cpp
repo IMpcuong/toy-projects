@@ -102,25 +102,24 @@ void solve()
   int d_len = sza(dst);
   vector<vector<int>> dp(s_len + 1, vector<int>(d_len + 1, INF));
   dp[0][0] = 0; // nil-state
-  for (int i = 1; i < s_len + 1; i++)
+  for (int i = 0; i < s_len + 1; i++)
   {
-    char s_chr = src[i - 1];
-    for (int j = 1; j < d_len + 1; j++)
+    for (int j = 0; j < d_len + 1; j++)
     {
-      char d_chr = dst[j - 1];
-
       // Deletes `s_chr`:
-      dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);
+      if (i)
+        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);
 
       // Adds `d_chr`:
-      dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);
+      if (j)
+        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);
 
       // Replaces `s_chr` -> `d_chr`:
-      dp[i][j] = min(dp[i][j], dp[i - 1][j - 1] + (s_chr != d_chr));
+      if (i && j)
+        dp[i][j] = min(dp[i][j], dp[i - 1][j - 1] + (src[i - 1] != dst[i - 1]));
     }
   }
 
-  cout << dp[s_len] << "\n";
   println(dp[s_len][d_len]);
 }
 
