@@ -107,16 +107,16 @@ void solve()
     for (int j = 0; j < d_len + 1; j++)
     {
       // Deletes `s_chr`:
-      if (i)
+      if (i > 0)
         dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);
 
       // Adds `d_chr`:
-      if (j)
+      if (j > 0)
         dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);
 
       // Replaces `s_chr` -> `d_chr`:
-      if (i && j)
-        dp[i][j] = min(dp[i][j], dp[i - 1][j - 1] + (src[i - 1] != dst[i - 1]));
+      if (i > 0 && j > 0)
+        dp[i][j] = min(dp[i][j], dp[i - 1][j - 1] + (src[i - 1] != dst[j - 1]));
     }
   }
 
