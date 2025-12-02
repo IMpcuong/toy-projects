@@ -100,45 +100,17 @@ void solve()
   ranges::generate(a, nxt<ll>);
 
   ll ans = 0;
-  map<ll, int> same_adjust;
-  int j = 0;
+  ll max_v = 0;
+  ll max_delta = 0;
   for (int i = 0; i < n; i++)
   {
-    if (a[i] >= a[j])
-    {
-      j = i;
-      continue;
-    }
-
-    while (a[i] < a[j] && i < n)
-    {
-      same_adjust[a[j] - a[i]]++;
-      if (i == n - 1)
-        break;
-      i++;
-    }
-  }
-  if (same_adjust.empty())
-  {
-    println(ans);
-    return;
+    max_v = max(max_v, a[i]);
+    ll delta = max_v - a[i];
+    ans += delta;
+    max_delta = max(max_delta, delta);
   }
 
-  cout << same_adjust << "\n";
-  int prev = 0;
-  int k_range = 0;
-  for (const auto &[_, freq] : same_adjust)
-    k_range += freq;
-  for (auto it = same_adjust.begin(); it != same_adjust.end(); it++)
-  {
-    ll diff = it->first;
-    int quan = it->second;
-    ans += (k_range + 1) * (diff - prev);
-    prev += (diff - prev);
-    k_range -= quan;
-  }
-
-  println(ans);
+  println(ans + max_delta);
 }
 
 int main()
