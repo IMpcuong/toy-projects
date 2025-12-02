@@ -5,7 +5,10 @@
 *.tag
 *.xml
 *.gdb
+*.o
+*.out
 out*
+main
 
 .vscode/
 output/
