@@ -98,6 +98,36 @@ void solve()
   auto n = nxt<int>();
   vector<ll> a(n);
   ranges::generate(a, nxt<ll>);
+
+  ll ans = 0;
+  int j = 0;
+  for (int i = 0; i < n; i++)
+  {
+    if (a[i] >= a[j])
+    {
+      j = i;
+      continue;
+    }
+
+    map<ll, int> smaller;
+    while (a[i] < a[j] && i < n)
+    {
+      smaller[a[i]]++;
+      if (i == n - 1)
+        break;
+      i++;
+    }
+
+    ll minus = 0;
+    for (auto rit = smaller.rbegin(); rit != smaller.rend(); rit++)
+    {
+      ll gap = a[j] - rit->first - minus;
+      ans += gap * (rit->second + 1);
+      minus += gap;
+    }
+  }
+
+  println(ans);
 }
 
 int main()
@@ -111,7 +141,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
