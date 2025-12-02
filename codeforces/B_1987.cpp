@@ -100,6 +100,7 @@ void solve()
   ranges::generate(a, nxt<ll>);
 
   ll ans = 0;
+  map<ll, int> same_adjust;
   int j = 0;
   for (int i = 0; i < n; i++)
   {
@@ -109,22 +110,32 @@ void solve()
       continue;
     }
 
-    map<ll, int> smaller;
     while (a[i] < a[j] && i < n)
     {
-      smaller[a[i]]++;
+      same_adjust[a[j] - a[i]]++;
       if (i == n - 1)
         break;
       i++;
     }
+  }
+  if (same_adjust.empty())
+  {
+    println(ans);
+    return;
+  }
 
-    ll minus = 0;
-    for (auto rit = smaller.rbegin(); rit != smaller.rend(); rit++)
-    {
-      ll gap = a[j] - rit->first - minus;
-      ans += gap * (rit->second + 1);
-      minus += gap;
-    }
+  cout << same_adjust << "\n";
+  int prev = 0;
+  int k_range = 0;
+  for (const auto &[_, freq] : same_adjust)
+    k_range += freq;
+  for (auto it = same_adjust.begin(); it != same_adjust.end(); it++)
+  {
+    ll diff = it->first;
+    int quan = it->second;
+    ans += (k_range + 1) * (diff - prev);
+    prev += (diff - prev);
+    k_range -= quan;
   }
 
   println(ans);
