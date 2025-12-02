@@ -4,4 +4,5 @@
   nasm -fmacho64 add_print.asm
   ld -macos_version_min `sw_vers -productVersion` -static add_print.o
   ./a.out
+  lllvm-objdump -d ./a.out
   ```
