@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <complex>    // Representation for numerical complex
 #include <iostream>   // Input/output stream objects
 #include <fstream>    // File stream objects
 #include <sstream>    // String stream objects
