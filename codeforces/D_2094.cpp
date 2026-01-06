@@ -101,28 +101,53 @@ void solve()
   auto orig = nxt<string>();
   auto real = nxt<string>();
 
-  string extracted = "";
-  int dup = 1;
-  for (const auto &chr : real)
+  int orig_sz = sza(orig);
+  int real_sz = sza(real);
+
+  map<pair<char, int>, int> omap;
+  int j = 0;
+  int inc = 0;
+  for (int i = 0; i < orig_sz; i++)
   {
-    if (extracted.empty())
-    {
-      extracted.push_back(chr);
-      continue;
-    }
-    if (extracted.back() == chr && dup)
-    {
-      dup--;
-      continue;
-    }
-    extracted.push_back(chr);
-    dup = 1;
+    while (orig[i] == orig[j] && j < orig_sz && ++j);
+    omap[pair{orig[i], inc}] = j - i;
+    inc++;
+    i = j - 1;
   }
 
-  if (orig == real || orig == extracted)
-    println(_Y);
-  else
+  map<pair<char, int>, int> rmap;
+  j = 0;
+  inc = 0;
+  for (int i = 0; i < real_sz; i++)
+  {
+    while (real[i] == real[j] && j < real_sz && ++j);
+    rmap[pair{real[i], inc}] = j - i;
+    inc++;
+    i = j - 1;
+  }
+
+  if (omap.size() != rmap.size())
+  {
     println(_N);
+    return;
+  }
+  for (auto oit = omap.begin(), rit = rmap.begin();
+       oit != omap.end() && rit != rmap.end(); oit++, rit++)
+  {
+    if (oit->first.first != rit->first.first ||
+        oit->first.second != rit->first.second)
+    {
+      println(_N);
+      return;
+    }
+    if (oit->second > rit->second || 2 * oit->second < rit->second)
+    {
+      println(_N);
+      return;
+    }
+  }
+
+  println(_Y);
 }
 
 int main()
