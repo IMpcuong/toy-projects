@@ -97,6 +97,7 @@ void solve()
 {
   auto n = nxt<int>();
   vector<pair<int, int>> bounds(n);
+  map<int, int> freq;
   vector<pair<int, int>> avoids;
   avoids.reserve(n);
   for (int i = 0; i < n; i++)
@@ -104,7 +105,10 @@ void solve()
     get<0>(bounds[i]) = nxt<int>();
     get<1>(bounds[i]) = nxt<int>();
     if (bounds[i].first == bounds[i].second)
+    {
+      freq[bounds[i].first]++;
       avoids.emplace_back(pair{bounds[i].first, i});
+    }
   }
   avoids.shrink_to_fit();
   ranges::sort(avoids,
@@ -133,7 +137,9 @@ void solve()
       while (l <= r)
       {
         int m = l + (r - l) / 2;
-        if (avoids[m].first == num && avoids[m].second != i)
+        if (avoids[m].first == num &&
+            (avoids[m].second != i ||
+             (avoids[m].second == i && freq[num] > 1)))
         {
           found = true;
           non_unique_cnt++;
