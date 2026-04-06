@@ -31,7 +31,7 @@
  *   No connection needed, they are generally used either TCP stack are unavailable or when a few dropped packets are acceptable.
  *   `tftp` (trivial file transfer protocol), `dhpcd` (a DHCP ~ Dynamic Host Configuration Protocol client), multiplayer games,
  *   streaming audio, video conferencing, etc.
- *   DHCP: is a protocol for configuring hosts, and runs periodically to keep their addresses ans other configurations up-to-date.
+ *   DHCP: is a protocol for configuring hosts, and runs periodically to keep their addresses and other configurations up-to-date.
  *         The traffic is between host and DHCP server; typically both are on the same network, but not always.
  *   NAT: a process is for rewriting packets as they are forwarded across router. Specifically, it translates the addresses/ports.
  *        The traffic is across a router; typically between an ISP (Internet Service Provider) and its client, or between two organizations.
