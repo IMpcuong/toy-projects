@@ -29,7 +29,7 @@
  *               -> slap an IP header on it with destination information
  *               -> send it out.
  *   No connection needed, they are generally used either TCP stack are unavailable or when a few dropped packets are acceptable.
- *   `tftp` (trivial file transfer protocol), `dhpcd` (a DHCP ~ Dynamic Host Configuration Protocol client), multiplayer games,
+ *   `tftp` (trivial file transfer protocol), `dhcpcd` (a DHCP ~ Dynamic Host Configuration Protocol client), multiplayer games,
  *   streaming audio, video conferencing, etc.
  *   DHCP: is a protocol for configuring hosts, and runs periodically to keep their addresses and other configurations up-to-date.
  *         The traffic is between host and DHCP server; typically both are on the same network, but not always.
