@@ -108,6 +108,7 @@ void solve()
     if (dice != first_roll)
       dp[0][dice] = 1;
   }
+  println(dp[0]);
   for (int i = 1; i < n; i++)
   {
     int cur_roll = roll_seq[i] - 1;
@@ -119,16 +120,16 @@ void solve()
         continue;
       }
 
-      bool first = true;
+      bool first_valid_diff = true;
       for (int _dice = 0; _dice < FACES; _dice++)
       {
-        if (_dice == cur_roll || _dice + cur_roll == FACES - 1)
+        if (_dice == cur_roll /* := dice */ || _dice + cur_roll == FACES - 1)
           continue;
 
-        if (first)
+        if (first_valid_diff)
         {
           dp[i][cur_roll] = dp[i - 1][_dice];
-          first = false;
+          first_valid_diff = false;
         }
         else
         {
@@ -136,6 +137,7 @@ void solve()
         }
       }
     }
+    println(dp[i]);
   }
 
   int ans = *ranges::min_element(dp[n - 1]);
