@@ -108,7 +108,6 @@ void solve()
     if (dice != first_roll)
       dp[0][dice] = 1;
   }
-  println(dp[0]);
   for (int i = 1; i < n; i++)
   {
     int cur_roll = roll_seq[i] - 1;
@@ -137,7 +136,6 @@ void solve()
         }
       }
     }
-    println(dp[i]);
   }
 
   int ans = *ranges::min_element(dp[n - 1]);
