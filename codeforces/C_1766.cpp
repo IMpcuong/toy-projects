@@ -148,7 +148,6 @@ void solve()
     }
 
     dp = nxt_dp;
-    // println(cnt_valid_tail, valid_tail, dp);
   }
 
   for (const auto &can_end_by_row : dp)
