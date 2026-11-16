@@ -95,9 +95,35 @@ inline IST nxt()
 
 void solve()
 {
-  vector<int> a(5);
-  ranges::generate(a, nxt<int>);
-  cout << a << " " << &a << endl;
+  const int row = 2;
+  auto col = nxt<int>();
+  vector<vector<uint64_t>> mat(row, vector<uint64_t>(col));
+  for (auto &line : mat)
+    ranges::generate_n(line.begin(), col, nxt<uint64_t>);
+
+  vector<ar<uint64_t, 2>> dp(col);
+  for (int i = 0; i < col; i++)
+  {
+    auto cur_f = mat[0][i];
+    auto cur_s = mat[1][i];
+    if (i == 0)
+    {
+      if (cur_f == cur_s)
+        dp[i][0] = dp[i][1] = 2;
+      else
+        dp[i][0] = dp[i][1] = 1;
+      continue;
+    }
+
+    auto same_idx_dist = (cur_f == cur_s) ? 2 : 1;
+    auto dist_fs = (mat[0][i - 1] == cur_s) ? 2 : 1;
+    auto dist_sf = (mat[1][i - 1] == cur_f) ? 2 : 1;
+    dp[i][0] = max(dp[i - 1][1] + dist_sf, dp[i - 1][0] + dist_fs + same_idx_dist);
+    dp[i][1] = max(dp[i - 1][0] + dist_fs, dp[i - 1][1] + dist_sf + same_idx_dist);
+  }
+
+  // println(dp);
+  println(max(dp[col - 1][0], dp[col - 1][1]));
 }
 
 int main()
@@ -111,7 +137,7 @@ int main()
   cin >> tc;
   for (int t = 1; t <= tc; t++)
   {
-    cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
+    // cout << "Case #" << t << ": "; // @Warn: Commenting before submission.
     solve();
   }
 }
