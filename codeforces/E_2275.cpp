@@ -101,29 +101,26 @@ void solve()
   for (auto &line : mat)
     ranges::generate_n(line.begin(), col, nxt<uint64_t>);
 
-  vector<ar<uint64_t, 2>> dp(col);
-  for (int i = 0; i < col; i++)
-  {
-    auto cur_f = mat[0][i];
-    auto cur_s = mat[1][i];
-    if (i == 0)
-    {
-      if (cur_f == cur_s)
-        dp[i][0] = dp[i][1] = 2;
-      else
-        dp[i][0] = dp[i][1] = 1;
-      continue;
-    }
+  auto dist_between = [](uint64_t f, uint64_t s) -> uint64_t {
+    return 1 + (f == s);
+  };
 
-    auto same_idx_dist = (cur_f == cur_s) ? 2 : 1;
-    auto dist_fs = (mat[0][i - 1] == cur_s) ? 2 : 1;
-    auto dist_sf = (mat[1][i - 1] == cur_f) ? 2 : 1;
-    dp[i][0] = max(dp[i - 1][1] + dist_sf, dp[i - 1][0] + dist_fs + same_idx_dist);
-    dp[i][1] = max(dp[i - 1][0] + dist_fs, dp[i - 1][1] + dist_sf + same_idx_dist);
+  uint64_t cur_dist = dist_between(mat[0][col - 1], mat[1][col - 1]);
+  for (int i = 0; i < col - 1; i++)
+  {
+    cur_dist += dist_between(mat[0][i], mat[1][i + 1]);
+    cur_dist += dist_between(mat[1][i], mat[0][i + 1]);
   }
 
-  // println(dp);
-  println(max(dp[col - 1][0], dp[col - 1][1]));
+  auto longest_dist = cur_dist;
+  for (int i = 0; i < col - 1; i++)
+  {
+    cur_dist -= dist_between(mat[0][i], mat[1][i + 1]);
+    cur_dist += dist_between(mat[0][i], mat[1][i]);
+    longest_dist = max(longest_dist, cur_dist);
+  }
+
+  println(longest_dist);
 }
 
 int main()
