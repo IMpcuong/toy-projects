@@ -25,7 +25,7 @@ button.addEventListener("click", async () => {
   // );
 
   let matches = [];
-  findMatchesWithItsDir = (nodes, dirs = []) => {
+  findMatchesWithTheirDirs = (nodes, dirs = []) => {
     for (const node of nodes) {
       if (node.url) {
         if (!pattern || node.url.toLowerCase().includes(pattern)) {
@@ -37,11 +37,11 @@ button.addEventListener("click", async () => {
         }
       } else {
         const nextDirs = node.title ? [...dirs, node.title] : dirs;
-        findMatchesWithItsDir(node.children ?? [], nextDirs);
+        findMatchesWithTheirDirs(node.children ?? [], nextDirs);
       }
     }
   }
-  findMatchesWithItsDir(tree);
+  findMatchesWithTheirDirs(tree);
   output.replaceChildren();
 
   for (const bookmark of matches) {
