@@ -1,14 +1,21 @@
 <!doctype html>
 <html>
   <body>
-    <input id="pattern" placeholder="URL pattern, e.g. example.com"/>
-    <button id="list">List bookmarks</button>
+    <div class="search">
+      <input id="pattern" placeholder="URL pattern"/>
+      <button id="list">List bookmarks</button>
+      <button id="sort">Newest first</button>
+    </div>
     <pre id="output"></pre>
     <script src="bookmark.js"></script>
 
     <style>
-      body { min-width: 320px; }
+      body { min-width: 480px; }
       #output { overflow-wrap: anywhere; }
+      .search {
+        display: flex;
+        gap: 8px;
+      }
     </style>
   </body>
 </html>
