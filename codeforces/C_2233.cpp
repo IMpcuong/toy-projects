@@ -104,7 +104,7 @@ void solve()
   assert(str_len == sza(bracket_str));
 
   deque<pair<char, int>> dq;
-  vector<pair<int, int>> valid_seq_ranges;
+  vector<pii> valid_seq_ranges;
   valid_seq_ranges.reserve(str_len / 2 + 1);
   int open_cnt = 0;
   for (int i = 0; i < str_len; i++)
@@ -148,7 +148,7 @@ void solve()
   }
 
   auto pinned_seq = valid_seq_ranges.front();
-  vector<pair<int, int>> compacted_valid_seq_ranges = {pinned_seq};
+  vector<pii> compacted_valid_seq_ranges = {pinned_seq};
   compacted_valid_seq_ranges.reserve(sza(valid_seq_ranges));
   for (const auto &seq : valid_seq_ranges | ranges::views::drop(1))
   {
@@ -158,6 +158,7 @@ void solve()
     compacted_valid_seq_ranges.emplace_back(seq);
     pinned_seq = seq;
   }
+  compacted_valid_seq_ranges.shrink_to_fit();
   ranges::sort(compacted_valid_seq_ranges,
       [](const auto &fp, const auto &sp)
       {
@@ -166,11 +167,13 @@ void solve()
         return f_len > s_len;
       }
   );
-  for (const auto &seq : compacted_valid_seq_ranges)
+
+  for (int i = 0; i < sza(compacted_valid_seq_ranges); i++)
   {
     if (op == 0)
       break;
 
+    auto seq = compacted_valid_seq_ranges[i];
     auto seq_len = seq.second - seq.first;
     if (op >= seq_len)
     {
