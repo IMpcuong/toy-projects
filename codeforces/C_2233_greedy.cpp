@@ -96,6 +96,8 @@ inline IST nxt()
 const char _O = '(';
 const char _C = ')';
 
+// @Docs: https://codeforces.com/blog/entry/154371
+
 void solve()
 {
   auto str_len = nxt<int>();
@@ -103,6 +105,8 @@ void solve()
   auto bracket_str = nxt<string>();
   assert(str_len == sza(bracket_str));
 
+#if 0
+  // @Note: An irrelevant approach but effective when coming to longest valid sub-seq at `i`.
   vector<int> maybe_l;
   maybe_l.reserve(str_len);
   int valid_l = str_len + 1;
@@ -130,10 +134,48 @@ void solve()
     int l = valid_l;
     int m = dp.second;
     int r = valid_r;
-    println(l, m, r);
 
     dp = {valid_l, valid_r};
   }
+#endif
+
+  vector<int> pref_open_sums(str_len + 1, 0);
+  vector<int> pref_close_sums(str_len + 1, 0);
+  for (int i = 0; i < str_len; i++)
+  {
+    pref_open_sums[i + 1]  = pref_open_sums[i] + (bracket_str[i] == _O);
+    pref_close_sums[i + 1] = pref_close_sums[i] + (bracket_str[i] == _C);
+  }
+  int close_quan = pref_close_sums[str_len];
+
+  int optimal_pos = str_len;
+  for (int i = 0; i < str_len; i++)
+  {
+    int cur_score = pref_open_sums[i] + (close_quan - pref_close_sums[i]);
+    int min_score = pref_open_sums[optimal_pos] + (close_quan - pref_close_sums[optimal_pos]);
+    if (cur_score < min_score)
+      optimal_pos = i;
+  }
+
+  string removed(str_len, '0');
+  for (int l = 0; l < optimal_pos; l++)
+  {
+    if (op && bracket_str[l] == _O)
+    {
+      removed[l] = '1';
+      op--;
+    }
+  }
+  for (int r = optimal_pos; r < str_len; r++)
+  {
+    if (op && bracket_str[r] == _C)
+    {
+      removed[r] = '1';
+      op--;
+    }
+  }
+
+  println(removed);
 }
 
 int main()
