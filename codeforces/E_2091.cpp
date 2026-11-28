@@ -83,7 +83,7 @@ inline T nxt()
 const ll _max_n = 1e7;
 const ll _upper = cqrt(_max_n);
 
-// @Doc: https://en.m.wikipedia.org/wiki/Sieve_of_Eratosthenes
+// @Docs: https://en.m.wikipedia.org/wiki/Sieve_of_Eratosthenes
 auto primes = [](const ll &upper = _upper) -> vector<ll>
 {
   vector<bool> prime_statuses(_max_n + 1, true);
